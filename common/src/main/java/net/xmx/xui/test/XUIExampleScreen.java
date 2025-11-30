@@ -72,13 +72,13 @@ public class XUIExampleScreen extends Screen {
                 .setY(Constraints.sibling(btn1, 15, true))
                 .setWidth(Constraints.relative(0.85f))
                 .setHeight(Constraints.pixel(35));
-        
+
         // Define specific border styles for this button
         btn2.style()
                 .set(UIState.DEFAULT, Properties.BORDER_THICKNESS, 1.0f)
                 .set(UIState.DEFAULT, Properties.BORDER_COLOR, 0xFF888888)
                 .set(UIState.HOVER, Properties.BORDER_COLOR, 0xFFFFFFFF)
-                .set(UIState.HOVER, Properties.BORDER_THICKNESS, 2.0f);
+                .set(UIState.HOVER, Properties.BORDER_THICKNESS, 1.0f);
 
         // --- Exit Button (Red) ---
         UIButton btnClose = new UIButton("Exit");
@@ -121,5 +121,11 @@ public class XUIExampleScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (root.mouseClicked(mouseX, mouseY, button)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (root.mouseReleased(mouseX, mouseY, button)) return true;
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 }

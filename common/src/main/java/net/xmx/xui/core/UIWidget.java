@@ -145,20 +145,36 @@ public abstract class UIWidget {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isVisible) return false;
 
+        // Propagate to children first (top-most visible first)
+        for (int i = children.size() - 1; i >= 0; i--) {
+            if (children.get(i).mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
+        }
+
         if (isHovered) {
             isFocused = true;
             if (onClick != null) {
                 onClick.accept(this);
             }
-            // Propagate to children (top-most visible first)
-            for (int i = children.size() - 1; i >= 0; i--) {
-                if (children.get(i).mouseClicked(mouseX, mouseY, button)) {
-                    return true;
-                }
-            }
             return true;
         } else {
             isFocused = false;
+        }
+        return false;
+    }
+
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (!isVisible) return false;
+
+        // Release the active state when mouse is released
+        isFocused = false;
+
+        // Propagate to children
+        for (int i = children.size() - 1; i >= 0; i--) {
+            if (children.get(i).mouseReleased(mouseX, mouseY, button)) {
+                return true;
+            }
         }
         return false;
     }

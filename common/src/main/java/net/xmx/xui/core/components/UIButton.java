@@ -40,6 +40,8 @@ public class UIButton extends UIWidget {
                 .set(UIState.HOVER, Properties.TEXT_COLOR, 0xFFFFFFFF)         // Pure White
                 .set(UIState.HOVER, Properties.SCALE, 1.05f)                   // Grow slightly
                 .set(UIState.HOVER, Properties.BORDER_RADIUS, 10.0f)           // Rounder
+                .set(UIState.HOVER, Properties.BORDER_THICKNESS, 0f)           // Keep border thickness same
+                .set(UIState.HOVER, Properties.BORDER_COLOR, 0x00000000)       // Keep border transparent
 
                 // --- ACTIVE/CLICK STATE (Feedback) ---
                 .set(UIState.ACTIVE, Properties.BACKGROUND_COLOR, 0xFF000000)  // Black
