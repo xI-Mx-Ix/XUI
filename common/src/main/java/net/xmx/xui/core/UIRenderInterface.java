@@ -19,6 +19,19 @@ public interface UIRenderInterface {
     void drawRect(float x, float y, float width, float height, int color, float radius);
 
     /**
+     * Draws a hollow outline (border) around a rectangle, optionally with rounded corners.
+     *
+     * @param x         The absolute x-coordinate.
+     * @param y         The absolute y-coordinate.
+     * @param width     The width of the rectangle.
+     * @param height    The height of the rectangle.
+     * @param color     The ARGB color value of the border.
+     * @param radius    The corner radius.
+     * @param thickness The thickness of the border line pointing inwards.
+     */
+    void drawOutline(float x, float y, float width, float height, int color, float radius, float thickness);
+
+    /**
      * Draws a string on the screen.
      *
      * @param text   The text content to render.

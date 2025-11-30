@@ -32,18 +32,26 @@ public class UIRenderImpl implements UIRenderInterface {
         if (radius > minDim / 2) radius = minDim / 2;
 
         if (radius <= 0) {
-            // Use the standard fill method for non-rounded rectangles
             guiGraphics.fill((int) x, (int) y, (int) (x + width), (int) (y + height), color);
         } else {
-            // Use custom tesselation for rounded corners
             drawRoundedRectInternal(x, y, width, height, radius, color);
         }
     }
 
     @Override
+    public void drawOutline(float x, float y, float width, float height, int color, float radius, float thickness) {
+        if (thickness <= 0) return;
+
+        // Clamp radius
+        float minDim = Math.min(width, height);
+        if (radius > minDim / 2) radius = minDim / 2;
+
+        drawRoundedOutlineInternal(x, y, width, height, radius, thickness, color);
+    }
+
+    @Override
     public void drawString(String text, float x, float y, int color, boolean shadow) {
         guiGraphics.pose().pushPose();
-        // Translate Z-axis slightly to prevent z-fighting with the background
         guiGraphics.pose().translate(0, 0, 0.01f);
         guiGraphics.drawString(font, text, (int) x, (int) y, color, shadow);
         guiGraphics.pose().popPose();
@@ -69,103 +77,129 @@ public class UIRenderImpl implements UIRenderInterface {
         guiGraphics.disableScissor();
     }
 
-    /**
-     * Renders a rounded rectangle by manually building the mesh.
-     * The shape is constructed from five internal rectangles and four corner fans
-     * to ensure correct geometry without overlapping fragments.
-     */
+    // --- Internal Rendering Helpers ---
+
+    private void setupRenderState() {
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.disableCull();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+    }
+
     private void drawRoundedRectInternal(float x, float y, float width, float height, float radius, int color) {
-        // Extract RGBA components from the packed integer
         float alpha = ((color >> 24) & 0xFF) / 255.0F;
         float red   = ((color >> 16) & 0xFF) / 255.0F;
         float green = ((color >> 8) & 0xFF) / 255.0F;
         float blue  = (color & 0xFF) / 255.0F;
 
         Matrix4f matrix = guiGraphics.pose().last().pose();
+        setupRenderState();
 
-        // 1. Render State Configuration
-        // Reset the shader color to avoid tinting from previous operations
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        // Enable alpha blending for transparency support
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-
-        // Disable culling to ensure back-facing triangles (if any) are still drawn
-        RenderSystem.disableCull();
-
-        // Bind the PositionColor shader. This shader ignores texture coordinates,
-        // allowing us to draw solid colored shapes without binding a white texture.
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        // 2. Mesh Construction
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
 
-        // Define the inner boundaries where corners begin
         float x1 = x + radius;
         float y1 = y + radius;
         float x2 = x + width - radius;
         float y2 = y + height - radius;
 
-        // Center Rectangle
+        // Center
         addQuad(buffer, matrix, x1, y1, x2, y2, red, green, blue, alpha);
+        // Edges
+        addQuad(buffer, matrix, x1, y, x2, y1, red, green, blue, alpha); // Top
+        addQuad(buffer, matrix, x1, y2, x2, y + height, red, green, blue, alpha); // Bottom
+        addQuad(buffer, matrix, x, y1, x1, y2, red, green, blue, alpha); // Left
+        addQuad(buffer, matrix, x2, y1, x + width, y2, red, green, blue, alpha); // Right
 
-        // Top Edge Rectangle
-        addQuad(buffer, matrix, x1, y, x2, y1, red, green, blue, alpha);
-
-        // Bottom Edge Rectangle
-        addQuad(buffer, matrix, x1, y2, x2, y + height, red, green, blue, alpha);
-
-        // Left Edge Rectangle
-        addQuad(buffer, matrix, x, y1, x1, y2, red, green, blue, alpha);
-
-        // Right Edge Rectangle
-        addQuad(buffer, matrix, x2, y1, x + width, y2, red, green, blue, alpha);
-
-        // Render Corners
-        int segments = 16; // Number of triangles per corner fan for smoothness
-
-        // Top Left Corner
+        // Corners
+        int segments = 16;
         addCorner(buffer, matrix, x1, y1, radius, Math.PI, Math.PI * 1.5, segments, red, green, blue, alpha);
-
-        // Top Right Corner
         addCorner(buffer, matrix, x2, y1, radius, Math.PI * 1.5, Math.PI * 2.0, segments, red, green, blue, alpha);
-
-        // Bottom Right Corner
         addCorner(buffer, matrix, x2, y2, radius, 0, Math.PI * 0.5, segments, red, green, blue, alpha);
-
-        // Bottom Left Corner
         addCorner(buffer, matrix, x1, y2, radius, Math.PI * 0.5, Math.PI, segments, red, green, blue, alpha);
 
-        // 3. Upload and Draw
         BufferUploader.drawWithShader(buffer.buildOrThrow());
-
-        // 4. State Restoration
         RenderSystem.enableCull();
     }
 
     /**
-     * Helper method to add a quadrilateral (composed of two triangles) to the buffer.
+     * Renders a hollow rounded rectangle (border).
+     * It constructs a "ring" mesh by defining an outer path and an inner path.
      */
+    private void drawRoundedOutlineInternal(float x, float y, float width, float height, float radius, float thickness, int color) {
+        float alpha = ((color >> 24) & 0xFF) / 255.0F;
+        float red   = ((color >> 16) & 0xFF) / 255.0F;
+        float green = ((color >> 8) & 0xFF) / 255.0F;
+        float blue  = (color & 0xFF) / 255.0F;
+
+        Matrix4f matrix = guiGraphics.pose().last().pose();
+        setupRenderState();
+
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+
+        // Define outer boundary coords
+        float oLeft = x;
+        float oTop = y;
+        float oRight = x + width;
+        float oBottom = y + height;
+
+        // Define inner boundary coords
+        float iLeft = x + thickness;
+        float iTop = y + thickness;
+        float iRight = x + width - thickness;
+        float iBottom = y + height - thickness;
+
+        // Ensure inner bounds don't invert
+        if (iLeft > iRight || iTop > iBottom) return;
+
+        // Radii
+        float rOut = radius;
+        float rIn = Math.max(0, radius - thickness);
+
+        // Center coordinates for the 4 corners
+        float cx1 = oLeft + rOut;
+        float cy1 = oTop + rOut; // Top-Left center
+        float cx2 = oRight - rOut;
+        float cy2 = oTop + rOut; // Top-Right center
+        float cx3 = oRight - rOut;
+        float cy3 = oBottom - rOut; // Bottom-Right center
+        float cx4 = oLeft + rOut;
+        float cy4 = oBottom - rOut; // Bottom-Left center
+
+        // 1. Draw Linear Edges (Rectangles connecting the corners)
+        // Top Edge
+        addQuad(buffer, matrix, cx1, oTop, cx2, iTop, red, green, blue, alpha);
+        // Bottom Edge
+        addQuad(buffer, matrix, cx4, iBottom, cx3, oBottom, red, green, blue, alpha);
+        // Left Edge
+        addQuad(buffer, matrix, oLeft, cy1, iLeft, cy4, red, green, blue, alpha);
+        // Right Edge
+        addQuad(buffer, matrix, iRight, cy2, oRight, cy3, red, green, blue, alpha);
+
+        // 2. Draw Rounded Corners (Ring segments)
+        int segments = 16;
+        addCornerRing(buffer, matrix, cx1, cy1, rOut, rIn, Math.PI, Math.PI * 1.5, segments, red, green, blue, alpha); // TL
+        addCornerRing(buffer, matrix, cx2, cy2, rOut, rIn, Math.PI * 1.5, Math.PI * 2.0, segments, red, green, blue, alpha); // TR
+        addCornerRing(buffer, matrix, cx3, cy3, rOut, rIn, 0, Math.PI * 0.5, segments, red, green, blue, alpha); // BR
+        addCornerRing(buffer, matrix, cx4, cy4, rOut, rIn, Math.PI * 0.5, Math.PI, segments, red, green, blue, alpha); // BL
+
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        RenderSystem.enableCull();
+    }
+
     private void addQuad(BufferBuilder buffer, Matrix4f matrix, float x1, float y1, float x2, float y2, float r, float g, float b, float a) {
-        // First Triangle
         buffer.addVertex(matrix, x1, y1, 0).setColor(r, g, b, a);
         buffer.addVertex(matrix, x1, y2, 0).setColor(r, g, b, a);
         buffer.addVertex(matrix, x2, y2, 0).setColor(r, g, b, a);
-
-        // Second Triangle
         buffer.addVertex(matrix, x1, y1, 0).setColor(r, g, b, a);
         buffer.addVertex(matrix, x2, y2, 0).setColor(r, g, b, a);
         buffer.addVertex(matrix, x2, y1, 0).setColor(r, g, b, a);
     }
 
-    /**
-     * Helper method to add a triangle fan representing a rounded corner.
-     */
     private void addCorner(BufferBuilder buffer, Matrix4f matrix, float cx, float cy, float radius, double startAngle, double endAngle, int segments, float r, float g, float b, float a) {
         double angleStep = (endAngle - startAngle) / segments;
-
         double prevX = cx + Math.cos(startAngle) * radius;
         double prevY = cy + Math.sin(startAngle) * radius;
 
@@ -174,13 +208,53 @@ public class UIRenderImpl implements UIRenderInterface {
             double px = cx + Math.cos(angle) * radius;
             double py = cy + Math.sin(angle) * radius;
 
-            // Add triangle: Center -> Previous Point -> Current Point
             buffer.addVertex(matrix, cx, cy, 0).setColor(r, g, b, a);
             buffer.addVertex(matrix, (float) prevX, (float) prevY, 0).setColor(r, g, b, a);
             buffer.addVertex(matrix, (float) px, (float) py, 0).setColor(r, g, b, a);
-
             prevX = px;
             prevY = py;
+        }
+    }
+
+    /**
+     * Tesselates a partial ring (thick arc) for rounded borders.
+     */
+    private void addCornerRing(BufferBuilder buffer, Matrix4f matrix, float cx, float cy, float rOut, float rIn, double startAngle, double endAngle, int segments, float r, float g, float b, float a) {
+        double angleStep = (endAngle - startAngle) / segments;
+
+        double prevCos = Math.cos(startAngle);
+        double prevSin = Math.sin(startAngle);
+
+        for (int i = 1; i <= segments; i++) {
+            double angle = startAngle + i * angleStep;
+            double cos = Math.cos(angle);
+            double sin = Math.sin(angle);
+
+            // Previous vertices
+            float pOx = cx + (float) (prevCos * rOut);
+            float pOy = cy + (float) (prevSin * rOut);
+            float pIx = cx + (float) (prevCos * rIn);
+            float pIy = cy + (float) (prevSin * rIn);
+
+            // Current vertices
+            float cOx = cx + (float) (cos * rOut);
+            float cOy = cy + (float) (sin * rOut);
+            float cIx = cx + (float) (cos * rIn);
+            float cIy = cy + (float) (sin * rIn);
+
+            // Add two triangles to form the quad for this segment
+            // 1. Outer-Prev -> Inner-Prev -> Outer-Curr
+            buffer.addVertex(matrix, pOx, pOy, 0).setColor(r, g, b, a);
+            buffer.addVertex(matrix, pIx, pIy, 0).setColor(r, g, b, a);
+            buffer.addVertex(matrix, cOx, cOy, 0).setColor(r, g, b, a);
+
+            // 2. Inner-Prev -> Inner-Curr -> Outer-Curr
+            buffer.addVertex(matrix, pIx, pIy, 0).setColor(r, g, b, a);
+            buffer.addVertex(matrix, cIx, cIy, 0).setColor(r, g, b, a);
+            buffer.addVertex(matrix, cOx, cOy, 0).setColor(r, g, b, a);
+
+            prevCos = cos;
+            prevSin = sin;
         }
     }
 }

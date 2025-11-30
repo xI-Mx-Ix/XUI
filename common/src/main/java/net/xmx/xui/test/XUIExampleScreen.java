@@ -4,9 +4,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.components.UIButton;
+import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
@@ -14,7 +14,7 @@ import net.xmx.xui.impl.UIRenderImpl;
 
 /**
  * Example screen demonstrating the Modern UI framework usage.
- * It constructs a sidebar layout with animated buttons and glassmorphism effects.
+ * It constructs a sidebar layout with animated buttons, glassmorphism effects, and bordered panels.
  */
 public class XUIExampleScreen extends Screen {
 
@@ -28,16 +28,16 @@ public class XUIExampleScreen extends Screen {
 
     @Override
     protected void init() {
-        // Initialize the root container filling the entire screen
-        root = new UIContainer();
+        // Initialize the root container filling the entire screen using UIPanel
+        root = new UIPanel();
         root.setWidth(Constraints.pixel(this.width))
                 .setHeight(Constraints.pixel(this.height));
 
-        // Set the root background to fully transparent to show the game world behind the UI
+        // Set the root background to fully transparent
         root.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
 
-        // --- Glassmorphism Sidebar ---
-        UIWidget sidebar = new UIContainer();
+        // --- Glassmorphism Sidebar with Border ---
+        UIPanel sidebar = new UIPanel();
         sidebar.setX(Constraints.pixel(20))
                 .setY(Constraints.pixel(20))
                 .setWidth(Constraints.pixel(160))
@@ -45,7 +45,9 @@ public class XUIExampleScreen extends Screen {
 
         sidebar.style()
                 .set(Properties.BACKGROUND_COLOR, 0xAA000000) // Semi-transparent black
-                .set(Properties.BORDER_RADIUS, 12.0f);        // Rounded corners
+                .set(Properties.BORDER_RADIUS, 12.0f)         // Rounded corners
+                .set(Properties.BORDER_THICKNESS, 2.0f)       // 2px Border
+                .set(Properties.BORDER_COLOR, 0xFF5D3FD3);    // Purple border
 
         // --- Title ---
         UIText title = new UIText("MODERN UI");
@@ -64,12 +66,19 @@ public class XUIExampleScreen extends Screen {
                 .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, 0xFF5D3FD3)
                 .set(UIState.HOVER, Properties.BACKGROUND_COLOR, 0xFF7F63F4);
 
-        // --- Settings Button ---
+        // --- Settings Button (With Border) ---
         UIButton btn2 = new UIButton("Settings");
         btn2.setX(Constraints.center())
                 .setY(Constraints.sibling(btn1, 15, true))
                 .setWidth(Constraints.relative(0.85f))
                 .setHeight(Constraints.pixel(35));
+        
+        // Define specific border styles for this button
+        btn2.style()
+                .set(UIState.DEFAULT, Properties.BORDER_THICKNESS, 1.0f)
+                .set(UIState.DEFAULT, Properties.BORDER_COLOR, 0xFF888888)
+                .set(UIState.HOVER, Properties.BORDER_COLOR, 0xFFFFFFFF)
+                .set(UIState.HOVER, Properties.BORDER_THICKNESS, 2.0f);
 
         // --- Exit Button (Red) ---
         UIButton btnClose = new UIButton("Exit");
@@ -97,17 +106,14 @@ public class XUIExampleScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        // Renders the standard dark transparent background for the screen
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
 
-        // Calculate real delta time in seconds for smooth physics-based animations
         long now = System.currentTimeMillis();
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
         if (renderer == null) renderer = new UIRenderImpl(guiGraphics);
 
-        // Pass deltaTime instead of partialTick to the UI render loop
         root.render(renderer, mouseX, mouseY, deltaTime);
     }
 
@@ -115,21 +121,5 @@ public class XUIExampleScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (root.mouseClicked(mouseX, mouseY, button)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    /**
-     * A simple container widget that draws a background rectangle.
-     */
-    private static class UIContainer extends UIWidget {
-        @Override
-        protected void drawSelf(UIRenderInterface renderer, int mx, int my, float dt, UIState state) {
-            int color = getColor(Properties.BACKGROUND_COLOR, state, dt);
-            float r = getFloat(Properties.BORDER_RADIUS, state, dt);
-
-            // Only draw if not fully transparent
-            if ((color >>> 24) > 0) {
-                renderer.drawRect(x, y, width, height, color, r);
-            }
-        }
     }
 }
