@@ -172,41 +172,27 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         // Retrieve the base hover overlay color (usually semi-transparent white)
         int baseHoverColor = style().getValue(UIState.DEFAULT, Properties.HOVER_COLOR);
 
-        // Animation speed logic
-        float speed = style().getTransitionSpeed();
-        float lerpFactor = 1.0f - (float) Math.exp(-speed * partialTicks);
-
         for (int i = 0; i < options.size(); i++) {
             float optY = overlayY + (i * optionHeight);
 
             boolean isOptionHovered = (mouseX >= x && mouseX <= x + width &&
                     mouseY >= optY && mouseY < optY + optionHeight);
 
-            // --- Individual Option Animation Logic ---
-            float currentAnim = optionAnimators.getOrDefault(i, 0.0f);
-            float targetAnim = isOptionHovered ? 1.0f : 0.0f;
-
-            // Interpolate towards target (0.0 to 1.0)
-            if (Math.abs(targetAnim - currentAnim) > 0.001f) {
-                currentAnim += (targetAnim - currentAnim) * lerpFactor;
-            } else {
-                currentAnim = targetAnim;
-            }
-            optionAnimators.put(i, currentAnim);
-
-            // Draw the highlight if visibility > 0
-            if (currentAnim > 0.01f) {
-                // Apply the animation alpha to the base hover color
-                int baseAlpha = (baseHoverColor >> 24) & 0xFF;
-                int animatedAlpha = (int) (baseAlpha * currentAnim);
-                int finalColor = (animatedAlpha << 24) | (baseHoverColor & 0x00FFFFFF);
-
-                renderer.drawRect(x, optY, width, optionHeight, finalColor, 0);
+            // Draw the highlight immediately if the option is hovered, without interpolation
+            if (isOptionHovered) {
+                renderer.drawRect(x, optY, width, optionHeight, baseHoverColor, 0);
             }
 
             String text = options.get(i);
             float textY = optY + (optionHeight - renderer.getFontHeight()) / 2.0f;
             renderer.drawString(text, x + 5, textY, textColor, false);
+        }
+    }
+
+    private void closeDropdown() {
+        if (this.isOpen) {
+            this.isOpen = false;
+            UIWidget.removeObstructor(this);
         }
     }
 
@@ -261,15 +247,6 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         if (!this.isOpen) {
             this.isOpen = true;
             UIWidget.addObstructor(this);
-        }
-    }
-
-    private void closeDropdown() {
-        if (this.isOpen) {
-            this.isOpen = false;
-            UIWidget.removeObstructor(this);
-            // Reset animations when closing to avoid visual glitches on reopen
-            optionAnimators.clear();
         }
     }
 
