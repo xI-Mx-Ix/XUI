@@ -17,8 +17,8 @@ public class AnimationManager {
      *
      * @param prop   The property key.
      * @param target The target value from the stylesheet.
-     * @param speed  The interpolation speed (0.0 to 1.0).
-     * @param dt     Delta time.
+     * @param speed  The interpolation speed (higher = faster, typical range 5-20).
+     * @param dt     Delta time in seconds.
      * @return The interpolated value for the current frame.
      */
     public float getAnimatedFloat(UIProperty<Float> prop, float target, float speed, float dt) {
@@ -28,8 +28,10 @@ public class AnimationManager {
         if (Math.abs(diff) < 0.001f) {
             current = target;
         } else {
-            // Simple linear interpolation
-            current += diff * speed * dt;
+            // Exponential decay interpolation: lerp factor = 1 - e^(-speed * dt)
+            // This ensures smooth, framerate-independent animation
+            float lerpFactor = 1.0f - (float) Math.exp(-speed * dt);
+            current += diff * lerpFactor;
         }
 
         currentValues.put(prop, current);
@@ -41,8 +43,8 @@ public class AnimationManager {
      *
      * @param prop   The property key.
      * @param target The target ARGB color.
-     * @param speed  The interpolation speed.
-     * @param dt     Delta time.
+     * @param speed  The interpolation speed (higher = faster, typical range 5-20).
+     * @param dt     Delta time in seconds.
      * @return The interpolated color for the current frame.
      */
     public int getAnimatedColor(UIProperty<Integer> prop, int target, float speed, float dt) {
@@ -50,11 +52,12 @@ public class AnimationManager {
 
         if (current == target) return current;
 
-        // Clamp speed factor for safety
-        float factor = speed * dt;
-        if (factor > 1.0f) factor = 1.0f;
+        // Exponential decay interpolation
+        float lerpFactor = 1.0f - (float) Math.exp(-speed * dt);
+        // Clamp to prevent overshoot
+        if (lerpFactor > 1.0f) lerpFactor = 1.0f;
 
-        int next = interpolateColor(current, target, factor);
+        int next = interpolateColor(current, target, lerpFactor);
 
         currentValues.put(prop, next);
         return next;

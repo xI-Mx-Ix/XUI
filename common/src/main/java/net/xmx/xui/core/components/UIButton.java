@@ -25,7 +25,7 @@ public class UIButton extends UIWidget {
 
     private void setupModernStyles() {
         this.style()
-                .setTransitionSpeed(0.25f) // Smooth speed
+                .setTransitionSpeed(12.0f) // Fast, smooth animation (higher = faster)
 
                 // --- DEFAULT STATE (Glass Look) ---
                 .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, 0xAA202020) // Transparent Dark Grey
@@ -52,7 +52,7 @@ public class UIButton extends UIWidget {
         int bgColor = getColor(Properties.BACKGROUND_COLOR, state, partialTicks);
         int txtColor = getColor(Properties.TEXT_COLOR, state, partialTicks);
         int borderColor = getColor(Properties.BORDER_COLOR, state, partialTicks);
-        
+
         float radius = getFloat(Properties.BORDER_RADIUS, state, partialTicks);
         float scale = getFloat(Properties.SCALE, state, partialTicks);
         float borderThick = getFloat(Properties.BORDER_THICKNESS, state, partialTicks);
@@ -64,7 +64,6 @@ public class UIButton extends UIWidget {
         float adjY = y - (scaledH - height) / 2.0f;
 
         // 3. Draw Shadow (Fake depth)
-        // Draw a black, transparent rect slightly offset
         renderer.drawRect(adjX + 2, adjY + 2, scaledW, scaledH, 0x40000000, radius);
 
         // 4. Draw Main Button Body
@@ -79,7 +78,6 @@ public class UIButton extends UIWidget {
         int strWidth = renderer.getStringWidth(label);
         int strHeight = renderer.getFontHeight();
 
-        // Center text mathematically
         float textX = x + (width - strWidth) / 2.0f;
         float textY = y + (height - strHeight) / 2.0f + 1;
 
