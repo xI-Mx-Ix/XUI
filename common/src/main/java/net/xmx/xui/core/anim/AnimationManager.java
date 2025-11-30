@@ -9,7 +9,7 @@ import java.util.Map;
  * It stores the current "live" animated values and moves them towards target values.
  */
 public class AnimationManager {
-    
+
     private final Map<UIProperty<?>, Object> currentValues = new HashMap<>();
 
     /**
@@ -22,8 +22,8 @@ public class AnimationManager {
      * @return The interpolated value for the current frame.
      */
     public float getAnimatedFloat(UIProperty<Float> prop, float target, float speed, float dt) {
-        float current = (float) currentValues.getOrDefault(prop, target); 
-        
+        float current = (float) currentValues.getOrDefault(prop, target);
+
         float diff = target - current;
         if (Math.abs(diff) < 0.001f) {
             current = target;
@@ -31,7 +31,7 @@ public class AnimationManager {
             // Simple linear interpolation
             current += diff * speed * dt;
         }
-        
+
         currentValues.put(prop, current);
         return current;
     }
@@ -47,15 +47,15 @@ public class AnimationManager {
      */
     public int getAnimatedColor(UIProperty<Integer> prop, int target, float speed, float dt) {
         int current = (int) currentValues.getOrDefault(prop, target);
-        
+
         if (current == target) return current;
 
         // Clamp speed factor for safety
         float factor = speed * dt;
         if (factor > 1.0f) factor = 1.0f;
-        
+
         int next = interpolateColor(current, target, factor);
-        
+
         currentValues.put(prop, next);
         return next;
     }

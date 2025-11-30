@@ -8,7 +8,7 @@ import java.util.Map;
  * Acts as a local CSS definition for a component.
  */
 public class StyleSheet {
-    
+
     private final Map<UIState, Map<UIProperty<?>, Object>> stateMap = new HashMap<>();
     private float transitionSpeed = 0.2f;
 
@@ -54,7 +54,7 @@ public class StyleSheet {
     @SuppressWarnings("unchecked")
     public <T> T getValue(UIState currentState, UIProperty<T> property) {
         Map<UIProperty<?>, Object> props = stateMap.get(currentState);
-        
+
         // 1. Check specific state
         if (props.containsKey(property)) {
             return (T) props.get(property);
