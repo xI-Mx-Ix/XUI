@@ -44,7 +44,7 @@ public class XUIScrollExampleScreen extends Screen {
 
     @Override
     protected void init() {
-        // Root container
+        // Root container setup
         root = new UIPanel();
         root.setWidth(Constraints.pixel(this.width))
                 .setHeight(Constraints.pixel(this.height));
@@ -57,6 +57,7 @@ public class XUIScrollExampleScreen extends Screen {
                 .setWidth(Constraints.pixel(600))
                 .setHeight(Constraints.pixel(500));
 
+        // Style the main container with rounded corners and a border
         mainPanel.style()
                 .set(Properties.BACKGROUND_COLOR, COLOR_PANEL)
                 .set(Properties.BORDER_RADIUS, 16.0f)
@@ -79,22 +80,22 @@ public class XUIScrollExampleScreen extends Screen {
                 .setWidth(Constraints.relative(1.0f));
         subtitle.style().set(Properties.TEXT_COLOR, COLOR_TEXT_SECONDARY);
 
-        // --- Scroll Panel ---
+        // --- Scroll Panel Configuration ---
         scrollPanel = new UIScrollPanel();
         scrollPanel.setX(Constraints.pixel(30))
                 .setY(Constraints.pixel(90))
                 .setWidth(Constraints.pixel(540))
                 .setHeight(Constraints.pixel(330));
 
-        // Configured for a thin, always visible scrollbar
+        // Configure scrollbar aesthetics
         scrollPanel.style()
                 .set(Properties.BACKGROUND_COLOR, 0x40000000)
                 .set(Properties.BORDER_RADIUS, 8.0f)
                 .set(Properties.BORDER_THICKNESS, 1.0f)
                 .set(Properties.BORDER_COLOR, 0x20FFFFFF)
-                .set(UIScrollPanel.SCROLLBAR_WIDTH, 4.0f)   // Thinner width
+                .set(UIScrollPanel.SCROLLBAR_WIDTH, 4.0f)
                 .set(UIScrollPanel.SCROLLBAR_PADDING, 4.0f)
-                .set(UIScrollPanel.SCROLLBAR_RADIUS, 2.0f)  // Rounded edges (half of width)
+                .set(UIScrollPanel.SCROLLBAR_RADIUS, 2.0f)
                 .set(UIScrollPanel.SCROLLBAR_COLOR, COLOR_SCROLLBAR)
                 .set(UIScrollPanel.SCROLLBAR_TRACK_COLOR, COLOR_SCROLLBAR_TRACK);
 
@@ -109,10 +110,12 @@ public class XUIScrollExampleScreen extends Screen {
                     .setWidth(Constraints.pixel(500))
                     .setHeight(Constraints.pixel(45));
 
-            // Alternate colors for visual variety
+            // Define colors for alternating pattern
             int bgColor = (i % 2 == 0) ? 0x80303030 : 0x80404040;
             int hoverColor = (i % 2 == 0) ? 0xAA404040 : 0xAA505050;
 
+            // Apply style with subtle active state
+            // When clicked, the button uses the hover color (no flash) but shrinks in scale
             itemButton.style()
                     .setTransitionSpeed(10.0f)
                     .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, bgColor)
@@ -122,8 +125,8 @@ public class XUIScrollExampleScreen extends Screen {
                     .set(UIState.HOVER, Properties.SCALE, 1.02f)
                     .set(UIState.HOVER, Properties.BORDER_THICKNESS, 1.0f)
                     .set(UIState.HOVER, Properties.BORDER_COLOR, COLOR_ACCENT)
-                    .set(UIState.ACTIVE, Properties.BACKGROUND_COLOR, COLOR_ACCENT)
-                    .set(UIState.ACTIVE, Properties.SCALE, 0.98f);
+                    .set(UIState.ACTIVE, Properties.BACKGROUND_COLOR, hoverColor) // Maintains gray color on click
+                    .set(UIState.ACTIVE, Properties.SCALE, 0.98f);                // Provides feedback via scaling
 
             final int itemNumber = i;
             itemButton.setOnClick(w -> System.out.println("Clicked Item #" + itemNumber));
@@ -173,7 +176,7 @@ public class XUIScrollExampleScreen extends Screen {
                 .set(UIState.ACTIVE, Properties.BACKGROUND_COLOR, COLOR_ACCENT_ACTIVE)
                 .set(UIState.ACTIVE, Properties.SCALE, 0.95f);
 
-        btnBottom.setOnClick(w -> scrollPanel.setScrollOffset(9999)); // Large number scrolls to end
+        btnBottom.setOnClick(w -> scrollPanel.setScrollOffset(9999));
 
         // Exit Button
         UIButton btnClose = new UIButton("Close");
@@ -193,7 +196,7 @@ public class XUIScrollExampleScreen extends Screen {
 
         btnClose.setOnClick(w -> this.onClose());
 
-        // Build the component tree
+        // Construct the UI tree
         mainPanel.add(title);
         mainPanel.add(subtitle);
         mainPanel.add(scrollPanel);
@@ -202,7 +205,7 @@ public class XUIScrollExampleScreen extends Screen {
         mainPanel.add(btnClose);
         root.add(mainPanel);
 
-        // Calculate initial positions
+        // Perform initial layout calculation
         root.layout();
     }
 
