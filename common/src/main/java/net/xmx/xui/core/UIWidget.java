@@ -132,8 +132,36 @@ public abstract class UIWidget {
         return animManager.getAnimatedFloat(prop, target, styleSheet.getTransitionSpeed(), dt);
     }
 
+    /**
+     * Checks if this widget is currently visually clipped by any of its ancestors.
+     * This occurs if a parent has enabled scissor testing and the mouse cursor
+     * is outside that parent's bounds.
+     *
+     * @param mouseX The current mouse X coordinate.
+     * @param mouseY The current mouse Y coordinate.
+     * @return true if the interaction should be blocked due to clipping.
+     */
+    protected boolean isClippedByParent(double mouseX, double mouseY) {
+        UIWidget current = this.parent;
+        while (current != null) {
+            // If a parent uses scissor (like a ScrollPanel), checks if the mouse
+            // is effectively "outside" the visible area of that parent.
+            if (current.useScissor && !current.isMouseOver(mouseX, mouseY)) {
+                return true;
+            }
+            current = current.parent;
+        }
+        return false;
+    }
+
+    /**
+     * Updates the internal hover state based on mouse position and visibility checks.
+     */
     protected void updateHoverState(int mouseX, int mouseY) {
-        boolean nowHovered = isMouseOver(mouseX, mouseY);
+        // The widget is only considered hovered if the mouse is over it AND
+        // it is not visually hidden by a parent's scissor clip.
+        boolean nowHovered = isMouseOver(mouseX, mouseY) && !isClippedByParent(mouseX, mouseY);
+
         if (nowHovered && !isHovered) {
             if (onMouseEnter != null) onMouseEnter.accept(this);
         } else if (!nowHovered && isHovered) {
@@ -144,6 +172,9 @@ public abstract class UIWidget {
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isVisible) return false;
+
+        // Do not process clicks if the widget is clipped by a parent container
+        if (isClippedByParent(mouseX, mouseY)) return false;
 
         // Propagate to children first (top-most visible first)
         for (int i = children.size() - 1; i >= 0; i--) {
@@ -166,6 +197,12 @@ public abstract class UIWidget {
 
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (!isVisible) return false;
+
+        // Do not process release events if the cursor is in a clipped region
+        if (isClippedByParent(mouseX, mouseY)) {
+            isFocused = false;
+            return false;
+        }
 
         // Release the active state when mouse is released
         isFocused = false;
