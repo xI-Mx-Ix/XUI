@@ -132,7 +132,7 @@ public abstract class UIWidget {
         return animManager.getAnimatedFloat(prop, target, styleSheet.getTransitionSpeed(), dt);
     }
 
-    private void updateHoverState(int mouseX, int mouseY) {
+    protected void updateHoverState(int mouseX, int mouseY) {
         boolean nowHovered = isMouseOver(mouseX, mouseY);
         if (nowHovered && !isHovered) {
             if (onMouseEnter != null) onMouseEnter.accept(this);
@@ -248,5 +248,54 @@ public abstract class UIWidget {
 
     public float getHeight() {
         return this.height;
+    }
+
+    public UIWidget getParent() {
+        return this.parent;
+    }
+
+    public List<UIWidget> getChildren() {
+        return this.children;
+    }
+
+    public boolean isVisible() {
+        return this.isVisible;
+    }
+
+    public UIWidget setVisible(boolean visible) {
+        this.isVisible = visible;
+        return this;
+    }
+
+    protected void setXDirect(float x) {
+        this.x = x;
+    }
+
+    protected void setYDirect(float y) {
+        this.y = y;
+    }
+
+    protected void setWidthDirect(float width) {
+        this.width = width;
+    }
+
+    protected void setHeightDirect(float height) {
+        this.height = height;
+    }
+
+    public UIConstraint getXConstraint() {
+        return this.xConstraint;
+    }
+
+    public UIConstraint getYConstraint() {
+        return this.yConstraint;
+    }
+
+    public UIConstraint getWidthConstraint() {
+        return this.widthConstraint;
+    }
+
+    public UIConstraint getHeightConstraint() {
+        return this.heightConstraint;
     }
 }
