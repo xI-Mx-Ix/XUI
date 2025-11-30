@@ -13,29 +13,35 @@ package net.xmx.xui.core;
 public interface UIRenderInterface {
 
     /**
-     * Draws a filled rectangle, optionally with rounded corners.
+     * Draws a filled rectangle with uniform corners.
+     */
+    void drawRect(float x, float y, float width, float height, int color, float radius);
+
+    /**
+     * Draws a filled rectangle with individual corner radii.
+     * Use this to create shapes like tabs or connected dropdowns.
      *
      * @param x      The absolute x-coordinate.
      * @param y      The absolute y-coordinate.
      * @param width  The width of the rectangle.
      * @param height The height of the rectangle.
      * @param color  The ARGB color value.
-     * @param radius The corner radius (0 for sharp corners).
+     * @param rTL    Top-Left radius.
+     * @param rTR    Top-Right radius.
+     * @param rBR    Bottom-Right radius.
+     * @param rBL    Bottom-Left radius.
      */
-    void drawRect(float x, float y, float width, float height, int color, float radius);
+    void drawRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL);
 
     /**
      * Draws a hollow outline (border) around a rectangle, optionally with rounded corners.
-     *
-     * @param x         The absolute x-coordinate.
-     * @param y         The absolute y-coordinate.
-     * @param width     The width of the rectangle.
-     * @param height    The height of the rectangle.
-     * @param color     The ARGB color value of the border.
-     * @param radius    The corner radius.
-     * @param thickness The thickness of the border line pointing inwards.
      */
     void drawOutline(float x, float y, float width, float height, int color, float radius, float thickness);
+
+    /**
+     * Draws a hollow outline with individual corner radii.
+     */
+    void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL);
 
     /**
      * Draws a string on the screen.
@@ -77,4 +83,13 @@ public interface UIRenderInterface {
      * Disables the active scissor test, restoring full screen rendering.
      */
     void disableScissor();
+
+    /**
+     * Moves the rendering position on the Z-axis (depth).
+     * Positive values move towards the viewer (on top), rendering over other elements.
+     * Negative values move away (behind).
+     *
+     * @param z The offset to apply to the Z-coordinate.
+     */
+    void translateZ(float z);
 }

@@ -6,6 +6,7 @@ package net.xmx.xui.core.style;
 
 /**
  * Static registry of common UI properties used by standard components.
+ * Updated to include Dropdown specific properties.
  *
  * @author xI-Mx-Ix
  */
@@ -14,6 +15,10 @@ public class Properties {
     public static final UIProperty<Integer> BACKGROUND_COLOR = new UIProperty<>("bg_color", 0xFF444444);
     public static final UIProperty<Integer> TEXT_COLOR = new UIProperty<>("text_color", 0xFFFFFFFF);
     public static final UIProperty<Integer> BORDER_COLOR = new UIProperty<>("border_color", 0xFF000000);
+
+    // Dropdown specific
+    public static final UIProperty<Integer> ARROW_COLOR = new UIProperty<>("arrow_color", 0xFFFFFFFF);
+    public static final UIProperty<Integer> HOVER_COLOR = new UIProperty<>("hover_color", 0x80FFFFFF);
 
     // Dimensions & Effects
     public static final UIProperty<Float> BORDER_RADIUS = new UIProperty<>("border_radius", 0f);

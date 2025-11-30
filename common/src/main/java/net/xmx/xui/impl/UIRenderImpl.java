@@ -33,26 +33,27 @@ public class UIRenderImpl implements UIRenderInterface {
 
     @Override
     public void drawRect(float x, float y, float width, float height, int color, float radius) {
-        // Clamp radius to half the shortest dimension to ensure geometric validity
-        float minDim = Math.min(width, height);
-        if (radius > minDim / 2) radius = minDim / 2;
+        drawRect(x, y, width, height, color, radius, radius, radius, radius);
+    }
 
-        if (radius <= 0) {
+    @Override
+    public void drawRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL) {
+        if (rTL <= 0 && rTR <= 0 && rBR <= 0 && rBL <= 0) {
             guiGraphics.fill((int) x, (int) y, (int) (x + width), (int) (y + height), color);
-        } else {
-            drawRoundedRectInternal(x, y, width, height, radius, color);
+            return;
         }
+        drawComplexRoundedRect(x, y, width, height, color, rTL, rTR, rBR, rBL);
     }
 
     @Override
     public void drawOutline(float x, float y, float width, float height, int color, float radius, float thickness) {
+        drawOutline(x, y, width, height, color, thickness, radius, radius, radius, radius);
+    }
+
+    @Override
+    public void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL) {
         if (thickness <= 0) return;
-
-        // Clamp radius
-        float minDim = Math.min(width, height);
-        if (radius > minDim / 2) radius = minDim / 2;
-
-        drawRoundedOutlineInternal(x, y, width, height, radius, thickness, color);
+        drawComplexRoundedOutline(x, y, width, height, color, thickness, rTL, rTR, rBR, rBL);
     }
 
     @Override
@@ -83,6 +84,11 @@ public class UIRenderImpl implements UIRenderInterface {
         guiGraphics.disableScissor();
     }
 
+    @Override
+    public void translateZ(float z) {
+        guiGraphics.pose().translate(0, 0, z);
+    }
+
     // --- Internal Rendering Helpers ---
 
     private void setupRenderState() {
@@ -93,7 +99,10 @@ public class UIRenderImpl implements UIRenderInterface {
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
     }
 
-    private void drawRoundedRectInternal(float x, float y, float width, float height, float radius, int color) {
+    /**
+     * Draws a rectangle where each corner can have a different radius.
+     */
+    private void drawComplexRoundedRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL) {
         float alpha = ((color >> 24) & 0xFF) / 255.0F;
         float red   = ((color >> 16) & 0xFF) / 255.0F;
         float green = ((color >> 8) & 0xFF) / 255.0F;
@@ -101,95 +110,88 @@ public class UIRenderImpl implements UIRenderInterface {
 
         Matrix4f matrix = guiGraphics.pose().last().pose();
         setupRenderState();
-
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
 
-        float x1 = x + radius;
-        float y1 = y + radius;
-        float x2 = x + width - radius;
-        float y2 = y + height - radius;
+        // Inner safe rectangle (minus largest radius)
+        float maxR = Math.max(Math.max(rTL, rTR), Math.max(rBR, rBL));
+        // Clamp radii to 0..minDimension/2
+        float minDim = Math.min(width, height);
+        if (maxR > minDim/2) maxR = minDim/2;
+        // Note: For perfect clamping we should clamp each radius individually against its neighbors,
+        // but for UI usage this simple max clamp is usually sufficient.
 
-        // Center
+        float x1 = x + maxR;
+        float y1 = y + maxR;
+        float x2 = x + width - maxR;
+        float y2 = y + height - maxR;
+
+        // 1. Center Body
         addQuad(buffer, matrix, x1, y1, x2, y2, red, green, blue, alpha);
-        // Edges
-        addQuad(buffer, matrix, x1, y, x2, y1, red, green, blue, alpha); // Top
-        addQuad(buffer, matrix, x1, y2, x2, y + height, red, green, blue, alpha); // Bottom
-        addQuad(buffer, matrix, x, y1, x1, y2, red, green, blue, alpha); // Left
-        addQuad(buffer, matrix, x2, y1, x + width, y2, red, green, blue, alpha); // Right
 
-        // Corners
-        int segments = 16;
-        addCorner(buffer, matrix, x1, y1, radius, Math.PI, Math.PI * 1.5, segments, red, green, blue, alpha);
-        addCorner(buffer, matrix, x2, y1, radius, Math.PI * 1.5, Math.PI * 2.0, segments, red, green, blue, alpha);
-        addCorner(buffer, matrix, x2, y2, radius, 0, Math.PI * 0.5, segments, red, green, blue, alpha);
-        addCorner(buffer, matrix, x1, y2, radius, Math.PI * 0.5, Math.PI, segments, red, green, blue, alpha);
+        // 2. Edges
+        addQuad(buffer, matrix, x + rTL, y, x + width - rTR, y + maxR, red, green, blue, alpha); // Top
+        addQuad(buffer, matrix, x + rBL, y + height - maxR, x + width - rBR, y + height, red, green, blue, alpha); // Bottom
+        addQuad(buffer, matrix, x, y + rTL, x + maxR, y + height - rBL, red, green, blue, alpha); // Left
+        addQuad(buffer, matrix, x + width - maxR, y + rTR, x + width, y + height - rBR, red, green, blue, alpha); // Right
+
+        // 3. Corners
+        // Top-Left
+        if (rTL > 0) addCorner(buffer, matrix, x + rTL, y + rTL, rTL, Math.PI, Math.PI * 1.5, 8, red, green, blue, alpha);
+        else addQuad(buffer, matrix, x, y, x+maxR, y+maxR, red, green, blue, alpha); // Fill if sharp
+
+        // Top-Right
+        if (rTR > 0) addCorner(buffer, matrix, x + width - rTR, y + rTR, rTR, Math.PI * 1.5, Math.PI * 2.0, 8, red, green, blue, alpha);
+        else addQuad(buffer, matrix, x+width-maxR, y, x+width, y+maxR, red, green, blue, alpha);
+
+        // Bottom-Right
+        if (rBR > 0) addCorner(buffer, matrix, x + width - rBR, y + height - rBR, rBR, 0, Math.PI * 0.5, 8, red, green, blue, alpha);
+        else addQuad(buffer, matrix, x+width-maxR, y+height-maxR, x+width, y+height, red, green, blue, alpha);
+
+        // Bottom-Left
+        if (rBL > 0) addCorner(buffer, matrix, x + rBL, y + height - rBL, rBL, Math.PI * 0.5, Math.PI, 8, red, green, blue, alpha);
+        else addQuad(buffer, matrix, x, y+height-maxR, x+maxR, y+height, red, green, blue, alpha);
 
         BufferUploader.drawWithShader(buffer.buildOrThrow());
         RenderSystem.enableCull();
     }
 
-    /**
-     * Renders a hollow rounded rectangle (border).
-     * It constructs a "ring" mesh by defining an outer path and an inner path.
-     */
-    private void drawRoundedOutlineInternal(float x, float y, float width, float height, float radius, float thickness, int color) {
+    private void drawComplexRoundedOutline(float x, float y, float width, float height, int color, float thick, float rTL, float rTR, float rBR, float rBL) {
+        // Simplified approach: Draw 4 lines for edges and arcs for corners
+        // For a pixel-perfect outline with varying radii, signed distance fields are better,
+        // but here we simply draw the 8 primitive parts.
+
         float alpha = ((color >> 24) & 0xFF) / 255.0F;
-        float red   = ((color >> 16) & 0xFF) / 255.0F;
-        float green = ((color >> 8) & 0xFF) / 255.0F;
-        float blue  = (color & 0xFF) / 255.0F;
+        float r   = ((color >> 16) & 0xFF) / 255.0F;
+        float g = ((color >> 8) & 0xFF) / 255.0F;
+        float b  = (color & 0xFF) / 255.0F;
 
         Matrix4f matrix = guiGraphics.pose().last().pose();
         setupRenderState();
-
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
 
-        // Define outer boundary coords
-        float oLeft = x;
-        float oTop = y;
-        float oRight = x + width;
-        float oBottom = y + height;
+        // Top Line
+        addQuad(buffer, matrix, x + rTL, y, x + width - rTR, y + thick, r, g, b, alpha);
+        // Bottom Line
+        addQuad(buffer, matrix, x + rBL, y + height - thick, x + width - rBR, y + height, r, g, b, alpha);
+        // Left Line
+        addQuad(buffer, matrix, x, y + rTL, x + thick, y + height - rBL, r, g, b, alpha);
+        // Right Line
+        addQuad(buffer, matrix, x + width - thick, y + rTR, x + width, y + height - rBR, r, g, b, alpha);
 
-        // Define inner boundary coords
-        float iLeft = x + thickness;
-        float iTop = y + thickness;
-        float iRight = x + width - thickness;
-        float iBottom = y + height - thickness;
+        // Corners (Ring Segments)
+        if(rTL > 0) addCornerRing(buffer, matrix, x+rTL, y+rTL, rTL, Math.max(0, rTL-thick), Math.PI, Math.PI*1.5, 8, r, g, b, alpha);
+        else addQuad(buffer, matrix, x, y, x+thick, y+thick, r, g, b, alpha); // Square corner fill
 
-        // Ensure inner bounds don't invert
-        if (iLeft > iRight || iTop > iBottom) return;
+        if(rTR > 0) addCornerRing(buffer, matrix, x+width-rTR, y+rTR, rTR, Math.max(0, rTR-thick), Math.PI*1.5, Math.PI*2.0, 8, r, g, b, alpha);
+        else addQuad(buffer, matrix, x+width-thick, y, x+width, y+thick, r, g, b, alpha);
 
-        // Radii
-        float rOut = radius;
-        float rIn = Math.max(0, radius - thickness);
+        if(rBR > 0) addCornerRing(buffer, matrix, x+width-rBR, y+height-rBR, rBR, Math.max(0, rBR-thick), 0, Math.PI*0.5, 8, r, g, b, alpha);
+        else addQuad(buffer, matrix, x+width-thick, y+height-thick, x+width, y+height, r, g, b, alpha);
 
-        // Center coordinates for the 4 corners
-        float cx1 = oLeft + rOut;
-        float cy1 = oTop + rOut; // Top-Left center
-        float cx2 = oRight - rOut;
-        float cy2 = oTop + rOut; // Top-Right center
-        float cx3 = oRight - rOut;
-        float cy3 = oBottom - rOut; // Bottom-Right center
-        float cx4 = oLeft + rOut;
-        float cy4 = oBottom - rOut; // Bottom-Left center
-
-        // 1. Draw Linear Edges (Rectangles connecting the corners)
-        // Top Edge
-        addQuad(buffer, matrix, cx1, oTop, cx2, iTop, red, green, blue, alpha);
-        // Bottom Edge
-        addQuad(buffer, matrix, cx4, iBottom, cx3, oBottom, red, green, blue, alpha);
-        // Left Edge
-        addQuad(buffer, matrix, oLeft, cy1, iLeft, cy4, red, green, blue, alpha);
-        // Right Edge
-        addQuad(buffer, matrix, iRight, cy2, oRight, cy3, red, green, blue, alpha);
-
-        // 2. Draw Rounded Corners (Ring segments)
-        int segments = 16;
-        addCornerRing(buffer, matrix, cx1, cy1, rOut, rIn, Math.PI, Math.PI * 1.5, segments, red, green, blue, alpha); // TL
-        addCornerRing(buffer, matrix, cx2, cy2, rOut, rIn, Math.PI * 1.5, Math.PI * 2.0, segments, red, green, blue, alpha); // TR
-        addCornerRing(buffer, matrix, cx3, cy3, rOut, rIn, 0, Math.PI * 0.5, segments, red, green, blue, alpha); // BR
-        addCornerRing(buffer, matrix, cx4, cy4, rOut, rIn, Math.PI * 0.5, Math.PI, segments, red, green, blue, alpha); // BL
+        if(rBL > 0) addCornerRing(buffer, matrix, x+rBL, y+height-rBL, rBL, Math.max(0, rBL-thick), Math.PI*0.5, Math.PI, 8, r, g, b, alpha);
+        else addQuad(buffer, matrix, x, y+height-thick, x+thick, y+height, r, g, b, alpha);
 
         BufferUploader.drawWithShader(buffer.buildOrThrow());
         RenderSystem.enableCull();

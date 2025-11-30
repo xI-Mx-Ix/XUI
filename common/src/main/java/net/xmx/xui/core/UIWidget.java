@@ -5,22 +5,65 @@
 package net.xmx.xui.core;
 
 import net.xmx.xui.core.anim.AnimationManager;
-import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.StyleSheet;
 import net.xmx.xui.core.style.UIProperty;
 import net.xmx.xui.core.style.UIState;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
  * The base class for all UI components.
  * Handles layout resolution, event propagation, styling, animations, and hierarchy.
+ * Now features a generic obstruction system to handle overlaps like dropdowns or modals
+ * without hardcoded dependencies on specific implementation classes.
  *
  * @author xI-Mx-Ix
  */
 public abstract class UIWidget {
+
+    /**
+     * Interface for widgets that can obstruct interactions with underlying widgets.
+     * Examples: Open Dropdowns, Modal Dialogs, Tooltips.
+     */
+    public interface WidgetObstructor {
+        /**
+         * Checks if the given screen coordinates are covered/blocked by this widget's overlay.
+         *
+         * @param mouseX The absolute X coordinate of the mouse.
+         * @param mouseY The absolute Y coordinate of the mouse.
+         * @return true if the area is obstructed.
+         */
+        boolean isObstructing(double mouseX, double mouseY);
+    }
+
+    /**
+     * A thread-safe list of active obstructors in the UI system.
+     * Widgets registers themselves here when they open overlays.
+     */
+    private static final List<WidgetObstructor> globalObstructors = new CopyOnWriteArrayList<>();
+
+    /**
+     * Registers a widget as an active obstructor.
+     *
+     * @param obstructor The widget acting as an overlay.
+     */
+    public static void addObstructor(WidgetObstructor obstructor) {
+        if (!globalObstructors.contains(obstructor)) {
+            globalObstructors.add(obstructor);
+        }
+    }
+
+    /**
+     * Unregisters a widget from the obstruction list.
+     *
+     * @param obstructor The widget to remove.
+     */
+    public static void removeObstructor(WidgetObstructor obstructor) {
+        globalObstructors.remove(obstructor);
+    }
 
     // Geometry
     protected float x, y, width, height;
@@ -161,9 +204,36 @@ public abstract class UIWidget {
     }
 
     /**
+     * Checks if the given coordinates are obstructed by any active global overlay.
+     *
+     * @param mouseX The current mouse X.
+     * @param mouseY The current mouse Y.
+     * @return true if an active obstructor (like an open dropdown) is covering this point.
+     */
+    protected boolean isGlobalObstructed(double mouseX, double mouseY) {
+        for (WidgetObstructor obstructor : globalObstructors) {
+            // A widget does not obstruct itself
+            if (obstructor != this && obstructor.isObstructing(mouseX, mouseY)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Updates the internal hover state based on mouse position and visibility checks.
      */
     protected void updateHoverState(int mouseX, int mouseY) {
+        // If an overlay (dropdown) blocks this area, we are not hovered,
+        // unless we ARE the dropdown (handled in the check above via reference equality).
+        if (isGlobalObstructed(mouseX, mouseY)) {
+            if (isHovered) {
+                isHovered = false;
+                if (onMouseExit != null) onMouseExit.accept(this);
+            }
+            return;
+        }
+
         // The widget is only considered hovered if the mouse is over it AND
         // it is not visually hidden by a parent's scissor clip.
         boolean nowHovered = isMouseOver(mouseX, mouseY) && !isClippedByParent(mouseX, mouseY);
@@ -182,12 +252,20 @@ public abstract class UIWidget {
         // Do not process clicks if the widget is clipped by a parent container
         if (isClippedByParent(mouseX, mouseY)) return false;
 
-        // Propagate to children first (top-most visible first)
+        // If we did, a Root panel would see the Dropdown obstruction and block
+        // the traversal to the Dropdown itself.
+
+        // 1. Propagate to children first (top-most visible first)
+        // Children will perform their own obstruction checks.
         for (int i = children.size() - 1; i >= 0; i--) {
             if (children.get(i).mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
         }
+
+        // 2. Check Self
+        // Now we check if *this* widget is obstructed before processing its own click.
+        if (isGlobalObstructed(mouseX, mouseY)) return false;
 
         if (isHovered) {
             isFocused = true;
@@ -308,22 +386,6 @@ public abstract class UIWidget {
     public UIWidget setVisible(boolean visible) {
         this.isVisible = visible;
         return this;
-    }
-
-    protected void setXDirect(float x) {
-        this.x = x;
-    }
-
-    protected void setYDirect(float y) {
-        this.y = y;
-    }
-
-    protected void setWidthDirect(float width) {
-        this.width = width;
-    }
-
-    protected void setHeightDirect(float height) {
-        this.height = height;
     }
 
     public UIConstraint getXConstraint() {
