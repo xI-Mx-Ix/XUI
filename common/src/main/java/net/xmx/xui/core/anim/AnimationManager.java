@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core.anim;
 
 import net.xmx.xui.core.style.UIProperty;
@@ -7,6 +11,8 @@ import java.util.Map;
 /**
  * Manages value interpolation for UI properties.
  * It stores the current "live" animated values and moves them towards target values.
+ *
+ * @author xI-Mx-Ix
  */
 public class AnimationManager {
 

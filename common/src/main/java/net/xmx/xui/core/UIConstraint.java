@@ -1,7 +1,13 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core;
 
 /**
  * Functional interface for calculating a position or dimension dynamically.
+ *
+ * @author xI-Mx-Ix
  */
 @FunctionalInterface
 public interface UIConstraint {

@@ -1,7 +1,13 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core.style;
 
 /**
  * Static registry of common UI properties used by standard components.
+ *
+ * @author xI-Mx-Ix
  */
 public class Properties {
     // Colors

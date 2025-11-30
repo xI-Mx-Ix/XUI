@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIRenderInterface;
@@ -18,6 +22,8 @@ import java.util.Map;
  * - Customizable scrollbar appearance
  * - Smooth scroll animations
  * - Scissor clipping for content overflow
+ *
+ * @author xI-Mx-Ix
  */
 public class UIScrollPanel extends UIWidget {
 

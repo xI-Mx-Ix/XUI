@@ -1,8 +1,14 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core;
 
 /**
  * Abstract interface for UI rendering operations.
  * This abstraction allows the core library to remain independent of specific game engine classes.
+ *
+ * @author xI-Mx-Ix
  */
 public interface UIRenderInterface {
 

@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.impl;
 
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -14,6 +18,8 @@ import org.joml.Matrix4f;
  * Concrete implementation of the rendering interface.
  * This class handles the low-level rendering calls using the game's shader system,
  * Tesselator, and direct vertex buffer manipulation to draw UI elements.
+ *
+ * @author xI-Mx-Ix
  */
 public class UIRenderImpl implements UIRenderInterface {
 

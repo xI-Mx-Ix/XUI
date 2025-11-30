@@ -1,7 +1,13 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core;
 
 /**
  * Factory class containing standard layout constraints.
+ *
+ * @author xI-Mx-Ix
  */
 public final class Constraints {
 

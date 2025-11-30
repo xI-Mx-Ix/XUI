@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.test;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,6 +20,8 @@ import net.xmx.xui.impl.UIRenderImpl;
 /**
  * Example screen demonstrating the UIScrollPanel component.
  * Features a scrollable list of items with a permanent, thin scrollbar.
+ *
+ * @author xI-Mx-Ix
  */
 public class XUIScrollExampleScreen extends Screen {
 

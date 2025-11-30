@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIRenderInterface;
@@ -9,6 +13,8 @@ import net.xmx.xui.core.style.UIState;
  * A generic container component (Panel).
  * It supports a background color, rounded corners, and a configurable border.
  * It is capable of holding children widgets.
+ *
+ * @author xI-Mx-Ix
  */
 public class UIPanel extends UIWidget {
 

@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.test;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,6 +19,8 @@ import net.xmx.xui.impl.UIRenderImpl;
 /**
  * Example screen demonstrating the Modern UI framework usage.
  * Features a clean, centered design with cohesive color scheme and subtle animations.
+ *
+ * @author xI-Mx-Ix
  */
 public class XUIExampleScreen extends Screen {
 

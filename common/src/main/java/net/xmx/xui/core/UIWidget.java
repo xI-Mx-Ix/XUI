@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core;
 
 import net.xmx.xui.core.anim.AnimationManager;
@@ -13,6 +17,8 @@ import java.util.function.Consumer;
 /**
  * The base class for all UI components.
  * Handles layout resolution, event propagation, styling, animations, and hierarchy.
+ *
+ * @author xI-Mx-Ix
  */
 public abstract class UIWidget {
 

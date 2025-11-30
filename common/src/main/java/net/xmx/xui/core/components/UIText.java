@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core.components;
 
 import net.minecraft.client.Minecraft;
@@ -10,6 +14,8 @@ import net.xmx.xui.core.style.UIState;
 /**
  * A basic text label component.
  * It automatically resizes itself to fit the text content.
+ *
+ * @author xI-Mx-Ix
  */
 public class UIText extends UIWidget {
 

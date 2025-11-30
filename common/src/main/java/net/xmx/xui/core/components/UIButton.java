@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIRenderInterface;
@@ -13,6 +17,8 @@ import net.xmx.xui.core.style.UIState;
  * - Rounded corners
  * - Text centering
  * - Configurable borders
+ *
+ * @author xI-Mx-Ix
  */
 public class UIButton extends UIWidget {
 

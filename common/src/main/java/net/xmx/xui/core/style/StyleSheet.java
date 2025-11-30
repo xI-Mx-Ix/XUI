@@ -1,3 +1,7 @@
+/*
+ * This file is part of XUI.
+ * Licensed under MIT license.
+ */
 package net.xmx.xui.core.style;
 
 import java.util.HashMap;
@@ -6,6 +10,8 @@ import java.util.Map;
 /**
  * Holds the styling rules for a widget across different states.
  * Acts as a local CSS definition for a component.
+ *
+ * @author xI-Mx-Ix
  */
 public class StyleSheet {
 
