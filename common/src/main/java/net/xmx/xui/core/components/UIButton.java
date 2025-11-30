@@ -71,9 +71,6 @@ public class UIButton extends UIWidget {
         float adjX = x - (scaledW - width) / 2.0f;
         float adjY = y - (scaledH - height) / 2.0f;
 
-        // 3. Draw Shadow (Fake depth)
-        renderer.drawRect(adjX + 2, adjY + 2, scaledW, scaledH, 0x40000000, radius);
-
         // 4. Draw Main Button Body
         renderer.drawRect(adjX, adjY, scaledW, scaledH, bgColor, radius);
 
