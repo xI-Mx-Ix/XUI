@@ -89,7 +89,7 @@ public class XUIExampleScreen extends Screen {
                 .setHeight(Constraints.pixel(buttonHeight));
 
         btn1.style()
-                .setTransitionSpeed(10.0f)
+                .setTransitionSpeed(20.0f)
                 .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, COLOR_ACCENT)
                 .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 8.0f)
                 .set(UIState.DEFAULT, Properties.SCALE, 1.0f)
@@ -106,7 +106,7 @@ public class XUIExampleScreen extends Screen {
                 .setHeight(Constraints.pixel(buttonHeight));
 
         btn2.style()
-                .setTransitionSpeed(10.0f)
+                .setTransitionSpeed(20.0f)
                 .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, 0x00000000)
                 .set(UIState.DEFAULT, Properties.BORDER_THICKNESS, 1.5f)
                 .set(UIState.DEFAULT, Properties.BORDER_COLOR, COLOR_ACCENT)
@@ -127,7 +127,7 @@ public class XUIExampleScreen extends Screen {
                 .setHeight(Constraints.pixel(buttonHeight));
 
         btn3.style()
-                .setTransitionSpeed(10.0f)
+                .setTransitionSpeed(20.0f)
                 .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, 0x00000000)
                 .set(UIState.DEFAULT, Properties.BORDER_THICKNESS, 1.5f)
                 .set(UIState.DEFAULT, Properties.BORDER_COLOR, COLOR_ACCENT)
@@ -148,7 +148,7 @@ public class XUIExampleScreen extends Screen {
                 .setHeight(Constraints.pixel(buttonHeight));
 
         btnClose.style()
-                .setTransitionSpeed(10.0f)
+                .setTransitionSpeed(20.0f)
                 .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, COLOR_DANGER)
                 .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 8.0f)
                 .set(UIState.DEFAULT, Properties.SCALE, 1.0f)

@@ -117,7 +117,7 @@ public class XUIScrollExampleScreen extends Screen {
             // Apply style with subtle active state
             // When clicked, the button uses the hover color (no flash) but shrinks in scale
             itemButton.style()
-                    .setTransitionSpeed(10.0f)
+                    .setTransitionSpeed(20.0f)
                     .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, bgColor)
                     .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 6.0f)
                     .set(UIState.DEFAULT, Properties.SCALE, 1.0f)
@@ -148,7 +148,7 @@ public class XUIScrollExampleScreen extends Screen {
                 .setHeight(Constraints.pixel(buttonHeight));
 
         btnTop.style()
-                .setTransitionSpeed(10.0f)
+                .setTransitionSpeed(20.0f)
                 .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, COLOR_ACCENT)
                 .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 8.0f)
                 .set(UIState.DEFAULT, Properties.SCALE, 1.0f)
@@ -167,7 +167,7 @@ public class XUIScrollExampleScreen extends Screen {
                 .setHeight(Constraints.pixel(buttonHeight));
 
         btnBottom.style()
-                .setTransitionSpeed(10.0f)
+                .setTransitionSpeed(20.0f)
                 .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, COLOR_ACCENT)
                 .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 8.0f)
                 .set(UIState.DEFAULT, Properties.SCALE, 1.0f)
@@ -186,7 +186,7 @@ public class XUIScrollExampleScreen extends Screen {
                 .setHeight(Constraints.pixel(buttonHeight));
 
         btnClose.style()
-                .setTransitionSpeed(10.0f)
+                .setTransitionSpeed(20.0f)
                 .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, COLOR_DANGER)
                 .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 8.0f)
                 .set(UIState.DEFAULT, Properties.SCALE, 1.0f)
