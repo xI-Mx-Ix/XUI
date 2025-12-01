@@ -5,13 +5,18 @@
 package net.xmx.xui.core.components;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.util.URLUtil;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A widget that parses basic Markdown syntax and renders it using native UI components.
@@ -19,10 +24,12 @@ import java.util.List;
  *
  * Supported features:
  * - Headers (#, ##, ###)
- * - Code Blocks (```)
+ * - Code Blocks (```) with Syntax Highlighting
  * - Blockquotes (>)
  * - Lists (- or *)
  * - Inline styles (**bold**, *italic*, `code`)
+ * - Horizontal Separators (---)
+ * - Clickable Links ([Text](URL))
  *
  * @author xI-Mx-Ix
  */
@@ -31,6 +38,15 @@ public class UIMarkdown extends UIPanel {
     private String rawMarkdown = "";
     private float currentLayoutY = 0;
     private final float contentWidth;
+
+    // Pattern for detecting Markdown links: [Label](Url)
+    private static final Pattern LINK_PATTERN = Pattern.compile("\\[(.*?)\\]\\((.*?)\\)");
+
+    // Pattern for detecting tokens in code blocks for syntax highlighting
+    // Captures: Strings, Comments, Keywords, Numbers
+    private static final Pattern CODE_TOKEN_PATTERN = Pattern.compile(
+            "(\".*?\"|'.*?'|//.*|/\\*[\\s\\S]*?\\*/|\\b(public|private|protected|class|interface|enum|extends|implements|void|int|float|double|boolean|char|String|return|if|else|for|while|do|switch|case|break|continue|new|null|true|false|this|super|static|final|abstract|synchronized|volatile|transient|import|package)\\b|\\b\\d+\\b)"
+    );
 
     /**
      * Constructs a Markdown viewer.
@@ -90,19 +106,22 @@ public class UIMarkdown extends UIPanel {
 
             // --- Standard Markdown parsing ---
             if (trimmed.isEmpty()) {
-                currentLayoutY += 10; // Paragraph spacing
+                currentLayoutY += 8; // Paragraph spacing
+            } else if (trimmed.equals("---") || trimmed.equals("***")) {
+                addSeparator();
             } else if (trimmed.startsWith("# ")) {
-                addHeader(parseInline(trimmed.substring(2)), 1.5f, ChatFormatting.GOLD);
+                addHeader(parseInline(trimmed.substring(2)), ChatFormatting.GOLD);
             } else if (trimmed.startsWith("## ")) {
-                addHeader(parseInline(trimmed.substring(3)), 1.2f, ChatFormatting.YELLOW);
+                addHeader(parseInline(trimmed.substring(3)), ChatFormatting.YELLOW);
             } else if (trimmed.startsWith("### ")) {
-                addHeader(parseInline(trimmed.substring(4)), 1.0f, ChatFormatting.AQUA);
+                addHeader(parseInline(trimmed.substring(4)), ChatFormatting.AQUA);
             } else if (trimmed.startsWith("> ")) {
                 addQuote(parseInline(trimmed.substring(2)));
             } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-                addListItem(parseInline(trimmed.substring(2)));
+                addListItem(trimmed.substring(2));
             } else {
-                addParagraph(parseInline(line));
+                // Use flow layout to handle inline links correctly
+                addFlowParagraph(line);
             }
         }
 
@@ -113,14 +132,26 @@ public class UIMarkdown extends UIPanel {
     // --- Widget Generators ---
 
     /**
-     * Helper to create a text widget that wraps correctly.
-     * Because the current UIText constructor defaults to non-wrapping for the first line
-     * and we cannot modify UIText, we create a widget with an empty first line
-     * and add the actual content as a second line with wrapping enabled.
-     *
-     * @param content     The text component to display.
-     * @param widthOffset The X offset (padding) to subtract from available width.
-     * @return A configured UIText widget.
+     * Adds a horizontal separator line.
+     */
+    private void addSeparator() {
+        currentLayoutY += 5;
+
+        UIPanel separator = new UIPanel();
+        separator.setX(Constraints.pixel(0))
+                .setY(Constraints.pixel(currentLayoutY))
+                .setWidth(Constraints.pixel(contentWidth))
+                .setHeight(Constraints.pixel(2)); // 2px thick line
+
+        separator.style().set(Properties.BACKGROUND_COLOR, 0xFF404040);
+
+        this.add(separator);
+        currentLayoutY += 10; // Height of separator + margin
+    }
+
+    /**
+     * Helper to create a text widget that wraps correctly using standard UIText logic.
+     * Used for headers and quotes where links are not prioritized.
      */
     private UIText createWrappingText(Component content, float widthOffset) {
         // 1. Create with empty string (Lines: [Empty, NoWrap])
@@ -139,7 +170,134 @@ public class UIMarkdown extends UIPanel {
         return widget;
     }
 
-    private void addHeader(Component text, float scaleIgnoredForNow, ChatFormatting color) {
+    /**
+     * Adds a paragraph using a "Flow Layout".
+     * Splits the line by links and words, positioning each segment manually
+     * to allow individual segments (links) to be clickable.
+     *
+     * @param rawText The full paragraph text.
+     */
+    private void addFlowParagraph(String rawText) {
+        Matcher matcher = LINK_PATTERN.matcher(rawText);
+        int lastIndex = 0;
+
+        // Current X position relative to the container for this paragraph flow
+        float cursorX = 0;
+        float fontHeight = Minecraft.getInstance().font.lineHeight;
+
+        while (matcher.find()) {
+            // 1. Text before the link
+            String preText = rawText.substring(lastIndex, matcher.start());
+            if (!preText.isEmpty()) {
+                cursorX = addFlowWords(preText, cursorX, fontHeight, false, null);
+            }
+
+            // 2. The Link itself
+            String label = matcher.group(1);
+            String url = matcher.group(2);
+            cursorX = addFlowWords(label, cursorX, fontHeight, true, url);
+
+            lastIndex = matcher.end();
+        }
+
+        // 3. Text after the last link
+        String remaining = rawText.substring(lastIndex);
+        if (!remaining.isEmpty()) {
+            addFlowWords(remaining, cursorX, fontHeight, false, null);
+        }
+
+        // After the flow is done, move the global layout Y down by one line height
+        // (plus any wrapping that happened inside addFlowWords)
+        currentLayoutY += fontHeight;
+    }
+
+    /**
+     * Helper to add words to the UI.
+     * Splits text by spaces and adds widgets word-by-word (or chunk-by-chunk),
+     * wrapping to the next line if the content width is exceeded.
+     *
+     * @param text     The text content.
+     * @param startX   The current X offset in the line.
+     * @param lineHeight The height of a line.
+     * @param isLink   Whether this segment is a clickable link.
+     * @param url      The URL target if isLink is true.
+     * @return The new X position after adding the text.
+     */
+    private float addFlowWords(String text, float startX, float lineHeight, boolean isLink, String url) {
+        // We split by spaces to perform simple word wrapping
+        String[] words = text.split("(?<=\\s)|(?=\\s)"); // Keep delimiters (spaces)
+
+        float currentX = startX;
+
+        for (String word : words) {
+            // Skip empty tokens
+            if (word.isEmpty()) continue;
+
+            // Parse styles (bold/italic/code)
+            Component wordComp = parseInline(word);
+            if (isLink) {
+                // Style links as Blue and Underlined
+                wordComp = wordComp.copy().withStyle(ChatFormatting.BLUE, ChatFormatting.UNDERLINE);
+            }
+
+            int wordWidth = Minecraft.getInstance().font.width(wordComp);
+
+            // Check if we need to wrap
+            if (currentX + wordWidth > contentWidth) {
+                currentX = 0; // Reset X
+                currentLayoutY += lineHeight; // Move Y down
+            }
+
+            // Create the widget for this word segment
+            addSegmentWidget(wordComp, currentX, currentLayoutY, wordWidth, lineHeight, isLink, url);
+            currentX += wordWidth;
+        }
+
+        return currentX;
+    }
+
+    /**
+     * Creates and adds a small text widget for a specific segment (word or link).
+     */
+    private void addSegmentWidget(Component content, float x, float y, int w, float h, boolean isLink, String url) {
+        UIText widget = new UIText(content);
+        widget.setX(Constraints.pixel(x));
+        widget.setY(Constraints.pixel(y));
+        widget.setWidth(Constraints.pixel(w));
+        // We set height slightly larger to ensure hitboxes work nicely
+        widget.setHeight(Constraints.pixel(h));
+
+        if (isLink && url != null) {
+            // Hover: Change cursor to Hand
+            widget.setOnMouseEnter(wgt -> {
+                long window = Minecraft.getInstance().getWindow().getWindow();
+                // Create a standard hand cursor
+                long cursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
+                GLFW.glfwSetCursor(window, cursor);
+            });
+
+            // Exit: Change cursor back to Arrow
+            widget.setOnMouseExit(wgt -> {
+                long window = Minecraft.getInstance().getWindow().getWindow();
+                long cursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
+                GLFW.glfwSetCursor(window, cursor);
+            });
+
+            // Click: Open URL
+            widget.setOnClick(wgt -> {
+                try {
+                    URLUtil.openURL(url);
+                } catch (Exception e) {
+                    System.err.println("Failed to open Markdown URL: " + url);
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        this.add(widget);
+    }
+
+    private void addHeader(Component text, ChatFormatting color) {
         // Since standard fonts don't support arbitrary scaling easily without matrix manipulation,
         // we use color and style to distinguish headers for now.
         MutableComponent styled = text.copy().withStyle(ChatFormatting.BOLD, color);
@@ -155,26 +313,17 @@ public class UIMarkdown extends UIPanel {
         currentLayoutY += widget.getHeight() + 2;
     }
 
-    private void addParagraph(Component text) {
-        UIText widget = createWrappingText(text, 0);
-
-        this.add(widget);
-        currentLayoutY += widget.getHeight();
-    }
-
     private void addQuote(Component text) {
         // Container for quote
         float padding = 4;
         float barWidth = 2;
         float quoteX = 10;
-        int fontHeight = net.minecraft.client.Minecraft.getInstance().font.lineHeight;
+        int fontHeight = Minecraft.getInstance().font.lineHeight;
 
         // Create the text widget first to measure it
         UIText textWidget = createWrappingText(text.copy().withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), quoteX + padding);
 
-        // FIX: The textWidget has an empty first line (~9px) that pushes text down.
         // We shift the widget UP by fontHeight to make the visible text start exactly at 'padding'.
-        // NOTE: Standard UI clipping usually doesn't clip negative relative coordinates unless scissor is strict.
         textWidget.setY(Constraints.pixel(padding - fontHeight));
         textWidget.layout();
 
@@ -209,7 +358,7 @@ public class UIMarkdown extends UIPanel {
         currentLayoutY += panelHeight + 5;
     }
 
-    private void addListItem(Component text) {
+    private void addListItem(String rawText) {
         float bulletWidth = 15;
 
         // Bullet point doesn't need wrapping, simple creation
@@ -219,14 +368,16 @@ public class UIMarkdown extends UIPanel {
         // Determine Y offset.
         // createWrappingText adds an empty line (~9px) at the start.
         // We align the bullet to the second line of the content widget (where text actually starts).
-        float fontHeight = net.minecraft.client.Minecraft.getInstance().font.lineHeight;
+        float fontHeight = Minecraft.getInstance().font.lineHeight;
         bullet.setY(Constraints.pixel(currentLayoutY + fontHeight));
-
-        UIText content = createWrappingText(text, bulletWidth);
-
         this.add(bullet);
-        this.add(content);
 
+        // For list items, we currently use simple wrapping.
+        // Advanced flow layout for list items with links requires handling indentation in addFlowParagraph,
+        // which is omitted here for brevity, but basic parsing is applied.
+        UIText content = createWrappingText(parseInline(rawText), bulletWidth);
+
+        this.add(content);
         currentLayoutY += content.getHeight();
     }
 
@@ -235,14 +386,14 @@ public class UIMarkdown extends UIPanel {
         for (String s : lines) sb.append(s).append("\n");
 
         String code = sb.toString();
-        int fontHeight = net.minecraft.client.Minecraft.getInstance().font.lineHeight;
+        int fontHeight = Minecraft.getInstance().font.lineHeight;
 
-        // Monospace-ish look (using standard font but grey)
-        Component text = Component.literal(code).withStyle(ChatFormatting.GRAY);
+        // Apply syntax highlighting
+        Component coloredCode = highlightCode(code);
 
         // Code blocks usually don't wrap, they scroll or clip.
         // For this implementation, we will allow wrapping via our helper.
-        UIText content = createWrappingText(text, 0);
+        UIText content = createWrappingText(coloredCode, 0);
 
         float padding = 6;
         // Height Correction: Subtract empty line height
@@ -269,6 +420,51 @@ public class UIMarkdown extends UIPanel {
         this.add(codePanel);
 
         currentLayoutY += totalHeight + 10;
+    }
+
+    /**
+     * Highlights code syntax using basic regex patterns.
+     *
+     * @param code The raw code string.
+     * @return A Component with colors applied to keywords, strings, etc.
+     */
+    private Component highlightCode(String code) {
+        MutableComponent result = Component.empty();
+        Matcher matcher = CODE_TOKEN_PATTERN.matcher(code);
+        int lastEnd = 0;
+
+        while (matcher.find()) {
+            // Append un-matched segment (plain text / symbols) as gray
+            String plain = code.substring(lastEnd, matcher.start());
+            if (!plain.isEmpty()) {
+                result.append(Component.literal(plain).withStyle(ChatFormatting.GRAY));
+            }
+
+            String token = matcher.group();
+            ChatFormatting color;
+
+            // Determine color based on token type
+            if (token.startsWith("\"") || token.startsWith("'")) {
+                color = ChatFormatting.GREEN; // Strings
+            } else if (token.startsWith("//") || token.startsWith("/*")) {
+                color = ChatFormatting.DARK_GRAY; // Comments
+            } else if (Character.isDigit(token.charAt(0))) {
+                color = ChatFormatting.BLUE; // Numbers
+            } else {
+                color = ChatFormatting.GOLD; // Keywords (public, void, etc.)
+            }
+
+            result.append(Component.literal(token).withStyle(color));
+            lastEnd = matcher.end();
+        }
+
+        // Append any remaining text after the last match
+        String tail = code.substring(lastEnd);
+        if (!tail.isEmpty()) {
+            result.append(Component.literal(tail).withStyle(ChatFormatting.GRAY));
+        }
+
+        return result;
     }
 
     /**

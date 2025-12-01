@@ -29,9 +29,6 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
     private final List<Component> options = new ArrayList<>();
 
-    // Tracks the animation progress (0.0f to 1.0f) for each option index
-    private final Map<Integer, Float> optionAnimators = new HashMap<>();
-
     private int selectedIndex = -1;
     private boolean isOpen = false;
     private Consumer<Integer> onSelected;
