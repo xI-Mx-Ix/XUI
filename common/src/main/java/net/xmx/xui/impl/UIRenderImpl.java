@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.UIRenderInterface;
 import org.joml.Matrix4f;
 
@@ -56,17 +57,71 @@ public class UIRenderImpl implements UIRenderInterface {
         drawComplexRoundedOutline(x, y, width, height, color, thickness, rTL, rTR, rBR, rBL);
     }
 
+    /**
+     * Draws a text component using the Minecraft FontRenderer.
+     *
+     * @param text   The Component to render.
+     * @param x      The absolute x-coordinate.
+     * @param y      The absolute y-coordinate.
+     * @param color  The base ARGB color.
+     * @param shadow True to render shadow.
+     */
     @Override
-    public void drawString(String text, float x, float y, int color, boolean shadow) {
+    public void drawText(Component text, float x, float y, int color, boolean shadow) {
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0, 0, 0.01f);
         guiGraphics.drawString(font, text, (int) x, (int) y, color, shadow);
         guiGraphics.pose().popPose();
     }
 
+    /**
+     * Splits the text component into lines based on the width and renders them sequentially.
+     *
+     * @param text   The Component to render.
+     * @param x      The absolute x-coordinate.
+     * @param y      The absolute y-coordinate.
+     * @param width  The maximum width.
+     * @param color  The base ARGB color.
+     * @param shadow True to render shadow.
+     */
     @Override
-    public int getStringWidth(String text) {
+    public void drawWrappedText(Component text, float x, float y, float width, int color, boolean shadow) {
+        if (width <= 0) return;
+
+        java.util.List<net.minecraft.util.FormattedCharSequence> lines = font.split(text, (int) width);
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0, 0, 0.01f);
+
+        for (int i = 0; i < lines.size(); i++) {
+            net.minecraft.util.FormattedCharSequence line = lines.get(i);
+            guiGraphics.drawString(font, line, (int) x, (int) (y + (i * font.lineHeight)), color, shadow);
+        }
+
+        guiGraphics.pose().popPose();
+    }
+
+    /**
+     * Measures the width of a Component.
+     *
+     * @param text The text to measure.
+     * @return The width in pixels.
+     */
+    @Override
+    public int getTextWidth(Component text) {
         return font.width(text);
+    }
+
+    /**
+     * Measures the vertical height required for wrapped text.
+     *
+     * @param text     The text to measure.
+     * @param maxWidth The wrapping width.
+     * @return The height in pixels.
+     */
+    @Override
+    public int getWordWrapHeight(Component text, int maxWidth) {
+        return font.wordWrapHeight(text, maxWidth);
     }
 
     @Override

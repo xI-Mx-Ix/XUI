@@ -4,6 +4,7 @@
  */
 package net.xmx.xui.core.components;
 
+import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
@@ -15,20 +16,37 @@ import net.xmx.xui.core.style.UIState;
  * - Animated background and border colors
  * - Animated scale (pop effect)
  * - Rounded corners
- * - Text centering
+ * - Text centering with Component support
  * - Configurable borders
  *
  * @author xI-Mx-Ix
  */
 public class UIButton extends UIWidget {
 
-    private String label;
+    private Component label;
 
+    /**
+     * Constructs a button with a string label (converted to Component.literal).
+     *
+     * @param label The text to display.
+     */
     public UIButton(String label) {
+        this(Component.literal(label));
+    }
+
+    /**
+     * Constructs a button with a Component label.
+     *
+     * @param label The component to display.
+     */
+    public UIButton(Component label) {
         this.label = label;
         setupModernStyles();
     }
 
+    /**
+     * Configures the default visual properties for the button states.
+     */
     private void setupModernStyles() {
         this.style()
                 .setTransitionSpeed(12.0f) // Fast, smooth animation (higher = faster)
@@ -80,17 +98,35 @@ public class UIButton extends UIWidget {
         }
 
         // 6. Draw Text (Centered)
-        int strWidth = renderer.getStringWidth(label);
+        // Uses renderer.getTextWidth() for Component width calculation
+        int strWidth = renderer.getTextWidth(label);
         int strHeight = renderer.getFontHeight();
 
         float textX = x + (width - strWidth) / 2.0f;
         float textY = y + (height - strHeight) / 2.0f + 1;
 
-        renderer.drawString(label, textX, textY, txtColor, true);
+        renderer.drawText(label, textX, textY, txtColor, true);
     }
 
-    public UIButton setLabel(String label) {
+    /**
+     * Updates the button label.
+     *
+     * @param label The new label component.
+     * @return This button instance.
+     */
+    public UIButton setLabel(Component label) {
         this.label = label;
+        return this;
+    }
+
+    /**
+     * Updates the button label with a string literal.
+     *
+     * @param label The new label string.
+     * @return This button instance.
+     */
+    public UIButton setLabel(String label) {
+        this.label = Component.literal(label);
         return this;
     }
 }

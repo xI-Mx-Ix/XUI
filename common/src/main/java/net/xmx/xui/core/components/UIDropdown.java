@@ -5,6 +5,7 @@
 package net.xmx.xui.core.components;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
@@ -20,12 +21,13 @@ import java.util.function.Consumer;
  * A Dropdown Widget (ComboBox) that displays a list of selectable options.
  * The header reacts to hover events by brightening, while the opened list maintains
  * a static background color until individual options are hovered.
+ * Supports Component-based options.
  *
  * @author xI-Mx-Ix
  */
 public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
-    private final List<String> options = new ArrayList<>();
+    private final List<Component> options = new ArrayList<>();
 
     // Tracks the animation progress (0.0f to 1.0f) for each option index
     private final Map<Integer, Float> optionAnimators = new HashMap<>();
@@ -42,7 +44,12 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     // Cache for calculated overlay position to check for obstructions
     private float overlayY, overlayHeight;
 
-    public UIDropdown(List<String> options) {
+    /**
+     * Constructs a dropdown with a list of Components.
+     *
+     * @param options The list of options to display.
+     */
+    public UIDropdown(List<Component> options) {
         this.options.addAll(options);
         if (!this.options.isEmpty()) {
             this.selectedIndex = 0;
@@ -109,7 +116,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         if (selectedIndex >= 0 && selectedIndex < options.size()) {
             float textY = y + (height - renderer.getFontHeight()) / 2.0f;
-            renderer.drawString(options.get(selectedIndex), x + 5, textY, textColor, false);
+            renderer.drawText(options.get(selectedIndex), x + 5, textY, textColor, false);
         }
 
         drawArrow(renderer, x + width - 12, y + (height - 5) / 2.0f, arrowColor, isOpen);
@@ -183,9 +190,9 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 renderer.drawRect(x, optY, width, optionHeight, baseHoverColor, 0);
             }
 
-            String text = options.get(i);
+            Component text = options.get(i);
             float textY = optY + (optionHeight - renderer.getFontHeight()) / 2.0f;
-            renderer.drawString(text, x + 5, textY, textColor, false);
+            renderer.drawText(text, x + 5, textY, textColor, false);
         }
     }
 

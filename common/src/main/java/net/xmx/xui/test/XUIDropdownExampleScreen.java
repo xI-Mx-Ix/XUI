@@ -77,8 +77,13 @@ public class XUIDropdownExampleScreen extends Screen {
         UIText label = new UIText("Select Mode:");
         label.setX(Constraints.pixel(10)).setY(Constraints.center());
         
-        // THE DROPDOWN
-        UIDropdown dropdown = new UIDropdown(Arrays.asList("Survival Mode", "Creative Mode", "Spectator Mode", "Adventure Mode"));
+        UIDropdown dropdown = new UIDropdown(Arrays.asList(
+                Component.literal("Survival Mode"),
+                Component.literal("Creative Mode"),
+                Component.literal("Spectator Mode"),
+                Component.literal("Adventure Mode")
+        ));
+
         dropdown.setX(Constraints.anchorEnd(10)) // Align right
                 .setY(Constraints.center())
                 .setWidth(Constraints.pixel(150))

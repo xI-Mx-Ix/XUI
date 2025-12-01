@@ -4,9 +4,12 @@
  */
 package net.xmx.xui.core;
 
+import net.minecraft.network.chat.Component;
+
 /**
  * Abstract interface for UI rendering operations.
  * This abstraction allows the core library to remain independent of specific game engine classes.
+ * Updated to support Minecraft's Component system for rich text and multi-line rendering.
  *
  * @author xI-Mx-Ix
  */
@@ -44,23 +47,36 @@ public interface UIRenderInterface {
     void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL);
 
     /**
-     * Draws a string on the screen.
+     * Draws a text component on the screen.
+     * Supports styling, colors, and translations defined within the Component.
      *
-     * @param text   The text content to render.
+     * @param text   The Component to render.
      * @param x      The absolute x-coordinate.
      * @param y      The absolute y-coordinate.
-     * @param color  The ARGB color value.
+     * @param color  The ARGB color value (may be overridden by Component styles).
      * @param shadow Whether to render a drop shadow behind the text.
      */
-    void drawString(String text, float x, float y, int color, boolean shadow);
+    void drawText(Component text, float x, float y, int color, boolean shadow);
 
     /**
-     * Calculates the width of the given text in pixels.
+     * Draws text that automatically wraps to the next line if it exceeds the specified width.
+     *
+     * @param text   The Component to render.
+     * @param x      The absolute x-coordinate.
+     * @param y      The absolute y-coordinate.
+     * @param width  The maximum width allowed before wrapping.
+     * @param color  The ARGB color value.
+     * @param shadow Whether to render a drop shadow.
+     */
+    void drawWrappedText(Component text, float x, float y, float width, int color, boolean shadow);
+
+    /**
+     * Calculates the width of the given text component in pixels.
      *
      * @param text The text to measure.
      * @return The width in pixels.
      */
-    int getStringWidth(String text);
+    int getTextWidth(Component text);
 
     /**
      * Returns the height of the standard font line.
@@ -68,6 +84,15 @@ public interface UIRenderInterface {
      * @return The font height in pixels.
      */
     int getFontHeight();
+
+    /**
+     * Calculates the total height required to render the text with the given maximum width constraint.
+     *
+     * @param text     The text to measure.
+     * @param maxWidth The wrapping width.
+     * @return The total height in pixels.
+     */
+    int getWordWrapHeight(Component text, int maxWidth);
 
     /**
      * Enables a scissor test to clip rendering to a specific screen region.
