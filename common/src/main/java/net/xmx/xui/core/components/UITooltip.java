@@ -22,14 +22,15 @@ import java.util.List;
  * - Dynamic content resizing.
  * - Configurable timing and offsets.
  *
- * Usage: Create the tooltip passing the target widget, then add the tooltip
+ * Usage: Create the tooltip, set the target via {@link #setTarget(UIWidget)},
+ * set content via {@link #setContent(Component)}, then add the tooltip
  * to the root container (not the target itself) to ensure proper Z-layering.
  *
  * @author xI-Mx-Ix
  */
 public class UITooltip extends UIPanel {
 
-    private final UIWidget target;
+    private UIWidget target;
     private final UIText contentText;
 
     // Timing Configuration (in seconds for consistency with XUI dt)
@@ -56,14 +57,12 @@ public class UITooltip extends UIPanel {
     private float currentOpacity = 0.0f;
 
     /**
-     * Constructs a tooltip linked to a specific target widget.
-     *
-     * @param target The widget that triggers this tooltip.
-     * @param text   The text content (supports wrapping if width is constrained).
+     * Constructs an empty tooltip.
+     * You must call {@link #setTarget(UIWidget)} and {@link #setContent(Component)}
+     * before it will function.
      */
-    public UITooltip(UIWidget target, Component text) {
-        this.target = target;
-        this.contentText = new UIText(text);
+    public UITooltip() {
+        this.contentText = new UIText();
 
         // Setup internal text widget
         this.contentText.setX(Constraints.pixel(padding));
@@ -82,21 +81,50 @@ public class UITooltip extends UIPanel {
     }
 
     /**
-     * Constructs a tooltip with simple string content.
+     * Sets the widget that triggers this tooltip.
+     *
+     * @param target The target widget.
+     * @return This tooltip instance.
      */
-    public UITooltip(UIWidget target, String text) {
-        this(target, Component.literal(text));
+    public UITooltip setTarget(UIWidget target) {
+        this.target = target;
+        return this;
     }
 
     /**
-     * Constructs a tooltip with multi-line content.
+     * Sets the content of the tooltip (supports wrapping).
+     *
+     * @param text The component text.
+     * @return This tooltip instance.
      */
-    public UITooltip(UIWidget target, List<Component> lines) {
-        this(target, Component.empty());
+    public UITooltip setContent(Component text) {
+        this.contentText.setText(text);
+        return this;
+    }
+
+    /**
+     * Sets the content of the tooltip from a string literal.
+     *
+     * @param text The string text.
+     * @return This tooltip instance.
+     */
+    public UITooltip setContent(String text) {
+        this.contentText.setText(text);
+        return this;
+    }
+
+    /**
+     * Sets the content of the tooltip with multiple lines.
+     *
+     * @param lines List of components.
+     * @return This tooltip instance.
+     */
+    public UITooltip setLines(List<Component> lines) {
         this.contentText.setText(Component.empty()); // Clear initial
         for (Component line : lines) {
             this.contentText.addText(line, false);
         }
+        return this;
     }
 
     /**
@@ -131,8 +159,6 @@ public class UITooltip extends UIPanel {
     @Override
     public void layout() {
         // 1. Let the text calculate its required size first
-        // We temporarily allow the text to be unbounded or constrained by a max tooltip width if desired
-        // For this implementation, we allow auto-width based on text.
         this.contentText.layout();
 
         // 2. Resize this panel to fit the text plus padding
@@ -148,6 +174,9 @@ public class UITooltip extends UIPanel {
 
     @Override
     public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks) {
+        // If no target is set, do not process logic
+        if (target == null) return;
+
         // Update Logic
         updateState(partialTicks);
 
@@ -160,7 +189,6 @@ public class UITooltip extends UIPanel {
         calculateSmartPosition(mouseX, mouseY);
 
         // Apply Opacity to Style for rendering
-        // We override the style's opacity property dynamically for the render pass
         float previousOpacity = style().getValue(UIState.DEFAULT, Properties.OPACITY);
         style().set(UIState.DEFAULT, Properties.OPACITY, currentOpacity);
 
@@ -190,9 +218,6 @@ public class UITooltip extends UIPanel {
 
     private void updateState(float dt) {
         // Check if target is currently hovered
-        // We access the boolean flag directly or via method if strictly encapsulated
-        // Assuming UIWidget has public boolean isHovered or we track it via listener.
-        // Since we are inside the UI framework package, we might access protected fields or use the public accessor.
         boolean targetHovered = target.isVisible() && isMouseOverTarget();
 
         switch (state) {
@@ -259,27 +284,16 @@ public class UITooltip extends UIPanel {
 
     /**
      * Checks if the mouse is currently within the target widget's bounds.
-     * We need the current global mouse position, which isn't stored in the widget state.
-     * We rely on the `render` method receiving correct mouse coordinates.
      */
     private boolean isMouseOverTarget() {
-        // This is a slight approximation. The most accurate way is if the Target widget
-        // exposes an "isHovered" getter that was updated in its own render/update cycle.
-        // We will assume the target was updated before the tooltip in the render loop.
-        
-        // Reflection or access to protected field 'isHovered' in UIWidget
-        // For this implementation, we'll assume the target has an accessible method
-        // or we check bounds manually if we have reference to mouse from render().
-        // Since render() passes mouseX/Y, let's just use the target's bounds check.
         double mx = Minecraft.getInstance().mouseHandler.xpos() * (double)Minecraft.getInstance().getWindow().getGuiScaledWidth() / (double)Minecraft.getInstance().getWindow().getScreenWidth();
         double my = Minecraft.getInstance().mouseHandler.ypos() * (double)Minecraft.getInstance().getWindow().getGuiScaledHeight() / (double)Minecraft.getInstance().getWindow().getScreenHeight();
-        
+
         return target.isMouseOver(mx, my);
     }
 
     /**
-     * Calculates the position of the tooltip based on mouse coordinates,
-     * ensuring it stays within the game window.
+     * Calculates the position of the tooltip based on mouse coordinates.
      */
     private void calculateSmartPosition(int mouseX, int mouseY) {
         int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
@@ -303,24 +317,14 @@ public class UITooltip extends UIPanel {
         if (newY < 5) newY = 5;
 
         // Update constraints directly for the rendering pass
-        // We don't use setX/setY with constraints here because we want raw pixel positioning
-        // bypassing relative layout logic for this frame.
         this.x = newX;
         this.y = newY;
-        
-        // We also need to update children positions relative to new X/Y
-        // Since UIPanel draws children based on its x/y, we just need to ensure layout()
-        // has run at least once to set relative offsets, then update absolute child positions.
+
+        // Update children positions relative to new X/Y
         for (UIWidget child : children) {
-            // Re-calculate child absolute position based on new parent x/y
-            // This is a simplified manual update since we aren't calling full layout() per frame
-            float childRelX = child.getX() - (this.x - (mouseX + offsetX)); // This logic depends on previous frame, tricky.
-            
-            // Safer approach: Just re-run layout for self with fixed pixel constraints
-            // This is cheap enough for a single tooltip.
             this.xConstraint = Constraints.pixel(newX);
             this.yConstraint = Constraints.pixel(newY);
-            super.layout(); 
+            super.layout();
         }
     }
 

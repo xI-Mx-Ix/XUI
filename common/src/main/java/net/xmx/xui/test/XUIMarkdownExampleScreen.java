@@ -101,10 +101,8 @@ public class XUIMarkdownExampleScreen extends Screen {
                 .setWidth(Constraints.pixel(460))
                 .setHeight(Constraints.pixel(360)); // Leave some margin
 
-        // Markdown Widget
-        // NOTE: We pass the width of the ScrollPanel (minus padding) to the Markdown widget
-        // so it knows exactly where to wrap text.
-        UIMarkdown markdown = new UIMarkdown(440); // 460 - padding
+        UIMarkdown markdown = new UIMarkdown();
+        markdown.setContentWidth(440);
         markdown.setMarkdown(SAMPLE_MARKDOWN);
 
         // Add to hierarchy

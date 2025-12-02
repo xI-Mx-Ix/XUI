@@ -192,8 +192,6 @@ public class UIScrollPanel extends UIWidget {
      */
     private void updateScrollbarHoverState(int mouseX, int mouseY) {
         isScrollbarHovered = isScrollable() && isPointOnScrollbar(mouseX, mouseY);
-        // We do not need to trigger fade-in here since it is always visible,
-        // but we keep the method for potential interaction states.
         if (isScrollbarHovered || isDraggingScrollbar) {
             showScrollbar();
         }

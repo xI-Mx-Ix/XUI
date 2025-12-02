@@ -26,21 +26,11 @@ public class UIButton extends UIWidget {
     private Component label;
 
     /**
-     * Constructs a button with a string label (converted to Component.literal).
-     *
-     * @param label The text to display.
+     * Constructs a button with default styles and an empty label.
+     * Content should be set using {@link #setLabel(Component)} or {@link #setLabel(String)}.
      */
-    public UIButton(String label) {
-        this(Component.literal(label));
-    }
-
-    /**
-     * Constructs a button with a Component label.
-     *
-     * @param label The component to display.
-     */
-    public UIButton(Component label) {
-        this.label = label;
+    public UIButton() {
+        this.label = Component.empty();
         setupModernStyles();
     }
 

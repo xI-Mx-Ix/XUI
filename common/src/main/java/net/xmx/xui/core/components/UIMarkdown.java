@@ -37,7 +37,7 @@ public class UIMarkdown extends UIPanel {
 
     private String rawMarkdown = "";
     private float currentLayoutY = 0;
-    private final float contentWidth;
+    private float contentWidth = 200.0f; // Default width
 
     // Pattern for detecting Markdown links: [Label](Url)
     private static final Pattern LINK_PATTERN = Pattern.compile("\\[(.*?)\\]\\((.*?)\\)");
@@ -49,16 +49,29 @@ public class UIMarkdown extends UIPanel {
     );
 
     /**
-     * Constructs a Markdown viewer.
-     *
-     * @param contentWidth The fixed width available for text wrapping.
-     *                     Important for correct height calculation inside ScrollPanels.
+     * Constructs a Markdown viewer with default settings.
+     * Use {@link #setContentWidth(float)} to define wrap width and {@link #setMarkdown(String)} to set content.
      */
-    public UIMarkdown(float contentWidth) {
-        this.contentWidth = contentWidth;
+    public UIMarkdown() {
         // Transparent background by default
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
+    }
+
+    /**
+     * Sets the fixed width available for text wrapping.
+     * Important for correct height calculation inside ScrollPanels.
+     *
+     * @param width The content width in pixels.
+     * @return This widget.
+     */
+    public UIMarkdown setContentWidth(float width) {
+        this.contentWidth = width;
+        this.setWidth(Constraints.pixel(width));
+        if (!rawMarkdown.isEmpty()) {
+            rebuild(); // Rebuild layout if content exists
+        }
+        return this;
     }
 
     /**
@@ -156,7 +169,8 @@ public class UIMarkdown extends UIPanel {
     private UIText createWrappingText(Component content, float widthOffset) {
         // 1. Create with empty string (Lines: [Empty, NoWrap])
         // This acts as a small top padding (line height ~9px)
-        UIText widget = new UIText(Component.empty());
+        UIText widget = new UIText();
+        widget.addText(Component.empty());
 
         // 2. Add actual content with wrapping enabled (Lines: [Empty, NoWrap], [Content, Wrap])
         widget.addText(content, true);
@@ -260,7 +274,9 @@ public class UIMarkdown extends UIPanel {
      * Creates and adds a small text widget for a specific segment (word or link).
      */
     private void addSegmentWidget(Component content, float x, float y, int w, float h, boolean isLink, String url) {
-        UIText widget = new UIText(content);
+        UIText widget = new UIText();
+        widget.setText(content);
+
         widget.setX(Constraints.pixel(x));
         widget.setY(Constraints.pixel(y));
         widget.setWidth(Constraints.pixel(w));
@@ -362,7 +378,8 @@ public class UIMarkdown extends UIPanel {
         float bulletWidth = 15;
 
         // Bullet point doesn't need wrapping, simple creation
-        UIText bullet = new UIText("•");
+        UIText bullet = new UIText();
+        bullet.setText("•");
         bullet.setX(Constraints.pixel(5));
 
         // Determine Y offset.

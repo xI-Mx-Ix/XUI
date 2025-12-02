@@ -42,21 +42,10 @@ public class UIText extends UIWidget {
     private boolean shadow = true;
 
     /**
-     * Constructs a text widget with an initial literal string (no wrapping).
-     *
-     * @param text The initial text.
+     * Constructs a text widget with no initial content.
+     * Use {@link #setText(Component)} or {@link #addText(Component)} to populate.
      */
-    public UIText(String text) {
-        this(Component.literal(text));
-    }
-
-    /**
-     * Constructs a text widget with an initial component (no wrapping).
-     *
-     * @param text The initial component.
-     */
-    public UIText(Component text) {
-        this.addText(text, false);
+    public UIText() {
         this.style().set(Properties.TEXT_COLOR, 0xFFFFFFFF);
     }
 
@@ -84,7 +73,7 @@ public class UIText extends UIWidget {
     }
 
     /**
-     * Clears all existing text and sets a single new line.
+     * Clears all existing text and sets a single new line (no wrap).
      *
      * @param text The new text.
      * @return This widget instance.
@@ -94,7 +83,7 @@ public class UIText extends UIWidget {
     }
 
     /**
-     * Clears all existing text and sets a single new line.
+     * Clears all existing text and sets a single new line (no wrap).
      *
      * @param text The new component.
      * @return This widget instance.

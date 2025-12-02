@@ -59,7 +59,8 @@ public class XUITooltipExampleScreen extends Screen {
         root.add(contentPanel);
 
         // Title
-        UIText title = new UIText("Tooltip Showcase");
+        UIText title = new UIText();
+        title.setText("Tooltip Showcase");
         title.setCentered(true)
                 .setX(Constraints.center())
                 .setY(Constraints.pixel(20))
@@ -71,37 +72,44 @@ public class XUITooltipExampleScreen extends Screen {
         List<UITooltip> tooltips = new ArrayList<>();
 
         // --- Example 1: Simple Tooltip ---
-        UIButton btnSimple = new UIButton("Simple Tooltip");
+        UIButton btnSimple = new UIButton();
+        btnSimple.setLabel("Simple Tooltip");
         btnSimple.setX(Constraints.center())
                 .setY(Constraints.pixel(60))
                 .setWidth(Constraints.pixel(200))
                 .setHeight(Constraints.pixel(30));
 
-        UITooltip tipSimple = new UITooltip(btnSimple, "Just a basic string tooltip.");
+        UITooltip tipSimple = new UITooltip();
+        tipSimple.setTarget(btnSimple);
+        tipSimple.setContent("Just a basic string tooltip.");
         tooltips.add(tipSimple);
         contentPanel.add(btnSimple);
 
         // --- Example 2: Fast Tooltip (No Delay) ---
-        UIButton btnInstant = new UIButton("Instant Fade");
+        UIButton btnInstant = new UIButton();
+        btnInstant.setLabel("Instant Fade");
         btnInstant.setX(Constraints.center())
                 .setY(Constraints.pixel(110))
                 .setWidth(Constraints.pixel(200))
                 .setHeight(Constraints.pixel(30));
 
-        UITooltip tipInstant = new UITooltip(btnInstant, "I appear immediately!")
+        UITooltip tipInstant = new UITooltip();
+        tipInstant.setTarget(btnInstant)
+                .setContent("I appear immediately!")
                 .setDelay(0.0f)
                 .setFadeTimes(0.1f, 0.1f); // Fast fade
-        
+
         // Custom styling for this tooltip
         tipInstant.style()
                 .set(Properties.BACKGROUND_COLOR, 0xFF003300) // Green tint
                 .set(Properties.BORDER_COLOR, 0xFF00FF00);
-        
+
         tooltips.add(tipInstant);
         contentPanel.add(btnInstant);
 
         // --- Example 3: Rich Text / Multi-line ---
-        UIButton btnRich = new UIButton("Rich Content");
+        UIButton btnRich = new UIButton();
+        btnRich.setLabel("Rich Content");
         btnRich.setX(Constraints.center())
                 .setY(Constraints.pixel(160))
                 .setWidth(Constraints.pixel(200))
@@ -115,23 +123,28 @@ public class XUITooltipExampleScreen extends Screen {
         richLines.add(Component.literal(" +50 Strength").withStyle(ChatFormatting.RED));
         richLines.add(Component.literal(" +10 Speed").withStyle(ChatFormatting.BLUE));
 
-        UITooltip tipRich = new UITooltip(btnRich, richLines)
+        UITooltip tipRich = new UITooltip();
+        tipRich.setTarget(btnRich)
+                .setLines(richLines)
                 .setDelay(0.3f);
-        
+
         tooltips.add(tipRich);
         contentPanel.add(btnRich);
 
         // --- Example 4: Corner Test (Smart Positioning) ---
-        UIButton btnCorner = new UIButton("Corner Test");
+        UIButton btnCorner = new UIButton();
+        btnCorner.setLabel("Corner Test");
         btnCorner.setX(Constraints.anchorEnd(10))
                 .setY(Constraints.anchorEnd(10)) // Bottom right of panel
                 .setWidth(Constraints.pixel(100))
                 .setHeight(Constraints.pixel(30));
-        
+
         // Positioned inside the panel
         contentPanel.add(btnCorner);
 
-        UITooltip tipCorner = new UITooltip(btnCorner, "I should flip to the left/up so I don't go off screen!");
+        UITooltip tipCorner = new UITooltip();
+        tipCorner.setTarget(btnCorner)
+                .setContent("I should flip to the left/up so I don't go off screen!");
         tooltips.add(tipCorner);
 
         // 3. Add Tooltips to Root LAST

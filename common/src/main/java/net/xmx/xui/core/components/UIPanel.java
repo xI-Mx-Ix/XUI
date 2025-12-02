@@ -18,6 +18,9 @@ import net.xmx.xui.core.style.UIState;
  */
 public class UIPanel extends UIWidget {
 
+    /**
+     * Constructs a panel with default transparent black background.
+     */
     public UIPanel() {
         // Set default styles for a panel
         this.style()
@@ -44,7 +47,7 @@ public class UIPanel extends UIWidget {
         // or fully covering the area. Standard panels usually draw background over the full area
         // and border on top/inset. Our render implementation handles the border as an inset frame,
         // so we can draw the background safely.
-        
+
         // To prevent the background from overlapping the border antialiasing or transparency weirdly,
         // we usually draw the background slightly smaller if the border is very thick, 
         // but for standard UI, drawing the full background rect underneath is standard.

@@ -37,59 +37,63 @@ public class XUITextExampleScreen extends Screen {
         // 1. Root Container
         root = new UIPanel();
         root.setWidth(Constraints.pixel(this.width))
-            .setHeight(Constraints.pixel(this.height));
+                .setHeight(Constraints.pixel(this.height));
         root.style().set(Properties.BACKGROUND_COLOR, 0xFF101010);
 
         // 2. Main Paper/Card Panel
         UIPanel paperPanel = new UIPanel();
         paperPanel.setX(Constraints.center())
-                  .setY(Constraints.center())
-                  .setWidth(Constraints.pixel(400))
-                  .setHeight(Constraints.pixel(350));
+                .setY(Constraints.center())
+                .setWidth(Constraints.pixel(400))
+                .setHeight(Constraints.pixel(350));
 
         paperPanel.style()
-                  .set(Properties.BACKGROUND_COLOR, 0xFF252525)
-                  .set(Properties.BORDER_RADIUS, 8.0f)
-                  .set(Properties.BORDER_COLOR, 0xFF404040)
-                  .set(Properties.BORDER_THICKNESS, 1.0f);
+                .set(Properties.BACKGROUND_COLOR, 0xFF252525)
+                .set(Properties.BORDER_RADIUS, 8.0f)
+                .set(Properties.BORDER_COLOR, 0xFF404040)
+                .set(Properties.BORDER_THICKNESS, 1.0f);
 
         // --- WIDGET 1: Simple Header (Single Line, Centered) ---
-        UIText header = new UIText(Component.literal("Update Changelog").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        UIText header = new UIText();
+        header.setText(Component.literal("Update Changelog").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         header.setCentered(true)
-              .setX(Constraints.center())
-              .setY(Constraints.pixel(20));
+                .setX(Constraints.center())
+                .setY(Constraints.pixel(20));
 
         // --- WIDGET 2: Multi-line List (Manual lines, No wrapping) ---
         // This widget automatically sizes its height based on added lines.
-        UIText featureList = new UIText(Component.literal("New Features:").withStyle(ChatFormatting.UNDERLINE));
-        
+        UIText featureList = new UIText();
+        featureList.setText(Component.literal("New Features:").withStyle(ChatFormatting.UNDERLINE));
+
         featureList.addText(Component.literal("• Added multi-line text support").withStyle(ChatFormatting.GREEN))
-                   .addText(Component.literal("• Integrated Minecraft Components").withStyle(ChatFormatting.AQUA))
-                   .addText(Component.literal("• Dynamic height calculation").withStyle(ChatFormatting.YELLOW));
+                .addText(Component.literal("• Integrated Minecraft Components").withStyle(ChatFormatting.AQUA))
+                .addText(Component.literal("• Dynamic height calculation").withStyle(ChatFormatting.YELLOW));
 
         featureList.setX(Constraints.pixel(20))
-                   .setY(Constraints.sibling(header, 30, true)); // Position below header
+                .setY(Constraints.sibling(header, 30, true)); // Position below header
 
         // --- WIDGET 3: Mixed Wrapping (Introduction + Long Text) ---
         // We set a fixed width constraint so the wrapping knows when to break lines.
-        UIText description = new UIText(Component.literal("Technical Details:").withStyle(ChatFormatting.RED));
+        UIText description = new UIText();
+        description.setText(Component.literal("Technical Details:").withStyle(ChatFormatting.RED));
 
         // Add a long paragraph with wrapping enabled (true)
         String longLorem = "The UIText component now supports an internal list of lines. " +
-                           "You can mix standard lines with auto-wrapping lines in the same widget. " +
-                           "The height of the widget is recalculated automatically based on the font renderer.";
-        
+                "You can mix standard lines with auto-wrapping lines in the same widget. " +
+                "The height of the widget is recalculated automatically based on the font renderer.";
+
         description.addText(Component.literal(longLorem).withStyle(ChatFormatting.GRAY), true);
-        
+
         // Add another line without wrapping (might overflow if too long, but useful for signatures etc)
         description.addText(Component.literal("End of report.").withStyle(ChatFormatting.ITALIC, ChatFormatting.DARK_GRAY), false);
 
         description.setX(Constraints.pixel(20))
-                   .setY(Constraints.sibling(featureList, 20, true))
-                   .setWidth(Constraints.pixel(360)); // Restrict width to force wrapping inside the panel
+                .setY(Constraints.sibling(featureList, 20, true))
+                .setWidth(Constraints.pixel(360)); // Restrict width to force wrapping inside the panel
 
         // --- Close Button ---
-        UIButton closeBtn = new UIButton("Close");
+        UIButton closeBtn = new UIButton();
+        closeBtn.setLabel("Close");
         closeBtn.setX(Constraints.center())
                 .setY(Constraints.anchorEnd(20))
                 .setWidth(Constraints.pixel(100))

@@ -12,9 +12,7 @@ import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -42,16 +40,42 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     private float overlayY, overlayHeight;
 
     /**
-     * Constructs a dropdown with a list of Components.
-     *
-     * @param options The list of options to display.
+     * Constructs an empty dropdown.
+     * Add options using {@link #addOption(Component)} or {@link #setOptions(List)}.
      */
-    public UIDropdown(List<Component> options) {
+    public UIDropdown() {
+        setupDefaultStyles();
+    }
+
+    /**
+     * Adds a single option to the dropdown.
+     *
+     * @param option The option component to add.
+     * @return This dropdown instance.
+     */
+    public UIDropdown addOption(Component option) {
+        this.options.add(option);
+        if (this.selectedIndex == -1 && !this.options.isEmpty()) {
+            this.selectedIndex = 0;
+        }
+        return this;
+    }
+
+    /**
+     * Sets the list of options, replacing any existing ones.
+     *
+     * @param options The list of options.
+     * @return This dropdown instance.
+     */
+    public UIDropdown setOptions(List<Component> options) {
+        this.options.clear();
         this.options.addAll(options);
         if (!this.options.isEmpty()) {
             this.selectedIndex = 0;
+        } else {
+            this.selectedIndex = -1;
         }
-        setupDefaultStyles();
+        return this;
     }
 
     private void setupDefaultStyles() {

@@ -71,7 +71,8 @@ public class XUIScrollExampleScreen extends Screen {
                 .set(Properties.BORDER_COLOR, COLOR_BORDER);
 
         // --- Title ---
-        UIText title = new UIText("Scrollable Item List");
+        UIText title = new UIText();
+        title.setText("Scrollable Item List");
         title.setCentered(true)
                 .setX(Constraints.center())
                 .setY(Constraints.pixel(30))
@@ -79,7 +80,8 @@ public class XUIScrollExampleScreen extends Screen {
         title.style().set(Properties.TEXT_COLOR, COLOR_TEXT_PRIMARY);
 
         // --- Subtitle ---
-        UIText subtitle = new UIText("Try scrolling with mouse wheel or drag the scrollbar");
+        UIText subtitle = new UIText();
+        subtitle.setText("Try scrolling with mouse wheel or drag the scrollbar");
         subtitle.setCentered(true)
                 .setX(Constraints.center())
                 .setY(Constraints.pixel(55))
@@ -110,7 +112,8 @@ public class XUIScrollExampleScreen extends Screen {
         float currentY = 10;
 
         for (int i = 1; i <= 25; i++) {
-            UIButton itemButton = new UIButton("Item #" + i);
+            UIButton itemButton = new UIButton();
+            itemButton.setLabel("Item #" + i);
             itemButton.setX(Constraints.pixel(10))
                     .setY(Constraints.pixel(currentY))
                     .setWidth(Constraints.pixel(500))
@@ -147,7 +150,8 @@ public class XUIScrollExampleScreen extends Screen {
         float buttonY = 440;
 
         // Scroll to Top Button
-        UIButton btnTop = new UIButton("Scroll to Top");
+        UIButton btnTop = new UIButton();
+        btnTop.setLabel("Scroll to Top");
         btnTop.setX(Constraints.pixel(50))
                 .setY(Constraints.pixel(buttonY))
                 .setWidth(Constraints.pixel(buttonWidth))
@@ -166,7 +170,8 @@ public class XUIScrollExampleScreen extends Screen {
         btnTop.setOnClick(w -> scrollPanel.setScrollOffset(0));
 
         // Scroll to Bottom Button
-        UIButton btnBottom = new UIButton("Scroll to Bottom");
+        UIButton btnBottom = new UIButton();
+        btnBottom.setLabel("Scroll to Bottom");
         btnBottom.setX(Constraints.center())
                 .setY(Constraints.pixel(buttonY))
                 .setWidth(Constraints.pixel(buttonWidth))
@@ -185,7 +190,8 @@ public class XUIScrollExampleScreen extends Screen {
         btnBottom.setOnClick(w -> scrollPanel.setScrollOffset(9999));
 
         // Exit Button
-        UIButton btnClose = new UIButton("Close");
+        UIButton btnClose = new UIButton();
+        btnClose.setLabel("Close");
         btnClose.setX(Constraints.anchorEnd(50))
                 .setY(Constraints.pixel(buttonY))
                 .setWidth(Constraints.pixel(buttonWidth))
