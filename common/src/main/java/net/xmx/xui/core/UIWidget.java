@@ -5,6 +5,8 @@
 package net.xmx.xui.core;
 
 import net.xmx.xui.core.anim.AnimationManager;
+import net.xmx.xui.core.effect.UIEffect;
+import net.xmx.xui.core.effect.UIScissorsEffect;
 import net.xmx.xui.core.style.StyleSheet;
 import net.xmx.xui.core.style.UIProperty;
 import net.xmx.xui.core.style.UIState;
@@ -16,9 +18,7 @@ import java.util.function.Consumer;
 
 /**
  * The base class for all UI components.
- * Handles layout resolution, event propagation, styling, animations, and hierarchy.
- * Now features a generic obstruction system to handle overlaps like dropdowns or modals
- * without hardcoded dependencies on specific implementation classes.
+ * Handles layout resolution, event propagation, styling, animations, hierarchy, and visual effects.
  *
  * @author xI-Mx-Ix
  */
@@ -82,16 +82,39 @@ public abstract class UIWidget {
     protected boolean isHovered;
     protected boolean isFocused;
     protected boolean isVisible = true;
-    protected boolean useScissor = false;
 
-    // Styling & Animation
+    // Styling, Animation & Effects
     protected final StyleSheet styleSheet = new StyleSheet();
     protected final AnimationManager animManager = new AnimationManager();
+    protected final List<UIEffect> effects = new ArrayList<>();
 
     // Event Callbacks
     protected Consumer<UIWidget> onMouseEnter;
     protected Consumer<UIWidget> onMouseExit;
     protected Consumer<UIWidget> onClick;
+
+    /**
+     * Adds a visual effect to this widget.
+     * Effects are applied in the order they are added.
+     *
+     * @param effect The effect to add (e.g., Stencil, Scissor).
+     * @return This widget instance.
+     */
+    public UIWidget addEffect(UIEffect effect) {
+        this.effects.add(effect);
+        return this;
+    }
+
+    /**
+     * Removes a visual effect from this widget.
+     *
+     * @param effect The effect instance to remove.
+     * @return This widget instance.
+     */
+    public UIWidget removeEffect(UIEffect effect) {
+        this.effects.remove(effect);
+        return this;
+    }
 
     /**
      * Calculates the layout of this widget and recursively its children.
@@ -119,7 +142,7 @@ public abstract class UIWidget {
 
     /**
      * The main rendering method.
-     * Handles state determination, scissor testing, animation updates, and child rendering.
+     * Handles state determination, effect application, animation updates, and child rendering.
      *
      * @param renderer     The render interface.
      * @param mouseX       Current mouse X position.
@@ -139,18 +162,22 @@ public abstract class UIWidget {
             state = UIState.HOVER;
         }
 
-        if (useScissor) {
-            renderer.enableScissor((int) x, (int) y, (int) width, (int) height);
+        // Apply visual effects (Stencil, Scissors, Shaders)
+        for (UIEffect effect : effects) {
+            effect.apply(renderer, this);
         }
 
+        // Render Widget Content
         drawSelf(renderer, mouseX, mouseY, partialTicks, state);
 
+        // Render Children
         for (UIWidget child : children) {
             child.render(renderer, mouseX, mouseY, partialTicks);
         }
 
-        if (useScissor) {
-            renderer.disableScissor();
+        // Revert visual effects (in reverse order to properly unwind stack-based effects)
+        for (int i = effects.size() - 1; i >= 0; i--) {
+            effects.get(i).revert(renderer, this);
         }
     }
 
@@ -183,7 +210,7 @@ public abstract class UIWidget {
 
     /**
      * Checks if this widget is currently visually clipped by any of its ancestors.
-     * This occurs if a parent has enabled scissor testing and the mouse cursor
+     * This occurs if a parent has an active {@link UIScissorsEffect} and the mouse cursor
      * is outside that parent's bounds.
      *
      * @param mouseX The current mouse X coordinate.
@@ -193,10 +220,15 @@ public abstract class UIWidget {
     protected boolean isClippedByParent(double mouseX, double mouseY) {
         UIWidget current = this.parent;
         while (current != null) {
-            // If a parent uses scissor (like a ScrollPanel), checks if the mouse
-            // is effectively "outside" the visible area of that parent.
-            if (current.useScissor && !current.isMouseOver(mouseX, mouseY)) {
-                return true;
+            // Iterate over the parent's effects to see if clipping is enabled
+            for (UIEffect effect : current.effects) {
+                if (effect instanceof UIScissorsEffect) {
+                    // If the parent is clipping content, and the mouse is outside the parent,
+                    // then this child is clipped/hidden at the mouse position.
+                    if (!current.isMouseOver(mouseX, mouseY)) {
+                        return true;
+                    }
+                }
             }
             current = current.parent;
         }
@@ -249,22 +281,15 @@ public abstract class UIWidget {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isVisible) return false;
 
-        // Do not process clicks if the widget is clipped by a parent container
         if (isClippedByParent(mouseX, mouseY)) return false;
 
-        // If we did, a Root panel would see the Dropdown obstruction and block
-        // the traversal to the Dropdown itself.
-
-        // 1. Propagate to children first (top-most visible first)
-        // Children will perform their own obstruction checks.
+        // Propagate to children first (top-most visible first)
         for (int i = children.size() - 1; i >= 0; i--) {
             if (children.get(i).mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
         }
 
-        // 2. Check Self
-        // Now we check if *this* widget is obstructed before processing its own click.
         if (isGlobalObstructed(mouseX, mouseY)) return false;
 
         if (isHovered) {
@@ -347,11 +372,6 @@ public abstract class UIWidget {
 
     public UIWidget setOnClick(Consumer<UIWidget> action) {
         this.onClick = action;
-        return this;
-    }
-
-    public UIWidget setScissor(boolean enabled) {
-        this.useScissor = enabled;
         return this;
     }
 

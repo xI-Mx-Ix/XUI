@@ -6,6 +6,8 @@ package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.effect.UIEffect;
+import net.xmx.xui.core.effect.UIScissorsEffect;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIProperty;
 import net.xmx.xui.core.style.UIState;
@@ -52,8 +54,13 @@ public class UIScrollPanel extends UIWidget {
     // Store original Y positions of children
     private final Map<UIWidget, Float> childBaseYPositions = new HashMap<>();
 
+    /**
+     * Constructs a scroll panel.
+     * Initializes the default styles and adds the scissor effect to handle content clipping.
+     */
     public UIScrollPanel() {
-        this.useScissor = true;
+        // Automatically add the scissor effect to clip scrolling content
+        this.addEffect(new UIScissorsEffect());
         setupDefaultStyles();
     }
 
@@ -253,6 +260,9 @@ public class UIScrollPanel extends UIWidget {
 
         updateHoverState(mouseX, mouseY);
 
+        // Maintain full visibility
+        targetScrollbarOpacity = 1.0f;
+
         // Determine current style state
         UIState state = UIState.DEFAULT;
         if (isFocused) {
@@ -261,11 +271,13 @@ public class UIScrollPanel extends UIWidget {
             state = UIState.HOVER;
         }
 
-        if (useScissor) {
-            renderer.enableScissor((int) this.getX(), (int) this.getY(), (int) this.getWidth(), (int) this.getHeight());
+        // Apply visual effects manually
+        // We do this here because we override the main render method to handle scroll offsets for children
+        for (UIEffect effect : effects) {
+            effect.apply(renderer, this);
         }
 
-        // Update animations and draw self
+        // Update animations and draw the panel background
         drawSelf(renderer, mouseX, mouseY, partialTicks, state);
 
         // Apply scroll offset to children before rendering
@@ -276,8 +288,9 @@ public class UIScrollPanel extends UIWidget {
             child.render(renderer, mouseX, mouseY, partialTicks);
         }
 
-        if (useScissor) {
-            renderer.disableScissor();
+        // Revert visual effects (in reverse order)
+        for (int i = effects.size() - 1; i >= 0; i--) {
+            effects.get(i).revert(renderer, this);
         }
     }
 

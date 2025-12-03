@@ -117,4 +117,17 @@ public interface UIRenderInterface {
      * @param z The offset to apply to the Z-coordinate.
      */
     void translateZ(float z);
+
+    /**
+     * Retrieves the current scissor rectangle active in the renderer.
+     * <p>
+     * This is essential for nested clipping regions (e.g., a scroll panel inside another scroll panel).
+     * Effects can use this to calculate the intersection between the parent's clip rect and the
+     * widget's desired clip rect.
+     * </p>
+     *
+     * @return An integer array {@code [x, y, width, height]} representing the current scissor window,
+     *         or {@code null} if no scissor test is currently enabled.
+     */
+    int[] getCurrentScissor();
 }
