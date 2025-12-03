@@ -279,14 +279,53 @@ public abstract class UIWidget {
         isHovered = nowHovered;
     }
 
+    /**
+     * Determines whether this widget should keep its focus after the mouse button is released.
+     * <p>
+     * Override this method to return {@code true} for widgets that require continuous input
+     * (like text fields). The default is {@code false}, which ensures that momentary widgets
+     * (like buttons) release their active state immediately after the click action ends.
+     * </p>
+     *
+     * @return true if focus should be retained, false to release it.
+     */
+    protected boolean shouldRetainFocus() {
+        return false;
+    }
+
+    /**
+     * Recursively removes focus from this widget and all its children.
+     */
+    public void unfocus() {
+        this.isFocused = false;
+        for (UIWidget child : children) {
+            child.unfocus();
+        }
+    }
+
+    /**
+     * Called when a mouse button is pressed.
+     * Propagates the event to children based on Z-order (reverse list order).
+     * Handles focus management.
+     *
+     * @param mouseX The absolute X coordinate of the mouse.
+     * @param mouseY The absolute Y coordinate of the mouse.
+     * @param button The mouse button index (0 = Left, 1 = Right, 2 = Middle).
+     * @return true if the event was consumed by this widget or a child.
+     */
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isVisible) return false;
-
         if (isClippedByParent(mouseX, mouseY)) return false;
 
-        // Propagate to children first (top-most visible first)
+        // Propagate to children first
         for (int i = children.size() - 1; i >= 0; i--) {
-            if (children.get(i).mouseClicked(mouseX, mouseY, button)) {
+            UIWidget child = children.get(i);
+            if (child.mouseClicked(mouseX, mouseY, button)) {
+                for (UIWidget sibling : children) {
+                    if (sibling != child) {
+                        sibling.unfocus();
+                    }
+                }
                 return true;
             }
         }
@@ -295,6 +334,13 @@ public abstract class UIWidget {
 
         if (isHovered) {
             isFocused = true;
+
+            // If I am a container and I got clicked (background),
+            // my children should probably lose focus.
+            for (UIWidget child : children) {
+                child.unfocus();
+            }
+
             if (onClick != null) {
                 onClick.accept(this);
             }
@@ -305,21 +351,89 @@ public abstract class UIWidget {
         return false;
     }
 
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    /**
+     * Called when the mouse is moved while a button is held down.
+     * Used for dragging sliders, scrollbars, or text selection.
+     *
+     * @param mouseX The current absolute X coordinate.
+     * @param mouseY The current absolute Y coordinate.
+     * @param button The button currently being held.
+     * @param dragX  The horizontal delta since the last event.
+     * @param dragY  The vertical delta since the last event.
+     * @return true if the event was handled.
+     */
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (!isVisible) return false;
 
-        // Do not process release events if the cursor is in a clipped region
-        if (isClippedByParent(mouseX, mouseY)) {
-            isFocused = false;
-            return false;
+        for (int i = children.size() - 1; i >= 0; i--) {
+            if (children.get(i).mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+                return true;
+            }
         }
+        // By default, if the widget is focused, it consumes drag events (e.g., text selection)
+        return isFocused;
+    }
 
-        // Release the active state when mouse is released
-        isFocused = false;
+    /**
+     * Called when a mouse button is released.
+     * Handles event propagation and focus management.
+     *
+     * @param mouseX The absolute X coordinate.
+     * @param mouseY The absolute Y coordinate.
+     * @param button The button released.
+     * @return true if the event was consumed.
+     */
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (!isVisible) return false;
+        if (isClippedByParent(mouseX, mouseY)) return false;
 
-        // Propagate to children
         for (int i = children.size() - 1; i >= 0; i--) {
             if (children.get(i).mouseReleased(mouseX, mouseY, button)) {
+                return true;
+            }
+        }
+
+        // If the widget is currently focused (Active state), check if it is designed to keep focus.
+        // If not (e.g., a standard Button), remove focus so the visual state reverts to Hover/Default.
+        if (isFocused && !shouldRetainFocus()) {
+            isFocused = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Called when a unicode character is typed.
+     *
+     * @param codePoint The character typed.
+     * @param modifiers The bitmask of modifier keys pressed.
+     * @return true if the character was accepted/consumed.
+     */
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (!isVisible) return false;
+
+        for (int i = children.size() - 1; i >= 0; i--) {
+            if (children.get(i).charTyped(codePoint, modifiers)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Called when a physical key is pressed.
+     *
+     * @param keyCode   The GLFW key code (e.g., GLFW.GLFW_KEY_ENTER).
+     * @param scanCode  The physical location of the key.
+     * @param modifiers The bitmask of modifier keys (Shift, Ctrl, Alt).
+     * @return true if the key press was handled.
+     */
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!isVisible) return false;
+
+        for (int i = children.size() - 1; i >= 0; i--) {
+            if (children.get(i).keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
             }
         }
