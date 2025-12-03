@@ -9,7 +9,7 @@ import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
 
@@ -59,7 +59,7 @@ public class MarkdownTaskListItem extends UIPanel {
         // Indent text so it doesn't overlap the box (Box + Margin)
         float textIndent = 18.0f;
 
-        UIText content = MarkdownUtils.createWrappingText(
+        UIWrappedText content = MarkdownUtils.createWrappingText(
                 MarkdownUtils.parseInline(rawText),
                 textIndent,
                 contentWidth

@@ -13,6 +13,7 @@ import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.impl.UIRenderImpl;
 
@@ -60,25 +61,30 @@ public class XUITextExampleScreen extends Screen {
                 .setX(Constraints.center())
                 .setY(Constraints.pixel(20));
 
-        // --- WIDGET 2: Multi-line List (Manual lines, No wrapping) ---
-        // This widget automatically sizes its height based on added lines.
-        UIText featureList = new UIText();
+        // --- WIDGET 2: Multi-line List ---
+        // CHANGED: Used UIWrappedText instead of UIText.
+        // UIText appends horizontally (single line).
+        // UIWrappedText supports adding multiple vertical lines.
+        UIWrappedText featureList = new UIWrappedText();
+
+        // Add the title line
         featureList.setText(Component.literal("New Features:").withStyle(ChatFormatting.UNDERLINE));
 
-        featureList.addText(Component.literal("• Added multi-line text support").withStyle(ChatFormatting.GREEN))
-                .addText(Component.literal("• Integrated Minecraft Components").withStyle(ChatFormatting.AQUA))
-                .addText(Component.literal("• Dynamic height calculation").withStyle(ChatFormatting.YELLOW));
+        // Add subsequent lines. Passing 'false' for wrapping means they act as hard line breaks.
+        featureList.addText(Component.literal("• Added multi-line text support").withStyle(ChatFormatting.GREEN), false)
+                .addText(Component.literal("• Integrated Minecraft Components").withStyle(ChatFormatting.AQUA), false)
+                .addText(Component.literal("• Dynamic height calculation").withStyle(ChatFormatting.YELLOW), false);
 
         featureList.setX(Constraints.pixel(20))
                 .setY(Constraints.sibling(header, 30, true)); // Position below header
 
         // --- WIDGET 3: Mixed Wrapping (Introduction + Long Text) ---
-        // We set a fixed width constraint so the wrapping knows when to break lines.
-        UIText description = new UIText();
+        // This remains UIWrappedText as it uses automatic wrapping for the paragraph.
+        UIWrappedText description = new UIWrappedText();
         description.setText(Component.literal("Technical Details:").withStyle(ChatFormatting.RED));
 
         // Add a long paragraph with wrapping enabled (true)
-        String longLorem = "The UIText component now supports an internal list of lines. " +
+        String longLorem = "The UIWrappedText component now supports an internal list of lines. " +
                 "You can mix standard lines with auto-wrapping lines in the same widget. " +
                 "The height of the widget is recalculated automatically based on the font renderer.";
 

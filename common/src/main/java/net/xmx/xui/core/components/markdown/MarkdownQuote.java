@@ -9,7 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
 
 /**
@@ -35,7 +35,7 @@ public class MarkdownQuote extends UIPanel {
         int fontHeight = Minecraft.getInstance().font.lineHeight;
 
         // Create the text widget first to measure it
-        UIText textWidget = MarkdownUtils.createWrappingText(
+        UIWrappedText textWidget = MarkdownUtils.createWrappingText(
                 text.copy().withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC),
                 quoteX + padding,
                 contentWidth

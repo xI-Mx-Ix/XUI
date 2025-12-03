@@ -8,7 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
 
 import java.util.List;
@@ -40,7 +40,7 @@ public class MarkdownCodeBlock extends UIPanel {
         Component coloredCode = MarkdownUtils.highlightCode(code);
 
         // Create wrapping text
-        UIText content = MarkdownUtils.createWrappingText(coloredCode, 0, contentWidth);
+        UIWrappedText content = MarkdownUtils.createWrappingText(coloredCode, 0, contentWidth);
 
         float padding = 6;
         // Height Correction: Subtract empty line height

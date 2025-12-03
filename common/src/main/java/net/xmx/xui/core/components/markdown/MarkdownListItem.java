@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
 
 /**
@@ -46,7 +47,7 @@ public class MarkdownListItem extends UIPanel {
         this.add(bullet);
 
         // Content
-        UIText content = MarkdownUtils.createWrappingText(
+        UIWrappedText content = MarkdownUtils.createWrappingText(
                 MarkdownUtils.parseInline(rawText),
                 bulletWidth,
                 contentWidth

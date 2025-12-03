@@ -8,7 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.components.UIWrappedText;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,10 +41,10 @@ public class MarkdownUtils {
      * @param content The text component to render.
      * @param widthOffset The x-offset to subtract from the total content width.
      * @param contentWidth The total available width.
-     * @return A configured UIText widget with layout calculated.
+     * @return A configured UIWrappedText widget with layout calculated.
      */
-    public static UIText createWrappingText(Component content, float widthOffset, float contentWidth) {
-        UIText widget = new UIText();
+    public static UIWrappedText createWrappingText(Component content, float widthOffset, float contentWidth) {
+        UIWrappedText widget = new UIWrappedText();
         // Add empty line for padding logic
         widget.addText(Component.empty());
         // Add actual content with wrapping enabled

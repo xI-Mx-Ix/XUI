@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
 
 /**
@@ -37,7 +37,7 @@ public class MarkdownHeader extends UIPanel {
         // Use color and style to distinguish headers
         MutableComponent styled = text.copy().withStyle(ChatFormatting.BOLD, color);
 
-        UIText widget = MarkdownUtils.createWrappingText(styled, 0, contentWidth);
+        UIWrappedText widget = MarkdownUtils.createWrappingText(styled, 0, contentWidth);
         
         // Add extra padding above headers (logic from original code: currentLayoutY += 5)
         float topPadding = 5;

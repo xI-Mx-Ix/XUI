@@ -31,7 +31,7 @@ import java.util.List;
 public class UITooltip extends UIPanel {
 
     private UIWidget target;
-    private final UIText contentText;
+    private final UIWrappedText contentText;
 
     // Timing Configuration (in seconds for consistency with XUI dt)
     private float delay = 0.5f;
@@ -62,7 +62,7 @@ public class UITooltip extends UIPanel {
      * before it will function.
      */
     public UITooltip() {
-        this.contentText = new UIText();
+        this.contentText = new UIWrappedText();
 
         // Setup internal text widget
         this.contentText.setX(Constraints.pixel(padding));
