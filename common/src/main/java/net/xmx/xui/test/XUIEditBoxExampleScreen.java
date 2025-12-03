@@ -74,6 +74,7 @@ public class XUIEditBoxExampleScreen extends Screen {
         UIEditBox userBox = new UIEditBox();
         userBox.setMultiline(false)
                 .setMaxLength(16);
+        userBox.setHint("Enter your username");
         
         userBox.setX(Constraints.pixel(30))
                 .setY(Constraints.sibling(lblUser, 5, true)) // 5px below label
@@ -100,6 +101,7 @@ public class XUIEditBoxExampleScreen extends Screen {
               .setY(Constraints.sibling(lblBio, 5, true))
               .setWidth(Constraints.pixel(340))
               .setHeight(Constraints.pixel(120));
+        bioBox.setHint("Enter your biography");
 
         // Set some long initial text to demonstrate scrolling
         bioBox.setText("I am a Minecraft player.\n" +

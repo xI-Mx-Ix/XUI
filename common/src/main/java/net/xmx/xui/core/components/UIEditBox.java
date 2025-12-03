@@ -40,6 +40,12 @@ public class UIEditBox extends UIWidget {
      */
     public static final UIProperty<Integer> SELECTION_COLOR = new UIProperty<>("selection_color", 0x800000FF);
 
+    /**
+     * Property for the color of the hint text (placeholder).
+     */
+    public static final UIProperty<Integer> HINT_COLOR = new UIProperty<>("hint_color", 0xFF888888);
+
+    private String hintText = "";
     private String text = "";
     private int cursorPosition = 0;
     private int selectionEnd = 0;
@@ -73,6 +79,7 @@ public class UIEditBox extends UIWidget {
                 .set(UIState.DEFAULT, Properties.BORDER_THICKNESS, 1.0f)
                 .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 3.0f)
                 .set(UIState.DEFAULT, Properties.TEXT_COLOR, 0xFFFFFFFF)
+                .set(UIState.DEFAULT, HINT_COLOR, 0xFF888888) // Default gray for hint
                 .set(UIState.DEFAULT, CURSOR_COLOR, 0xFFFFFFFF)
                 .set(UIState.DEFAULT, SELECTION_COLOR, 0x800000AA)
                 .set(UIState.HOVER, Properties.BORDER_COLOR, 0xFFAAAAAA)
@@ -87,6 +94,17 @@ public class UIEditBox extends UIWidget {
      */
     public UIEditBox setMultiline(boolean multiline) {
         this.isMultiline = multiline;
+        return this;
+    }
+
+    /**
+     * Sets the hint text (placeholder) to display when the box is empty and unfocused.
+     *
+     * @param hint The hint text.
+     * @return This instance.
+     */
+    public UIEditBox setHint(String hint) {
+        this.hintText = hint;
         return this;
     }
 
@@ -128,6 +146,7 @@ public class UIEditBox extends UIWidget {
         int bgColor = getColor(Properties.BACKGROUND_COLOR, state, partialTicks);
         int borderColor = getColor(Properties.BORDER_COLOR, state, partialTicks);
         int textColor = getColor(Properties.TEXT_COLOR, state, partialTicks);
+        int hintColor = getColor(HINT_COLOR, state, partialTicks); // Retrieve hint color
         int cursorColor = getColor(CURSOR_COLOR, state, partialTicks);
         int selectionColor = getColor(SELECTION_COLOR, state, partialTicks);
 
@@ -147,7 +166,6 @@ public class UIEditBox extends UIWidget {
         updateScrolling(renderer);
 
         // Calculate the base coordinates for drawing text
-        // Both modes now subtract scrollX for horizontal movement
         float drawX = contentX - scrollX;
         float drawY;
 
@@ -164,14 +182,26 @@ public class UIEditBox extends UIWidget {
             renderSelection(renderer, drawX, drawY, selectionColor);
         }
 
-        // Render the actual text content
-        if (isMultiline) {
-            String[] lines = text.split("\n", -1);
-            for (int i = 0; i < lines.length; i++) {
-                renderer.drawText(Component.literal(lines[i]), drawX, drawY + (i * fontHeight), textColor, true);
+        // If the box is empty, not focused, and has a hint, draw the hint.
+        if (text.isEmpty() && !isFocused && !hintText.isEmpty()) {
+            if (isMultiline) {
+                String[] lines = hintText.split("\n", -1);
+                for (int i = 0; i < lines.length; i++) {
+                    renderer.drawText(Component.literal(lines[i]), drawX, drawY + (i * fontHeight), hintColor, true);
+                }
+            } else {
+                renderer.drawText(Component.literal(hintText), drawX, drawY, hintColor, true);
             }
         } else {
-            renderer.drawText(Component.literal(text), drawX, drawY, textColor, true);
+            // Otherwise, render the actual text content
+            if (isMultiline) {
+                String[] lines = text.split("\n", -1);
+                for (int i = 0; i < lines.length; i++) {
+                    renderer.drawText(Component.literal(lines[i]), drawX, drawY + (i * fontHeight), textColor, true);
+                }
+            } else {
+                renderer.drawText(Component.literal(text), drawX, drawY, textColor, true);
+            }
         }
 
         // Render the blinking cursor if the widget has focus
