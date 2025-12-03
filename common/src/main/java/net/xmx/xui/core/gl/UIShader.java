@@ -2,7 +2,7 @@
  * This file is part of XUI.
  * Licensed under MIT license.
  */
-package net.xmx.xui.impl;
+package net.xmx.xui.core.gl;
 
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;

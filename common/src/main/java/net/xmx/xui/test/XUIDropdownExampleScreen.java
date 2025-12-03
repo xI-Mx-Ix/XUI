@@ -28,7 +28,6 @@ import java.util.Arrays;
 public class XUIDropdownExampleScreen extends Screen {
 
     private UIWidget root;
-    private UIRenderImpl renderer;
     private long lastFrameTime = 0;
 
     public XUIDropdownExampleScreen() {
@@ -112,9 +111,7 @@ public class XUIDropdownExampleScreen extends Screen {
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
-        if (renderer == null) renderer = new UIRenderImpl(guiGraphics);
-
-        root.render(renderer, mouseX, mouseY, deltaTime);
+        root.render(UIRenderImpl.getInstance(), mouseX, mouseY, deltaTime);
 
         // Debug Text
         guiGraphics.drawString(font, "Dropdown should cover the button below.", 10, 10, 0xFFFFFFFF);

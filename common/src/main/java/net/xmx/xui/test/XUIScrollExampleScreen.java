@@ -26,7 +26,6 @@ import net.xmx.xui.impl.UIRenderImpl;
 public class XUIScrollExampleScreen extends Screen {
 
     private UIWidget root;
-    private UIRenderImpl renderer;
     private UIScrollPanel scrollPanel;
     private long lastFrameTime = 0;
 
@@ -229,9 +228,7 @@ public class XUIScrollExampleScreen extends Screen {
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
-        if (renderer == null) renderer = new UIRenderImpl(guiGraphics);
-
-        root.render(renderer, mouseX, mouseY, deltaTime);
+        root.render(UIRenderImpl.getInstance(), mouseX, mouseY, deltaTime);
     }
 
     @Override

@@ -29,7 +29,6 @@ import java.util.List;
 public class XUITooltipExampleScreen extends Screen {
 
     private UIWidget root;
-    private UIRenderImpl renderer;
     private long lastFrameTime = 0;
 
     public XUITooltipExampleScreen() {
@@ -164,8 +163,6 @@ public class XUITooltipExampleScreen extends Screen {
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
-        if (renderer == null) renderer = new UIRenderImpl(guiGraphics);
-
-        root.render(renderer, mouseX, mouseY, deltaTime);
+        root.render(UIRenderImpl.getInstance(), mouseX, mouseY, deltaTime);
     }
 }
