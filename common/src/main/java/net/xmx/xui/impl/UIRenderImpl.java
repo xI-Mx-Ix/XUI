@@ -7,7 +7,7 @@ package net.xmx.xui.impl;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.xmx.xui.core.UIRenderInterface;
+import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.gl.UIRenderer;
 
 /**

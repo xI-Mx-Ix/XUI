@@ -6,7 +6,7 @@ package net.xmx.xui.core.components.markdown;
 
 import net.minecraft.client.Minecraft;
 import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.UIRenderInterface;
+import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;

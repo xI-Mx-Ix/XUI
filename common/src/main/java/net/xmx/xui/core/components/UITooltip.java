@@ -7,7 +7,7 @@ package net.xmx.xui.core.components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.UIRenderInterface;
+import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIProperty;

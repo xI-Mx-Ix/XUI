@@ -2,7 +2,7 @@
  * This file is part of XUI.
  * Licensed under MIT license.
  */
-package net.xmx.xui.core;
+package net.xmx.xui.core.gl;
 
 import net.minecraft.network.chat.Component;
 

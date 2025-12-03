@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.components;
 
-import net.xmx.xui.core.UIRenderInterface;
+import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.effect.UIEffect;
 import net.xmx.xui.core.effect.UIScissorsEffect;

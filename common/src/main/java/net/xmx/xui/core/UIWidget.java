@@ -7,6 +7,7 @@ package net.xmx.xui.core;
 import net.xmx.xui.core.anim.AnimationManager;
 import net.xmx.xui.core.effect.UIEffect;
 import net.xmx.xui.core.effect.UIScissorsEffect;
+import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.style.StyleSheet;
 import net.xmx.xui.core.style.UIProperty;
 import net.xmx.xui.core.style.UIState;
