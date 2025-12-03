@@ -9,9 +9,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.UIWidget;
-import net.xmx.xui.core.components.UIMarkdown;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIScrollPanel;
+import net.xmx.xui.core.components.markdown.UIMarkdown;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.impl.UIRenderImpl;
 
