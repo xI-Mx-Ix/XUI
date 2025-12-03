@@ -15,7 +15,7 @@ import net.xmx.xui.core.gl.UIRenderer;
  * <p>
  * This class acts as a Singleton bridge. It initializes the Minecraft-specific
  * {@link GuiGraphics} for text rendering and delegates raw geometry operations
- * to the {@link UIRenderer}.
+ * to the {@link UIRenderer}, automatically injecting the current GUI scale.
  * </p>
  *
  * @author xI-Mx-Ix
@@ -50,32 +50,32 @@ public class UIRenderImpl implements UIRenderInterface {
 
     @Override
     public void drawRect(float x, float y, float width, float height, int color, float radius) {
-        UIRenderer.getInstance().drawRect(x, y, width, height, color, radius, radius, radius, radius);
+        UIRenderer.getInstance().drawRect(x, y, width, height, color, radius, radius, radius, radius, getGuiScale());
     }
 
     @Override
     public void drawRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL) {
-        UIRenderer.getInstance().drawRect(x, y, width, height, color, rTL, rTR, rBR, rBL);
+        UIRenderer.getInstance().drawRect(x, y, width, height, color, rTL, rTR, rBR, rBL, getGuiScale());
     }
 
     @Override
     public void drawOutline(float x, float y, float width, float height, int color, float radius, float thickness) {
-        UIRenderer.getInstance().drawOutline(x, y, width, height, color, thickness, radius, radius, radius, radius);
+        UIRenderer.getInstance().drawOutline(x, y, width, height, color, thickness, radius, radius, radius, radius, getGuiScale());
     }
 
     @Override
     public void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL) {
-        UIRenderer.getInstance().drawOutline(x, y, width, height, color, thickness, rTL, rTR, rBR, rBL);
+        UIRenderer.getInstance().drawOutline(x, y, width, height, color, thickness, rTL, rTR, rBR, rBL, getGuiScale());
     }
 
     @Override
     public void enableScissor(int x, int y, int width, int height) {
-        UIRenderer.getInstance().enableScissor(x, y, width, height);
+        UIRenderer.getInstance().enableScissor(x, y, width, height, getGuiScale());
     }
 
     @Override
     public void disableScissor() {
-        UIRenderer.getInstance().disableScissor();
+        UIRenderer.getInstance().disableScissor(getGuiScale());
     }
 
     @Override
@@ -117,5 +117,16 @@ public class UIRenderImpl implements UIRenderInterface {
     @Override
     public void translateZ(float z) {
         guiGraphics.pose().translate(0, 0, z);
+    }
+
+    /**
+     * Retrieves the current GUI scale factor from the Minecraft window settings.
+     * This factor is used to convert logical UI coordinates into physical pixels.
+     *
+     * @return The current GUI scale factor (e.g., 1.0, 2.0, 3.0).
+     */
+    @Override
+    public double getGuiScale() {
+        return Minecraft.getInstance().getWindow().getGuiScale();
     }
 }

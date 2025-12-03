@@ -4,9 +4,8 @@
  */
 package net.xmx.xui.core.gl;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
@@ -64,21 +63,24 @@ public class UIRenderer {
      * Enables a scissor test to clip rendering to a specific screen region.
      * Pushes the new scissor rectangle onto the internal stack.
      *
-     * @param x      The logical x-coordinate of the clipping area.
-     * @param y      The logical y-coordinate of the clipping area.
-     * @param width  The logical width of the clipping area.
-     * @param height The logical height of the clipping area.
+     * @param x        The logical x-coordinate of the clipping area.
+     * @param y        The logical y-coordinate of the clipping area.
+     * @param width    The logical width of the clipping area.
+     * @param height   The logical height of the clipping area.
+     * @param guiScale The current GUI scale factor used to convert logical coordinates to physical pixels.
      */
-    public void enableScissor(int x, int y, int width, int height) {
+    public void enableScissor(int x, int y, int width, int height, double guiScale) {
         scissorStack.push(new int[]{x, y, width, height});
-        setRawScissor(x, y, width, height);
+        setRawScissor(x, y, width, height, guiScale);
     }
 
     /**
      * Disables the active scissor test or restores the previous state from the stack.
      * If the stack is empty, scissoring is completely disabled in OpenGL.
+     *
+     * @param guiScale The current GUI scale factor, required to recalculate the previous scissor region if restored.
      */
-    public void disableScissor() {
+    public void disableScissor(double guiScale) {
         if (!scissorStack.isEmpty()) {
             scissorStack.pop();
         }
@@ -88,7 +90,7 @@ public class UIRenderer {
         } else {
             int[] prev = scissorStack.peek();
             if (prev != null) {
-                setRawScissor(prev[0], prev[1], prev[2], prev[3]);
+                setRawScissor(prev[0], prev[1], prev[2], prev[3], guiScale);
             }
         }
     }
@@ -111,22 +113,22 @@ public class UIRenderer {
      * @param y      Logical Y position.
      * @param width  Logical Width.
      * @param height Logical Height.
+     * @param scale  The GUI scale factor.
      */
-    private void setRawScissor(int x, int y, int width, int height) {
-        Minecraft mc = Minecraft.getInstance();
-        long windowHandle = mc.getWindow().getWindow();
+    private void setRawScissor(int x, int y, int width, int height, double scale) {
+        long windowHandle = GLFW.glfwGetCurrentContext();
 
         int[] wW = new int[1];
         int[] wH = new int[1];
-        org.lwjgl.glfw.GLFW.glfwGetFramebufferSize(windowHandle, wW, wH);
+        GLFW.glfwGetFramebufferSize(windowHandle, wW, wH);
 
-        double scale = mc.getWindow().getGuiScale();
-
+        // Convert logical coordinates to physical pixels
         int sx = (int) (x * scale);
         int sw = (int) (width * scale);
         int sh = (int) (height * scale);
 
         // OpenGL Origin is Bottom-Left, GUI Origin is Top-Left
+        // We must invert the Y axis relative to the physical window height
         int sy = wH[0] - (int) ((y * scale) + sh);
 
         if (sx < 0) sx = 0;
@@ -143,21 +145,22 @@ public class UIRenderer {
     /**
      * Draws a filled rectangle with independent corner radii.
      *
-     * @param x      The x-coordinate.
-     * @param y      The y-coordinate.
-     * @param width  The width of the rectangle.
-     * @param height The height of the rectangle.
-     * @param color  The ARGB color value.
-     * @param rTL    Top-Left corner radius.
-     * @param rTR    Top-Right corner radius.
-     * @param rBR    Bottom-Right corner radius.
-     * @param rBL    Bottom-Left corner radius.
+     * @param x        The x-coordinate.
+     * @param y        The y-coordinate.
+     * @param width    The width of the rectangle.
+     * @param height   The height of the rectangle.
+     * @param color    The ARGB color value.
+     * @param rTL      Top-Left corner radius.
+     * @param rTR      Top-Right corner radius.
+     * @param rBR      Bottom-Right corner radius.
+     * @param rBL      Bottom-Left corner radius.
+     * @param guiScale The scale factor to apply to the projection matrix.
      */
-    public void drawRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL) {
+    public void drawRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL, double guiScale) {
         if (width <= 0 || height <= 0) return;
 
         GlStateTracker.saveCurrentState();
-        prepareRenderState();
+        prepareRenderState((float) guiScale);
 
         float a = ((color >> 24) & 0xFF) / 255.0F;
         float r = ((color >> 16) & 0xFF) / 255.0F;
@@ -205,12 +208,13 @@ public class UIRenderer {
      * @param rTR       Top-Right corner radius.
      * @param rBR       Bottom-Right corner radius.
      * @param rBL       Bottom-Left corner radius.
+     * @param guiScale  The scale factor to apply to the projection matrix.
      */
-    public void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL) {
+    public void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL, double guiScale) {
         if (thickness <= 0) return;
 
         GlStateTracker.saveCurrentState();
-        prepareRenderState();
+        prepareRenderState((float) guiScale);
 
         float a = ((color >> 24) & 0xFF) / 255.0F;
         float r = ((color >> 16) & 0xFF) / 255.0F;
@@ -245,15 +249,18 @@ public class UIRenderer {
     /**
      * Configures the OpenGL state for custom UI rendering.
      * Sets up blending, disables depth testing, and uploads the projection matrix.
+     *
+     * @param scale The GUI scale factor used to transform the projection matrix.
      */
-    private void prepareRenderState() {
+    private void prepareRenderState(float scale) {
         int[] viewport = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
         float width = viewport[2];
         float height = viewport[3];
 
+        // Create an orthographic projection matching the viewport dimensions,
+        // then scale it so logical coordinates match the GUI scale.
         projectionMatrix.identity().ortho(0, width, height, 0, 1000, -1000);
-        float scale = (float) Minecraft.getInstance().getWindow().getGuiScale();
         projectionMatrix.scale(scale, scale, 1.0f);
 
         GL11.glEnable(GL11.GL_BLEND);
@@ -267,14 +274,25 @@ public class UIRenderer {
 
     /**
      * Restores critical OpenGL state to ensure compatibility with Minecraft's renderer.
-     * Specifically restores the VAO/VBO bindings to their previous state.
+     * <p>
+     * This method unbinds the custom shader, restores the previous VAO/VBO bindings
+     * via the {@link GlStateTracker}, and re-enables standard OpenGL states (Depth Test, Blending)
+     * using raw {@link GL11} calls. This bypasses the high-level {@code RenderSystem} to ensure
+     * the driver state is explicitly reset for the next render pass.
+     * </p>
      */
     private void finalizeRenderState() {
         shader.unbind();
         GlStateTracker.restorePreviousState();
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+
+        // Re-enable Depth Testing (standard for Minecraft text/GUI layers)
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+
+        // Re-enable Blending
+        GL11.glEnable(GL11.GL_BLEND);
+
+        // Restore standard Alpha Blending function (Source Alpha, 1 - Source Alpha)
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
     }
 
     /**

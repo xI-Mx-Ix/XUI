@@ -130,4 +130,16 @@ public interface UIRenderInterface {
      *         or {@code null} if no scissor test is currently enabled.
      */
     int[] getCurrentScissor();
+
+    /**
+     * Retrieves the current GUI scale factor used by the game engine.
+     * <p>
+     * This factor represents how many physical monitor pixels correspond to one logical UI unit.
+     * This is required for converting logical coordinates to physical OpenGL window coordinates,
+     * typically for scissoring or custom viewport calculations.
+     * </p>
+     *
+     * @return The current GUI scale factor (e.g., 1.0, 2.0, 3.0).
+     */
+    double getGuiScale();
 }
