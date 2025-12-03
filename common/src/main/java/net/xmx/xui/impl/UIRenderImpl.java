@@ -48,7 +48,7 @@ public class UIRenderImpl implements UIRenderInterface {
      */
     public UIRenderImpl(GuiGraphics guiGraphics) {
         this.guiGraphics = guiGraphics;
-        this.shader = new UIShader();
+        this.shader = UIShader.ofResource("xui", "core/ui_core");
         this.mesh = new UIMeshBuffer();
     }
 

@@ -7,11 +7,19 @@ package net.xmx.xui.impl;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.FloatBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 /**
  * Manages the OpenGL shader program for UI rendering.
- * Compiles Vertex and Fragment shaders and handles uniform data uploads (like the projection matrix).
+ * Handles loading GLSL source code from the classpath, compilation, linking,
+ * and uniform data uploads.
  *
  * <p>The shader expects:</p>
  * <ul>
@@ -29,40 +37,34 @@ public class UIShader {
     private final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
 
     /**
-     * Standard GLSL 150 Vertex Shader source.
-     * Transforms the vertex position by the projection matrix and passes the color to the fragment stage.
-     */
-    private static final String VERTEX_SRC =
-            "#version 150 core\n" +
-            "in vec3 position;\n" +
-            "in vec4 color;\n" +
-            "uniform mat4 projMat;\n" +
-            "out vec4 vertexColor;\n" +
-            "void main() {\n" +
-            "    gl_Position = projMat * vec4(position, 1.0);\n" +
-            "    vertexColor = color;\n" +
-            "}\n";
-
-    /**
-     * Standard GLSL 150 Fragment Shader source.
-     * Outputs the interpolated color from the vertex stage.
-     */
-    private static final String FRAGMENT_SRC =
-            "#version 150 core\n" +
-            "in vec4 vertexColor;\n" +
-            "out vec4 fragColor;\n" +
-            "void main() {\n" +
-            "    fragColor = vertexColor;\n" +
-            "}\n";
-
-    /**
-     * Compiles and links the shader program.
+     * Creates a new shader instance by loading the vertex and fragment shaders
+     * from the classpath using the standard asset structure.
+     * <p>
+     * The method looks for files at: {@code /assets/{namespace}/shaders/{path}.[vsh/fsh]}
+     * </p>
      *
-     * @throws RuntimeException if compilation or linking fails.
+     * @param namespace The resource namespace (e.g., "xui").
+     * @param path      The path relative to the shaders folder (e.g., "core/ui_core").
+     * @return A compiled and linked {@link UIShader}.
+     * @throws RuntimeException if the resources cannot be found or compilation fails.
      */
-    public UIShader() {
-        int vShader = compileShader(GL20.GL_VERTEX_SHADER, VERTEX_SRC);
-        int fShader = compileShader(GL20.GL_FRAGMENT_SHADER, FRAGMENT_SRC);
+    public static UIShader ofResource(String namespace, String path) {
+        String basePath = "/assets/" + namespace + "/shaders/" + path;
+        String vertSource = loadResource(basePath + ".vsh");
+        String fragSource = loadResource(basePath + ".fsh");
+        return new UIShader(vertSource, fragSource);
+    }
+
+    /**
+     * Private constructor used by the factory method.
+     * Compiles and links the provided source strings.
+     *
+     * @param vertSrc The vertex shader source code.
+     * @param fragSrc The fragment shader source code.
+     */
+    private UIShader(String vertSrc, String fragSrc) {
+        int vShader = compileShader(GL20.GL_VERTEX_SHADER, vertSrc);
+        int fShader = compileShader(GL20.GL_FRAGMENT_SHADER, fragSrc);
 
         programId = GL20.glCreateProgram();
         GL20.glAttachShader(programId, vShader);
@@ -86,6 +88,26 @@ public class UIShader {
         GL20.glDetachShader(programId, fShader);
         GL20.glDeleteShader(vShader);
         GL20.glDeleteShader(fShader);
+    }
+
+    /**
+     * Reads a file from the classpath into a String.
+     *
+     * @param fullPath The absolute path to the resource in the classpath.
+     * @return The file content.
+     * @throws RuntimeException if the file cannot be found or read.
+     */
+    private static String loadResource(String fullPath) {
+        try (InputStream is = UIShader.class.getResourceAsStream(fullPath)) {
+            if (is == null) {
+                throw new RuntimeException("Shader file not found in classpath: " + fullPath);
+            }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                return reader.lines().collect(Collectors.joining("\n"));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read shader resource: " + fullPath, e);
+        }
     }
 
     /**
