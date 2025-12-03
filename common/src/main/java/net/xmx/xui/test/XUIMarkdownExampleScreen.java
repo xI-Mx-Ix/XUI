@@ -29,7 +29,7 @@ public class XUIMarkdownExampleScreen extends Screen {
 
     // A sample markdown string without images
     private static final String SAMPLE_MARKDOWN =
-            "# XUI Framework v2\n" +
+            "# XUI Framework\n" +
                     "Welcome to the **XUI** markdown demo.\n" +
                     "\n" +
                     "## Rich Formatting\n" +

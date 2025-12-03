@@ -24,9 +24,14 @@ public class MarkdownUtils {
     // Pattern for detecting Markdown links: [Label](Url)
     public static final Pattern LINK_PATTERN = Pattern.compile("\\[(.*?)\\]\\((.*?)\\)");
 
-    // Pattern for detecting tokens in code blocks for syntax highlighting
+    // Pattern for detecting tokens in code blocks for syntax highlighting.
+    // Updates:
+    // 1. Strings ("..." or '...')
+    // 2. Comments (//... or /*...*/)
+    // 3. Keywords (public, private, etc.)
+    // 4. Numbers (Integers, Decimals, Floats/Doubles/Longs like 1.5f, 10L, 3.14)
     public static final Pattern CODE_TOKEN_PATTERN = Pattern.compile(
-            "(\".*?\"|'.*?'|//.*|/\\*[\\s\\S]*?\\*/|\\b(public|private|protected|class|interface|enum|extends|implements|void|int|float|double|boolean|char|String|return|if|else|for|while|do|switch|case|break|continue|new|null|true|false|this|super|static|final|abstract|synchronized|volatile|transient|import|package)\\b|\\b\\d+\\b)"
+            "(\".*?\"|'.*?'|//.*|/\\*[\\s\\S]*?\\*/|\\b(public|private|protected|class|interface|enum|extends|implements|void|int|float|double|boolean|char|String|return|if|else|for|while|do|switch|case|break|continue|new|null|true|false|this|super|static|final|abstract|synchronized|volatile|transient|import|package)\\b|\\b\\d+(\\.\\d+)?[fFdDL]?\\b)"
     );
 
     /**
@@ -85,7 +90,7 @@ public class MarkdownUtils {
     }
 
     /**
-     * Highlights code syntax using basic regex patterns.
+     * Highlights code syntax using regex patterns.
      *
      * @param code The raw code string.
      * @return A Component with colors applied to keywords, strings, etc.
