@@ -10,6 +10,7 @@ import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.style.UIProperty;
 import net.xmx.xui.core.style.UIState;
 
 import java.util.List;
@@ -20,7 +21,7 @@ import java.util.List;
  * - Automatic visibility management (hover delays, fading).
  * - Smart positioning to stay within screen bounds.
  * - Dynamic content resizing.
- * - Configurable timing and offsets.
+ * - Fully styled via UIProperties (timing, offsets, padding).
  *
  * Usage: Create the tooltip, set the target via {@link #setTarget(UIWidget)},
  * set content via {@link #setContent(Component)}, then add the tooltip
@@ -30,18 +31,28 @@ import java.util.List;
  */
 public class UITooltip extends UIPanel {
 
+    // --- Tooltip Specific Properties ---
+
+    /** Time in seconds the mouse must hover before the tooltip appears. */
+    public static final UIProperty<Float> SHOW_DELAY = new UIProperty<>("tooltip_show_delay", 0.5f);
+
+    /** Duration of the fade-in animation in seconds. */
+    public static final UIProperty<Float> FADE_IN_TIME = new UIProperty<>("tooltip_fade_in_time", 0.2f);
+
+    /** Duration of the fade-out animation in seconds. */
+    public static final UIProperty<Float> FADE_OUT_TIME = new UIProperty<>("tooltip_fade_out_time", 0.2f);
+
+    /** Horizontal offset from the mouse cursor in pixels. */
+    public static final UIProperty<Float> OFFSET_X = new UIProperty<>("tooltip_offset_x", 12.0f);
+
+    /** Vertical offset from the mouse cursor in pixels. */
+    public static final UIProperty<Float> OFFSET_Y = new UIProperty<>("tooltip_offset_y", -12.0f);
+
+    /** Padding around the text content inside the tooltip frame. */
+    public static final UIProperty<Float> PADDING = new UIProperty<>("tooltip_padding", 5.0f);
+
     private UIWidget target;
     private final UIWrappedText contentText;
-
-    // Timing Configuration (in seconds for consistency with XUI dt)
-    private float delay = 0.5f;
-    private float fadeInTime = 0.2f;
-    private float fadeOutTime = 0.2f;
-
-    // Positioning Configuration
-    private float offsetX = 12.0f;
-    private float offsetY = -12.0f;
-    private float padding = 5.0f;
 
     // State Management
     private enum TooltipState {
@@ -64,20 +75,26 @@ public class UITooltip extends UIPanel {
     public UITooltip() {
         this.contentText = new UIWrappedText();
 
-        // Setup internal text widget
-        this.contentText.setX(Constraints.pixel(padding));
-        this.contentText.setY(Constraints.pixel(padding));
-        this.add(this.contentText);
-
         // Default Tooltip Styling
         this.style()
                 .set(Properties.BACKGROUND_COLOR, 0xF0101010) // Dark semi-transparent
                 .set(Properties.BORDER_COLOR, 0x505000FF)     // Purple-ish border
                 .set(Properties.BORDER_THICKNESS, 1.0f)
-                .set(Properties.BORDER_RADIUS, 4.0f);
+                .set(Properties.BORDER_RADIUS, 4.0f)
+                // Default specific properties
+                .set(SHOW_DELAY, 0.5f)
+                .set(FADE_IN_TIME, 0.2f)
+                .set(FADE_OUT_TIME, 0.2f)
+                .set(OFFSET_X, 12.0f)
+                .set(OFFSET_Y, -12.0f)
+                .set(PADDING, 5.0f);
 
-        // Tooltips are invisible by default and do not block input
-        this.setVisible(true); // Logic handles opacity, widget remains "active" to update
+        // Setup internal text widget
+        // Positions are updated in layout() based on PADDING property
+        this.add(this.contentText);
+
+        // Tooltips are invisible by default (managed by opacity), but the widget remains "active" to update logic
+        this.setVisible(true);
     }
 
     /**
@@ -128,42 +145,49 @@ public class UITooltip extends UIPanel {
     }
 
     /**
-     * Sets the hover delay before the tooltip appears.
+     * Configures the hover delay via the style system.
      * @param seconds Time in seconds.
      */
     public UITooltip setDelay(float seconds) {
-        this.delay = seconds;
+        this.style().set(UIState.DEFAULT, SHOW_DELAY, seconds);
         return this;
     }
 
     /**
-     * Sets the fade animation durations.
+     * Configures the fade animation durations via the style system.
      * @param fadeIn  Fade in duration in seconds.
      * @param fadeOut Fade out duration in seconds.
      */
     public UITooltip setFadeTimes(float fadeIn, float fadeOut) {
-        this.fadeInTime = fadeIn;
-        this.fadeOutTime = fadeOut;
+        this.style().set(UIState.DEFAULT, FADE_IN_TIME, fadeIn);
+        this.style().set(UIState.DEFAULT, FADE_OUT_TIME, fadeOut);
         return this;
     }
 
     /**
-     * Sets the mouse cursor offset.
+     * Configures the mouse cursor offset via the style system.
      */
     public UITooltip setOffset(float x, float y) {
-        this.offsetX = x;
-        this.offsetY = y;
+        this.style().set(UIState.DEFAULT, OFFSET_X, x);
+        this.style().set(UIState.DEFAULT, OFFSET_Y, y);
         return this;
     }
 
     @Override
     public void layout() {
+        // Retrieve dynamic padding from style
+        float pad = style().getValue(UIState.DEFAULT, PADDING);
+
+        // Update internal text position
+        this.contentText.setX(Constraints.pixel(pad));
+        this.contentText.setY(Constraints.pixel(pad));
+
         // 1. Let the text calculate its required size first
         this.contentText.layout();
 
         // 2. Resize this panel to fit the text plus padding
-        float requiredWidth = this.contentText.getWidth() + (padding * 2);
-        float requiredHeight = this.contentText.getHeight() + (padding * 2);
+        float requiredWidth = this.contentText.getWidth() + (pad * 2);
+        float requiredHeight = this.contentText.getHeight() + (pad * 2);
 
         this.setWidth(Constraints.pixel(requiredWidth));
         this.setHeight(Constraints.pixel(requiredHeight));
@@ -219,6 +243,11 @@ public class UITooltip extends UIPanel {
     private void updateState(float dt) {
         // Check if target is currently hovered
         boolean targetHovered = target.isVisible() && isMouseOverTarget();
+
+        // Retrieve timing from style
+        float delay = style().getValue(UIState.DEFAULT, SHOW_DELAY);
+        float fadeInTime = style().getValue(UIState.DEFAULT, FADE_IN_TIME);
+        float fadeOutTime = style().getValue(UIState.DEFAULT, FADE_OUT_TIME);
 
         switch (state) {
             case HIDDEN:
@@ -299,13 +328,17 @@ public class UITooltip extends UIPanel {
         int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 
+        // Retrieve offsets from style
+        float offX = style().getValue(UIState.DEFAULT, OFFSET_X);
+        float offY = style().getValue(UIState.DEFAULT, OFFSET_Y);
+
         // Start with offset position
-        float newX = mouseX + offsetX;
-        float newY = mouseY + offsetY;
+        float newX = mouseX + offX;
+        float newY = mouseY + offY;
 
         // Check Right Edge
         if (newX + width > screenWidth - 5) {
-            newX = mouseX - width - offsetX; // Flip to left
+            newX = mouseX - width - offX; // Flip to left
         }
         // Check Bottom Edge
         if (newY + height > screenHeight - 5) {

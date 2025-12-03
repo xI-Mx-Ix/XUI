@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.style.UIProperty;
 import net.xmx.xui.core.style.UIState;
 
 import java.util.ArrayList;
@@ -24,6 +25,11 @@ import java.util.function.Consumer;
  * @author xI-Mx-Ix
  */
 public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
+
+    /**
+     *  Color of the chevron/arrow indicator on the right side.
+     */
+    public static final UIProperty<Integer> ARROW_COLOR = new UIProperty<>("dropdown_arrow_color", 0xFFAAAAAA);
 
     private final List<Component> options = new ArrayList<>();
 
@@ -86,14 +92,14 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 4.0f)
                 .set(UIState.DEFAULT, Properties.BORDER_THICKNESS, 1.0f)
                 .set(UIState.DEFAULT, Properties.TEXT_COLOR, 0xFFE0E0E0)
-                .set(UIState.DEFAULT, Properties.ARROW_COLOR, 0xFFAAAAAA)
+                .set(UIState.DEFAULT, ARROW_COLOR, 0xFFAAAAAA)
 
                 // This color is drawn over the option to make it "lighter".
                 // 0x40 is alpha (approx 25% opacity). White overlay = lighter background.
                 .set(UIState.DEFAULT, Properties.HOVER_COLOR, 0x40FFFFFF)
 
                 .set(UIState.HOVER, Properties.BACKGROUND_COLOR, 0xFF303030)
-                .set(UIState.HOVER, Properties.ARROW_COLOR, 0xFFFFFFFF)
+                .set(UIState.HOVER, ARROW_COLOR, 0xFFFFFFFF)
 
                 .set(UIState.ACTIVE, Properties.BACKGROUND_COLOR, 0xFF101010);
     }
@@ -111,7 +117,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         int borderColor = getColor(Properties.BORDER_COLOR, state, partialTicks);
         int textColor = getColor(Properties.TEXT_COLOR, state, partialTicks);
-        int arrowColor = getColor(Properties.ARROW_COLOR, state, partialTicks);
+        int arrowColor = getColor(ARROW_COLOR, state, partialTicks);
         float radius = getFloat(Properties.BORDER_RADIUS, state, partialTicks);
         float borderThick = getFloat(Properties.BORDER_THICKNESS, state, partialTicks);
 
