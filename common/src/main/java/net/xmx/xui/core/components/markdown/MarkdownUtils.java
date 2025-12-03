@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 /**
  * Utility class for parsing Markdown syntax and helper methods for text generation.
- * Contains shared logic for regex patterns and text wrapping initialization.
+ * Contains logic for Regex patterns, inline style parsing, and syntax highlighting.
  *
  * @author xI-Mx-Ix
  */
@@ -39,28 +39,28 @@ public class MarkdownUtils {
      * @return A configured UIText widget with layout calculated.
      */
     public static UIText createWrappingText(Component content, float widthOffset, float contentWidth) {
-        // 1. Create with empty string (Lines: [Empty, NoWrap])
-        // This acts as a small top padding (line height ~9px)
         UIText widget = new UIText();
+        // Add empty line for padding logic
         widget.addText(Component.empty());
-
-        // 2. Add actual content with wrapping enabled (Lines: [Empty, NoWrap], [Content, Wrap])
+        // Add actual content with wrapping enabled
         widget.addText(content, true);
 
         widget.setX(Constraints.pixel(widthOffset));
-        widget.setY(Constraints.pixel(0)); // Y is relative to the container
+        widget.setY(Constraints.pixel(0));
         widget.setWidth(Constraints.pixel(contentWidth - widthOffset));
 
-        // Force layout calculation immediately so we can read the height
         widget.layout();
         return widget;
     }
 
     /**
-     * Primitive regex parser for inline markdown styles.
-     * **bold** -> Bold
-     * *italic* -> Italic
-     * `code` -> Gray/Monospace
+     * Parses inline markdown styles including Bold, Italic, Strikethrough, and Code.
+     *
+     * Supported syntax:
+     * - **Bold** -> Bold
+     * - *Italic* -> Italic
+     * - ~~Strike~~ -> Strikethrough
+     * - `Code` -> Gray/Monospace style
      *
      * @param text The raw text.
      * @return A component with formatting codes applied.
@@ -74,6 +74,9 @@ public class MarkdownUtils {
 
         // Replace Italic *...*
         safe = safe.replaceAll("\\*(.*?)\\*", "§o$1§r");
+
+        // Replace Strikethrough ~~...~~
+        safe = safe.replaceAll("~~(.*?)~~", "§m$1§r");
 
         // Replace Code `...` (Yellow/Gray)
         safe = safe.replaceAll("`(.*?)`", "§7$1§r");
@@ -102,7 +105,6 @@ public class MarkdownUtils {
             String token = matcher.group();
             ChatFormatting color;
 
-            // Determine color based on token type
             if (token.startsWith("\"") || token.startsWith("'")) {
                 color = ChatFormatting.GREEN; // Strings
             } else if (token.startsWith("//") || token.startsWith("/*")) {
@@ -110,14 +112,13 @@ public class MarkdownUtils {
             } else if (Character.isDigit(token.charAt(0))) {
                 color = ChatFormatting.BLUE; // Numbers
             } else {
-                color = ChatFormatting.GOLD; // Keywords (public, void, etc.)
+                color = ChatFormatting.GOLD; // Keywords
             }
 
             result.append(Component.literal(token).withStyle(color));
             lastEnd = matcher.end();
         }
 
-        // Append any remaining text after the last match
         String tail = code.substring(lastEnd);
         if (!tail.isEmpty()) {
             result.append(Component.literal(tail).withStyle(ChatFormatting.GRAY));

@@ -16,7 +16,7 @@ import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.impl.UIRenderImpl;
 
 /**
- * Example screen demonstrating the UIMarkdown widget inside a ScrollPanel.
+ * Example screen demonstrating the expanded UIMarkdown widget features.
  *
  * @author xI-Mx-Ix
  */
@@ -27,47 +27,45 @@ public class XUIMarkdownExampleScreen extends Screen {
     private UIScrollPanel scrollPanel;
     private long lastFrameTime = 0;
 
-    // A sample markdown string with various features
+    // A sample markdown string without images
     private static final String SAMPLE_MARKDOWN =
-            "# XUI Framework\n" +
+            "# XUI Framework v2\n" +
                     "Welcome to the **XUI** markdown demo.\n" +
                     "\n" +
-                    "## Features\n" +
-                    "This widget supports various *styles*:\n" +
-                    "- Headers (H1, H2, H3)\n" +
-                    "- Unordered lists like this one\n" +
-                    "- **Bold text** and *Italic text*\n" +
-                    "- Inline `code snippets` for technical stuff\n" +
+                    "## Rich Formatting\n" +
+                    "We now support:\n" +
+                    "- **Bold** and *Italic*\n" +
+                    "- ~~Strikethrough text~~\n" +
+                    "- `Inline Code` formatting\n" +
                     "\n" +
-                    "---" + // Horizontal separator
+                    "## Task Lists\n" +
+                    "Track your progress easily:\n" +
+                    "- [x] Implement Basic Markdown\n" +
+                    "- [x] Add Tables support\n" +
+                    "- [ ] Release version 1.0\n" +
                     "\n" +
-                    "## Links\n" +
-                    "You can now include clickable links. Visit [Google](https://google.com) or check the [Minecraft Site](https://minecraft.net) for updates.\n" +
+                    "## Data Tables\n" +
+                    "Tables render with dynamic column sizing:\n" +
                     "\n" +
-                    "## Blockquotes\n" +
-                    "> \"UI design is not just about how it looks, but how it works.\"\n" +
-                    "> - Anonymous Developer\n" +
+                    "| ID | Item Name | Status |\n" +
+                    "|---|---|---|\n" +
+                    "| 1 | Diamond Sword | **Enchanted** |\n" +
+                    "| 2 | Iron Pickaxe | Damaged |\n" +
+                    "| 3 | Golden Apple | `Rare` |\n" +
                     "\n" +
-                    "## Code Blocks with Highlighting\n" +
-                    "You can also display multiline code with syntax colors:\n" +
+                    "## Code Blocks\n" +
+                    "Syntax highlighting for code:\n" +
                     "```\n" +
-                    "// Simple Java Example\n" +
-                    "public void onInit() {\n" +
-                    "    String message = \"Hello World\";\n" +
-                    "    int count = 42;\n" +
-                    "    if (count > 0) {\n" +
-                    "        System.out.println(message);\n" +
-                    "    }\n" +
-                    "    return;\n" +
+                    "// Java Entity Logic\n" +
+                    "if (player.isSprinting()) {\n" +
+                    "    speed *= 1.5f;\n" +
+                    "    spawnParticles();\n" +
                     "}\n" +
                     "```\n" +
                     "\n" +
-                    "## Integration\n" +
-                    "This widget automatically calculates its height, making it perfect " +
-                    "for **UIScrollPanel**. As you add more text, the scrollbar adjusts automatically.\n" +
+                    "> \"The update adds significant flexibility to document rendering.\"\n" +
                     "\n" +
-                    "### Conclusion\n" +
-                    "Enjoy building UIs with XUI!";
+                    "Visit [GitHub](https://github.com) for more info.";
 
     public XUIMarkdownExampleScreen() {
         super(Component.literal("Markdown Demo"));
@@ -99,7 +97,7 @@ public class XUIMarkdownExampleScreen extends Screen {
         scrollPanel.setX(Constraints.pixel(20))
                 .setY(Constraints.pixel(20))
                 .setWidth(Constraints.pixel(460))
-                .setHeight(Constraints.pixel(360)); // Leave some margin
+                .setHeight(Constraints.pixel(360));
 
         UIMarkdown markdown = new UIMarkdown();
         markdown.setContentWidth(440);

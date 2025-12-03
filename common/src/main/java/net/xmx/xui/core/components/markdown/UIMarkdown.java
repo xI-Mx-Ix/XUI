@@ -13,17 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A widget that parses basic Markdown syntax and renders it using native UI components.
- * It acts as a vertical layout container for the generated text and code block widgets.
- *
- * Supported features:
- * - Headers (#, ##, ###)
- * - Code Blocks (```) with Syntax Highlighting
- * - Blockquotes (>)
- * - Lists (- or *)
- * - Inline styles (**bold**, *italic*, `code`)
- * - Horizontal Separators (---)
- * - Clickable Links ([Text](URL))
+ * A widget that parses comprehensive Markdown syntax and renders it using native UI components.
+ * Updated to use native Checkbox rendering for Task Lists.
  *
  * @author xI-Mx-Ix
  */
@@ -31,7 +22,7 @@ public class UIMarkdown extends UIPanel {
 
     private String rawMarkdown = "";
     private float currentLayoutY = 0;
-    private float contentWidth = 200.0f; // Default width
+    private float contentWidth = 200.0f;
 
     /**
      * Constructs a Markdown viewer with default settings.
@@ -79,18 +70,19 @@ public class UIMarkdown extends UIPanel {
         this.currentLayoutY = 0;
 
         String[] lines = rawMarkdown.split("\n");
+
         List<String> codeBlockBuffer = null;
+        List<String> tableBuffer = null;
 
         for (String line : lines) {
             String trimmed = line.trim();
 
-            // --- Code Block Handling ---
+            // --- 1. Code Block Handling ---
             if (trimmed.startsWith("```")) {
                 if (codeBlockBuffer == null) {
-                    // Start code block
+                    if (tableBuffer != null) { flushTable(tableBuffer); tableBuffer = null; }
                     codeBlockBuffer = new ArrayList<>();
                 } else {
-                    // End code block
                     addCodeBlock(codeBlockBuffer);
                     codeBlockBuffer = null;
                 }
@@ -98,14 +90,27 @@ public class UIMarkdown extends UIPanel {
             }
 
             if (codeBlockBuffer != null) {
-                codeBlockBuffer.add(line); // Add raw line (keep indentation)
+                codeBlockBuffer.add(line);
                 continue;
             }
 
-            // --- Standard Markdown parsing ---
+            // --- 2. Table Handling ---
+            if (trimmed.startsWith("|")) {
+                if (tableBuffer == null) tableBuffer = new ArrayList<>();
+                tableBuffer.add(line);
+                continue;
+            } else if (tableBuffer != null) {
+                flushTable(tableBuffer);
+                tableBuffer = null;
+            }
+
+            // --- 3. Standard Parsing ---
             if (trimmed.isEmpty()) {
-                currentLayoutY += 8; // Paragraph spacing
-            } else if (trimmed.equals("---") || trimmed.equals("***")) {
+                currentLayoutY += 8;
+                continue;
+            }
+
+            if (trimmed.equals("---") || trimmed.equals("***")) {
                 addSeparator();
             } else if (trimmed.startsWith("# ")) {
                 addHeader(trimmed.substring(2), ChatFormatting.GOLD);
@@ -116,18 +121,34 @@ public class UIMarkdown extends UIPanel {
             } else if (trimmed.startsWith("> ")) {
                 addQuote(trimmed.substring(2));
             } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-                addListItem(trimmed.substring(2));
+                // Check for Task List Syntax
+                if (trimmed.startsWith("- [ ] ") || trimmed.startsWith("- [x] ")) {
+                    boolean checked = trimmed.startsWith("- [x] ");
+                    // Substring: "- [x] " is 6 chars long
+                    addTaskListItem(trimmed.substring(6), checked);
+                } else {
+                    addListItem(trimmed.substring(2));
+                }
             } else {
-                // Use flow layout to handle inline links correctly
                 addFlowParagraph(line);
             }
         }
 
-        // Finalize height constraint based on total content
+        if (tableBuffer != null) flushTable(tableBuffer);
+        if (codeBlockBuffer != null) addCodeBlock(codeBlockBuffer);
+
         this.setHeight(Constraints.pixel(currentLayoutY));
     }
 
-    // --- Component Instantiation Wrappers ---
+    // --- Component Generators ---
+
+    private void flushTable(List<String> lines) {
+        MarkdownTable table = new MarkdownTable(lines, contentWidth);
+        table.setY(Constraints.pixel(currentLayoutY));
+        this.add(table);
+
+        currentLayoutY += table.getRenderHeight();
+    }
 
     private void addSeparator() {
         MarkdownSeparator separator = new MarkdownSeparator(contentWidth);
@@ -155,6 +176,17 @@ public class UIMarkdown extends UIPanel {
 
     private void addListItem(String rawText) {
         MarkdownListItem item = new MarkdownListItem(rawText, contentWidth);
+        item.setY(Constraints.pixel(currentLayoutY));
+        this.add(item);
+
+        currentLayoutY += item.getRenderHeight();
+    }
+
+    /**
+     * Adds a Task List item using the new visual renderer.
+     */
+    private void addTaskListItem(String rawText, boolean checked) {
+        MarkdownTaskListItem item = new MarkdownTaskListItem(rawText, checked, contentWidth);
         item.setY(Constraints.pixel(currentLayoutY));
         this.add(item);
 
