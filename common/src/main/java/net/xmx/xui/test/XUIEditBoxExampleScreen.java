@@ -60,14 +60,14 @@ public class XUIEditBoxExampleScreen extends Screen {
         title.setCentered(true)
                 .setX(Constraints.center())
                 .setY(Constraints.pixel(15));
-        
+
         // --- Field 1: Username (Single Line) ---
-        
+
         // Label
         UIText lblUser = new UIText();
         lblUser.setText("Username:");
         lblUser.setX(Constraints.pixel(30))
-               .setY(Constraints.pixel(50));
+                .setY(Constraints.pixel(50));
         lblUser.style().set(Properties.TEXT_COLOR, 0xFFAAAAAA);
 
         // Input Box
@@ -75,12 +75,12 @@ public class XUIEditBoxExampleScreen extends Screen {
         userBox.setMultiline(false)
                 .setMaxLength(16);
         userBox.setHint("Enter your username");
-        
+
         userBox.setX(Constraints.pixel(30))
                 .setY(Constraints.sibling(lblUser, 5, true)) // 5px below label
                 .setWidth(Constraints.pixel(340))
                 .setHeight(Constraints.pixel(22));
-        
+
         userBox.setText("PlayerOne"); // Default value
 
         // --- Field 2: Biography (Multi Line) ---
@@ -89,34 +89,34 @@ public class XUIEditBoxExampleScreen extends Screen {
         UIText lblBio = new UIText();
         lblBio.setText("Biography (Multi-line):");
         lblBio.setX(Constraints.pixel(30))
-              .setY(Constraints.sibling(userBox, 15, true));
+                .setY(Constraints.sibling(userBox, 15, true));
         lblBio.style().set(Properties.TEXT_COLOR, 0xFFAAAAAA);
 
         // Input Area
         UIEditBox bioBox = new UIEditBox();
         bioBox.setMultiline(true)
-              .setMaxLength(512);
+                .setMaxLength(512);
 
         bioBox.setX(Constraints.pixel(30))
-              .setY(Constraints.sibling(lblBio, 5, true))
-              .setWidth(Constraints.pixel(340))
-              .setHeight(Constraints.pixel(120));
+                .setY(Constraints.sibling(lblBio, 5, true))
+                .setWidth(Constraints.pixel(340))
+                .setHeight(Constraints.pixel(120));
         bioBox.setHint("Enter your biography");
 
         // Set some long initial text to demonstrate scrolling
         bioBox.setText("I am a Minecraft player.\n" +
-                       "I enjoy building redstone contraptions and exploring new biomes.\n" +
-                       "This text box supports scrolling if you type too much!\n" +
-                       "Try selecting this text with your mouse.");
+                "I enjoy building redstone contraptions and exploring new biomes.\n" +
+                "This text box supports scrolling if you type too much!\n" +
+                "Try selecting this text with your mouse.");
 
         // --- Submit Button ---
         UIButton submitBtn = new UIButton();
         submitBtn.setLabel("Print to Console");
         submitBtn.setX(Constraints.center())
-                 .setY(Constraints.anchorEnd(20))
-                 .setWidth(Constraints.pixel(150))
-                 .setHeight(Constraints.pixel(30));
-        
+                .setY(Constraints.anchorEnd(20))
+                .setWidth(Constraints.pixel(150))
+                .setHeight(Constraints.pixel(30));
+
         submitBtn.setOnClick(widget -> {
             System.out.println("--- Form Data ---");
             System.out.println("User: " + userBox.getText());

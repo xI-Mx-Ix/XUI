@@ -144,7 +144,7 @@ public class XUIMarkdownExampleScreen extends Screen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (scrollPanel != null) {
-            scrollPanel.mouseDragged(mouseX, mouseY, button);
+            scrollPanel.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
