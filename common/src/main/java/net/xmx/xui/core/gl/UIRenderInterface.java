@@ -142,13 +142,15 @@ public interface UIRenderInterface {
     void disableScissor();
 
     /**
-     * Moves the rendering position on the Z-axis (depth).
-     * Positive values move towards the viewer (on top), rendering over other elements.
-     * Negative values move away (behind).
+     * Translates the rendering origin by the specified amount.
+     * This affects all subsequent drawing operations until reversed.
+     * Useful for scroll containers or moving groups of widgets.
      *
-     * @param z The offset to apply to the Z-coordinate.
+     * @param x The offset on the X-axis in logical pixels.
+     * @param y The offset on the Y-axis in logical pixels.
+     * @param z The offset on the Z-axis (depth).
      */
-    void translateZ(float z);
+    void translate(float x, float y, float z);
 
     /**
      * Retrieves the current scissor rectangle active in the renderer.

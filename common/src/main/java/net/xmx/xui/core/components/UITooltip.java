@@ -201,8 +201,8 @@ public class UITooltip extends UIPanel {
         // If no target is set, do not process logic
         if (target == null) return;
 
-        // Update Logic
-        updateState(partialTicks);
+        // Update Logic using logic coordinates passed by UIContext
+        updateState(partialTicks, mouseX, mouseY);
 
         // Early exit if completely invisible
         if (currentOpacity <= 0.001f) {
@@ -229,9 +229,9 @@ public class UITooltip extends UIPanel {
 
         // Render Self and Children
         // We push Z translation to ensure tooltip is on top
-        renderer.translateZ(500.0f);
+        renderer.translate(0, 0, 500.0f);
         super.render(renderer, mouseX, mouseY, partialTicks);
-        renderer.translateZ(-500.0f);
+        renderer.translate(0, 0, -500.0f);
 
         // Restore original style values
         style().set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, baseBg);
@@ -240,9 +240,9 @@ public class UITooltip extends UIPanel {
         contentText.style().set(UIState.DEFAULT, Properties.TEXT_COLOR, baseText);
     }
 
-    private void updateState(float dt) {
-        // Check if target is currently hovered
-        boolean targetHovered = target.isVisible() && isMouseOverTarget();
+    private void updateState(float dt, int mouseX, int mouseY) {
+        // Check if target is currently hovered using logical coordinates
+        boolean targetHovered = target.isVisible() && target.isMouseOver(mouseX, mouseY);
 
         // Retrieve timing from style
         float delay = style().getValue(UIState.DEFAULT, SHOW_DELAY);
@@ -309,16 +309,6 @@ public class UITooltip extends UIPanel {
                 }
                 break;
         }
-    }
-
-    /**
-     * Checks if the mouse is currently within the target widget's bounds.
-     */
-    private boolean isMouseOverTarget() {
-        double mx = Minecraft.getInstance().mouseHandler.xpos() * (double)Minecraft.getInstance().getWindow().getGuiScaledWidth() / (double)Minecraft.getInstance().getWindow().getScreenWidth();
-        double my = Minecraft.getInstance().mouseHandler.ypos() * (double)Minecraft.getInstance().getWindow().getGuiScaledHeight() / (double)Minecraft.getInstance().getWindow().getScreenHeight();
-
-        return target.isMouseOver(mx, my);
     }
 
     /**

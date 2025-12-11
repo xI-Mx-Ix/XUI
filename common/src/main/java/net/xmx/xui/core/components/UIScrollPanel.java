@@ -67,6 +67,13 @@ public class UIScrollPanel extends UIWidget {
     private boolean isScrollbarHovered = false;
 
     /**
+     * Flag indicating that the panel is currently iterating over its children
+     * for rendering or event processing. When true, {@link #isMouseOver} adjusts
+     * the input coordinates to account for the scroll offset.
+     */
+    private boolean handlingChildEvent = false;
+
+    /**
      * Cache for the original Y positions of children.
      * Required because we modify the children's Y coordinate dynamically during render
      * to simulate scrolling, and we need a stable reference point.
@@ -93,6 +100,22 @@ public class UIScrollPanel extends UIWidget {
                 .set(SCROLLBAR_RADIUS, 4.0f)
                 .set(SCROLLBAR_COLOR, 0x80FFFFFF)
                 .set(SCROLLBAR_TRACK_COLOR, 0x20FFFFFF);
+    }
+
+    /**
+     * Overridden to correctly handle visibility checks from children.
+     * <p>
+     * When children check if they are clipped by this parent, they pass coordinates
+     * that include the scroll offset. If we are currently handling child events,
+     * we must subtract that offset to check against the physical bounds of the panel.
+     * </p>
+     */
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        if (handlingChildEvent) {
+            return super.isMouseOver(mouseX, mouseY - scrollOffset);
+        }
+        return super.isMouseOver(mouseX, mouseY);
     }
 
     /**
@@ -189,6 +212,8 @@ public class UIScrollPanel extends UIWidget {
      * Handles mouse click events.
      * <p>
      * Detects clicks on the scrollbar track to initiate dragging.
+     * Forwards events to children using corrected coordinates and sets the
+     * clipping context flag to ensure children pass visibility checks.
      * </p>
      *
      * @param mouseX The absolute X coordinate.
@@ -200,29 +225,79 @@ public class UIScrollPanel extends UIWidget {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isVisible) return false;
 
-        // Check if clicking on scrollbar
+        // Check if clicking on scrollbar (Physical coordinates, no scroll offset applied)
         if (button == 0 && isScrollable() && isPointOnScrollbar(mouseX, mouseY)) {
             isDraggingScrollbar = true;
             dragStartY = (float) mouseY;
             dragStartScroll = scrollOffset;
             showScrollbar();
-            // We return true to capture focus, ensuring we receive drag events
             return true;
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        // If clipped (mouse outside panel bounds), ignore children
+        if (isClippedByParent(mouseX, mouseY)) return false;
+
+        // Calculate scrolled mouse Y for children interactions
+        double scrolledMouseY = mouseY + scrollOffset;
+
+        // Propagate the event to children.
+        handlingChildEvent = true;
+        try {
+            for (int i = children.size() - 1; i >= 0; i--) {
+                UIWidget child = children.get(i);
+                if (child.mouseClicked(mouseX, scrolledMouseY, button)) {
+                    for (UIWidget sibling : children) {
+                        if (sibling != child) sibling.unfocus();
+                    }
+                    return true;
+                }
+            }
+        } finally {
+            handlingChildEvent = false;
+        }
+
+        // Check if global obstruction prevents panel interaction
+        if (isGlobalObstructed(mouseX, mouseY)) return false;
+
+        // Self interaction
+        if (isHovered) {
+            isFocused = true;
+            for (UIWidget child : children) child.unfocus();
+            if (onClick != null) onClick.accept(this);
+            return true;
+        } else {
+            isFocused = false;
+        }
+
+        return false;
     }
 
     /**
      * Handles mouse release events.
-     * Stops any active scrollbar dragging.
+     * Stops any active scrollbar dragging and propagates to children with coordinate correction.
      */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (!isVisible) return false;
+
         if (isDraggingScrollbar && button == 0) {
             isDraggingScrollbar = false;
             return true;
         }
+
+        // Forward to children with offset
+        double scrolledMouseY = mouseY + scrollOffset;
+        handlingChildEvent = true;
+        try {
+            for (int i = children.size() - 1; i >= 0; i--) {
+                if (children.get(i).mouseReleased(mouseX, scrolledMouseY, button)) {
+                    return true;
+                }
+            }
+        } finally {
+            handlingChildEvent = false;
+        }
+
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -241,6 +316,8 @@ public class UIScrollPanel extends UIWidget {
      */
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (!isVisible) return false;
+
         if (isDraggingScrollbar && isScrollable()) {
             // We use the absolute position difference from the start of the drag
             // instead of accumulating deltas to avoid drift.
@@ -259,8 +336,45 @@ public class UIScrollPanel extends UIWidget {
             return true;
         }
 
-        // Pass drag event to children if we aren't dragging the scrollbar
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        // Pass drag event to children with offset
+        double scrolledMouseY = mouseY + scrollOffset;
+        handlingChildEvent = true;
+        try {
+            for (int i = children.size() - 1; i >= 0; i--) {
+                if (children.get(i).mouseDragged(mouseX, scrolledMouseY, button, dragX, dragY)) {
+                    return true;
+                }
+            }
+        } finally {
+            handlingChildEvent = false;
+        }
+
+        return isFocused;
+    }
+
+    /**
+     * Called whenever the mouse moves, regardless of button state.
+     *
+     * @param mouseX The absolute X coordinate.
+     * @param mouseY The absolute Y coordinate.
+     */
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        if (!isVisible) return;
+
+        // Update own hover state with physical coordinates
+        updateHoverState((int) mouseX, (int) mouseY);
+
+        // Forward to children with logical scrolling coordinates
+        double scrolledMouseY = mouseY + scrollOffset;
+        handlingChildEvent = true;
+        try {
+            for (int i = children.size() - 1; i >= 0; i--) {
+                children.get(i).mouseMoved(mouseX, scrolledMouseY);
+            }
+        } finally {
+            handlingChildEvent = false;
+        }
     }
 
     /**
@@ -352,7 +466,6 @@ public class UIScrollPanel extends UIWidget {
         }
 
         // Apply visual effects manually (e.g., Scissors)
-        // We override render to control child positioning, so we must handle effects here
         for (UIEffect effect : effects) {
             effect.apply(renderer, this);
         }
@@ -360,33 +473,28 @@ public class UIScrollPanel extends UIWidget {
         // Draw the panel itself (background)
         drawSelf(renderer, mouseX, mouseY, partialTicks, state);
 
-        // Apply scroll offset to children before rendering them
-        applyScrollOffsetToChildren();
+        // Apply visual translation for scrolling using the renderer.
+        // This shifts the coordinate system up by scrollOffset.
+        renderer.translate(0, -scrollOffset, 0);
 
         // Render children
-        for (UIWidget child : children) {
-            child.render(renderer, mouseX, mouseY, partialTicks);
+        // Enable child event handling flag so isMouseOver calls from children during their render
+        // (triggered by their updateHoverState) are properly compensated for the scroll offset.
+        handlingChildEvent = true;
+        try {
+            for (UIWidget child : children) {
+                child.render(renderer, mouseX, (int) (mouseY + scrollOffset), partialTicks);
+            }
+        } finally {
+            handlingChildEvent = false;
         }
+
+        // Revert visual translation
+        renderer.translate(0, scrollOffset, 0);
 
         // Revert visual effects
         for (int i = effects.size() - 1; i >= 0; i--) {
             effects.get(i).revert(renderer, this);
-        }
-    }
-
-    /**
-     * Applies the current scroll offset to children by modifying their Y positions dynamically.
-     * Does not permanently alter constraints, just the calculated Y for this frame.
-     */
-    private void applyScrollOffsetToChildren() {
-        for (UIWidget child : children) {
-            Float baseY = childBaseYPositions.get(child);
-            if (baseY != null) {
-                final float scrolledY = baseY - scrollOffset;
-                // Temporarily override the Y calculation for the next frame
-                child.setY((parentPos, parentSize, selfSize) -> scrolledY);
-                child.layout();
-            }
         }
     }
 
@@ -478,26 +586,6 @@ public class UIScrollPanel extends UIWidget {
         this.targetScrollOffset = offset;
         clampScrollOffset();
         showScrollbar();
-        return this;
-    }
-
-    /**
-     * Helper: Scrolls to ensure a specific child is visible.
-     */
-    public UIScrollPanel scrollToChild(UIWidget child) {
-        Float baseY = childBaseYPositions.get(child);
-        if (baseY == null) return this;
-
-        float childY = baseY - this.getY();
-        float childBottom = childY + child.getHeight();
-
-        if (childY < scrollOffset) {
-            // Child is above visible area
-            setScrollOffset(childY);
-        } else if (childBottom > scrollOffset + this.getHeight()) {
-            // Child is below visible area
-            setScrollOffset(childBottom - this.getHeight());
-        }
         return this;
     }
 }

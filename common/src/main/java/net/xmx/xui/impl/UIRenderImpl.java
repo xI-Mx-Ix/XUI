@@ -22,8 +22,8 @@ import net.xmx.xui.core.gl.UIRenderer;
  * <b>Pixel Snapping Implementation:</b><br>
  * Since the UI uses floating-point scaling factors, logical coordinates often result
  * in sub-pixel positions (e.g., 10.5px). This implementation forces coordinates to
- * snap to the nearest physical monitor pixel using the {@link #align(float)} method
- * before rendering. This prevents visual artifacts like blurry fonts or uneven border thicknesses.
+ * snap to the nearest physical monitor pixel using the {@link #alignX(float)} and {@link #alignY(float)}
+ * methods before rendering. This prevents visual artifacts like blurry fonts or uneven border thicknesses.
  * </p>
  *
  * @author xI-Mx-Ix
@@ -47,6 +47,13 @@ public class UIRenderImpl implements UIRenderInterface {
      * Defaults to 1.0 but is overridden by {@link #setScale(double)}.
      */
     private double currentScale = 1.0;
+
+    /**
+     * Global translation offsets for the current render batch.
+     * Used for scrolling and container offsets without modifying widget coordinates.
+     */
+    private float globalOffsetX = 0.0f;
+    private float globalOffsetY = 0.0f;
 
     /**
      * Private constructor for Singleton pattern.
@@ -88,22 +95,35 @@ public class UIRenderImpl implements UIRenderInterface {
      */
     public void setGuiGraphics(GuiGraphics guiGraphics) {
         this.guiGraphics = guiGraphics;
+        // Reset offsets at start of frame
+        this.globalOffsetX = 0;
+        this.globalOffsetY = 0;
     }
 
     /**
-     * Aligns a logical coordinate to the nearest physical screen pixel to prevent sub-pixel artifacts.
-     * <p>
-     * The formula used is: {@code round(logical * scale) / scale}.
-     * This converts the logical coordinate to physical pixels, snaps it to the grid,
-     * and converts it back to logical space for the GPU.
-     * </p>
+     * Aligns a logical X coordinate to the nearest physical screen pixel,
+     * taking into account the global offset.
      *
-     * @param logicalValue The coordinate in the UI system.
+     * @param logicalX The coordinate in the UI system.
      * @return The coordinate adjusted to start exactly on a monitor pixel.
      */
-    private float align(float logicalValue) {
-        if (currentScale == 0) return logicalValue;
-        return (float) (Math.round(logicalValue * currentScale) / currentScale);
+    private float alignX(float logicalX) {
+        float val = logicalX + globalOffsetX;
+        if (currentScale == 0) return val;
+        return (float) (Math.round(val * currentScale) / currentScale);
+    }
+
+    /**
+     * Aligns a logical Y coordinate to the nearest physical screen pixel,
+     * taking into account the global offset.
+     *
+     * @param logicalY The coordinate in the UI system.
+     * @return The coordinate adjusted to start exactly on a monitor pixel.
+     */
+    private float alignY(float logicalY) {
+        float val = logicalY + globalOffsetY;
+        if (currentScale == 0) return val;
+        return (float) (Math.round(val * currentScale) / currentScale);
     }
 
     /**
@@ -119,7 +139,8 @@ public class UIRenderImpl implements UIRenderInterface {
      */
     private float alignDim(float logicalSize) {
         if (logicalSize <= 0) return 0;
-        float aligned = align(logicalSize);
+        // Dimension scaling does not use offsets, just the raw size
+        float aligned = (float) (Math.round(logicalSize * currentScale) / currentScale);
 
         // If the size is positive but rounds to 0 (very thin line on low scale), force 1 physical pixel.
         if (aligned == 0 && logicalSize > 0) {
@@ -133,8 +154,8 @@ public class UIRenderImpl implements UIRenderInterface {
     @Override
     public void drawRect(float x, float y, float width, float height, int color, float radius) {
         // Snap position and dimensions to the pixel grid
-        float ax = align(x);
-        float ay = align(y);
+        float ax = alignX(x);
+        float ay = alignY(y);
         float aw = alignDim(width);
         float ah = alignDim(height);
 
@@ -143,8 +164,8 @@ public class UIRenderImpl implements UIRenderInterface {
 
     @Override
     public void drawRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL) {
-        float ax = align(x);
-        float ay = align(y);
+        float ax = alignX(x);
+        float ay = alignY(y);
         float aw = alignDim(width);
         float ah = alignDim(height);
 
@@ -153,27 +174,25 @@ public class UIRenderImpl implements UIRenderInterface {
 
     @Override
     public void drawOutline(float x, float y, float width, float height, int color, float radius, float thickness) {
-        float ax = align(x);
-        float ay = align(y);
+        float ax = alignX(x);
+        float ay = alignY(y);
         float aw = alignDim(width);
         float ah = alignDim(height);
 
         // Calculate minimal thickness to prevent borders from disappearing
-        float minThickness = (float) (1.0 / currentScale);
-        float snappedThickness = Math.max(minThickness, align(thickness));
+        float snappedThickness = Math.max((float)(1.0/currentScale), alignDim(thickness));
 
         UIRenderer.getInstance().drawOutline(ax, ay, aw, ah, color, snappedThickness, radius, radius, radius, radius, currentScale);
     }
 
     @Override
     public void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL) {
-        float ax = align(x);
-        float ay = align(y);
+        float ax = alignX(x);
+        float ay = alignY(y);
         float aw = alignDim(width);
         float ah = alignDim(height);
 
-        float minThickness = (float) (1.0 / currentScale);
-        float snappedThickness = Math.max(minThickness, align(thickness));
+        float snappedThickness = Math.max((float)(1.0/currentScale), alignDim(thickness));
 
         UIRenderer.getInstance().drawOutline(ax, ay, aw, ah, color, snappedThickness, rTL, rTR, rBR, rBL, currentScale);
     }
@@ -198,9 +217,9 @@ public class UIRenderImpl implements UIRenderInterface {
         // Flush any pending rendering commands (especially text) before changing state.
         Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
 
-        // 1. Align logical coordinates to the pixel grid (e.g., 10.5 -> 10.5)
-        float ax = align(x);
-        float ay = align(y);
+        // 1. Align logical coordinates to the pixel grid (e.g., 10.5 -> 10.5), including offsets
+        float ax = alignX(x);
+        float ay = alignY(y);
         float aw = alignDim(width);
         float ah = alignDim(height);
 
@@ -252,15 +271,28 @@ public class UIRenderImpl implements UIRenderInterface {
         };
     }
 
+    // --- Translation ---
+
+    @Override
+    public void translate(float x, float y, float z) {
+        this.globalOffsetX += x;
+        this.globalOffsetY += y;
+
+        // Z translation is handled via PoseStack to properly layer text/items
+        if (z != 0 && guiGraphics != null) {
+            guiGraphics.pose().translate(0, 0, z);
+        }
+    }
+
     // --- Text Rendering (Minecraft Specific) ---
 
     @Override
     public void drawText(Component text, float x, float y, int color, boolean shadow) {
         if (guiGraphics == null) return;
 
-        // CRITICAL: Snap text position to the pixel grid.
-        float ax = align(x);
-        float ay = align(y);
+        // Snap text position to the pixel grid.
+        float ax = alignX(x);
+        float ay = alignY(y);
 
         guiGraphics.pose().pushPose();
         // Translate slightly on Z to render over geometry
@@ -273,8 +305,8 @@ public class UIRenderImpl implements UIRenderInterface {
     public void drawWrappedText(Component text, float x, float y, float width, int color, boolean shadow) {
         if (guiGraphics == null) return;
 
-        float ax = align(x);
-        float ay = align(y);
+        float ax = alignX(x);
+        float ay = alignY(y);
         int aw = (int) alignDim(width);
 
         guiGraphics.drawWordWrap(Minecraft.getInstance().font, text, (int) ax, (int) ay, aw, color);
@@ -293,10 +325,5 @@ public class UIRenderImpl implements UIRenderInterface {
     @Override
     public int getWordWrapHeight(Component text, int maxWidth) {
         return Minecraft.getInstance().font.wordWrapHeight(text, maxWidth);
-    }
-
-    @Override
-    public void translateZ(float z) {
-        guiGraphics.pose().translate(0, 0, z);
     }
 }

@@ -150,10 +150,10 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         if (isOpen) {
             // Render the options overlay on top of everything
-            renderer.translateZ(300.0f);
+            renderer.translate(0.0f, 0.0f, 300.0f);
             // Pass the static listBgColor for the overlay background
             renderDropdownOverlay(renderer, mouseX, mouseY, partialTicks, listBgColor, borderColor, textColor, radius);
-            renderer.translateZ(-300.0f);
+            renderer.translate(0.0f, 0.0f, -300.0f);
         }
     }
 
