@@ -17,6 +17,13 @@ public interface UIRenderInterface {
 
     /**
      * Draws a filled rectangle with uniform corners.
+     *
+     * @param x      The absolute x-coordinate.
+     * @param y      The absolute y-coordinate.
+     * @param width  The width of the rectangle.
+     * @param height The height of the rectangle.
+     * @param color  The ARGB color value.
+     * @param radius The radius for all four corners.
      */
     void drawRect(float x, float y, float width, float height, int color, float radius);
 
@@ -38,11 +45,30 @@ public interface UIRenderInterface {
 
     /**
      * Draws a hollow outline (border) around a rectangle, optionally with rounded corners.
+     *
+     * @param x         The absolute x-coordinate.
+     * @param y         The absolute y-coordinate.
+     * @param width     The width of the rectangle.
+     * @param height    The height of the rectangle.
+     * @param color     The ARGB color value.
+     * @param radius    The radius for all four corners.
+     * @param thickness The thickness of the border line.
      */
     void drawOutline(float x, float y, float width, float height, int color, float radius, float thickness);
 
     /**
      * Draws a hollow outline with individual corner radii.
+     *
+     * @param x         The absolute x-coordinate.
+     * @param y         The absolute y-coordinate.
+     * @param width     The width of the rectangle.
+     * @param height    The height of the rectangle.
+     * @param color     The ARGB color value.
+     * @param thickness The thickness of the border line.
+     * @param rTL       Top-Left radius.
+     * @param rTR       Top-Right radius.
+     * @param rBR       Bottom-Right radius.
+     * @param rBL       Bottom-Left radius.
      */
     void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL);
 
@@ -96,13 +122,19 @@ public interface UIRenderInterface {
 
     /**
      * Enables a scissor test to clip rendering to a specific screen region.
+     * <p>
+     * <b>Implementation Note:</b> This method accepts float coordinates to allow for
+     * sub-pixel precision calculations (e.g., centering logic). The implementation
+     * must snap these values to the nearest physical pixel grid to ensure that
+     * clipping areas align perfectly with rendered geometry.
+     * </p>
      *
-     * @param x      The x-coordinate of the clipping area.
-     * @param y      The y-coordinate of the clipping area.
-     * @param width  The width of the clipping area.
-     * @param height The height of the clipping area.
+     * @param x      The logical x-coordinate of the clipping area.
+     * @param y      The logical y-coordinate of the clipping area.
+     * @param width  The logical width of the clipping area.
+     * @param height The logical height of the clipping area.
      */
-    void enableScissor(int x, int y, int width, int height);
+    void enableScissor(float x, float y, float width, float height);
 
     /**
      * Disables the active scissor test, restoring full screen rendering.
@@ -126,20 +158,8 @@ public interface UIRenderInterface {
      * widget's desired clip rect.
      * </p>
      *
-     * @return An integer array {@code [x, y, width, height]} representing the current scissor window,
+     * @return A float array {@code [x, y, width, height]} representing the current scissor window in logical pixels,
      *         or {@code null} if no scissor test is currently enabled.
      */
-    int[] getCurrentScissor();
-
-    /**
-     * Retrieves the current GUI scale factor used by the game engine.
-     * <p>
-     * This factor represents how many physical monitor pixels correspond to one logical UI unit.
-     * This is required for converting logical coordinates to physical OpenGL window coordinates,
-     * typically for scissoring or custom viewport calculations.
-     * </p>
-     *
-     * @return The current GUI scale factor (e.g., 1.0, 2.0, 3.0).
-     */
-    double getGuiScale();
+    float[] getCurrentScissor();
 }

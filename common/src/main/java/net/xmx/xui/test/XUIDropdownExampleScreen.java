@@ -4,22 +4,22 @@
  */
 package net.xmx.xui.test;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIDropdown;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.impl.UIRenderImpl;
 
 import java.util.Arrays;
 
 /**
- * Demonstrates Dropdown Z-Ordering.
+ * Demonstrates Dropdown Z-Ordering using {@link UIContext}.
  * The Dropdown is in a top panel but renders visually OVER the bottom panel
  * and blocks clicks to elements behind it.
  *
@@ -27,7 +27,7 @@ import java.util.Arrays;
  */
 public class XUIDropdownExampleScreen extends Screen {
 
-    private UIWidget root;
+    private final UIContext uiContext = new UIContext();
     private long lastFrameTime = 0;
 
     public XUIDropdownExampleScreen() {
@@ -36,15 +36,21 @@ public class XUIDropdownExampleScreen extends Screen {
 
     @Override
     protected void init() {
-        // 1. Root
-        root = new UIPanel();
-        root.setWidth(Constraints.pixel(this.width))
-                .setHeight(Constraints.pixel(this.height));
+        int wW = Minecraft.getInstance().getWindow().getWidth();
+        int wH = Minecraft.getInstance().getWindow().getHeight();
+        uiContext.updateLayout(wW, wH);
+
+        if (!uiContext.isInitialized()) {
+            buildUI();
+        }
+    }
+
+    private void buildUI() {
+        UIPanel root = uiContext.getRoot();
         root.style().set(Properties.BACKGROUND_COLOR, 0xFF121212);
 
         // 2. Bottom Container (Acts as the "Background" or "Obstructed" layer)
-        // We place this before the top panel in the add list so it renders first,
-        // but even if order was swapped, Z-translation handles the overlap.
+        // We place this before the top panel in the add list so it renders first.
         UIPanel bottomPanel = new UIPanel();
         bottomPanel.setX(Constraints.center())
                 .setY(Constraints.pixel(100))
@@ -111,21 +117,33 @@ public class XUIDropdownExampleScreen extends Screen {
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
-        root.render(UIRenderImpl.getInstance(), mouseX, mouseY, deltaTime);
+        uiContext.render(mouseX, mouseY, deltaTime);
 
-        // Debug Text
+        // Debug Text drawn directly to screen (bypassing UIContext)
         guiGraphics.drawString(font, "Dropdown should cover the button below.", 10, 10, 0xFFFFFFFF);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (root.mouseClicked(mouseX, mouseY, button)) return true;
+        if (uiContext.mouseClicked(mouseX, mouseY, button)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (root.mouseReleased(mouseX, mouseY, button)) return true;
+        if (uiContext.mouseReleased(mouseX, mouseY, button)) return true;
         return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (uiContext.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (uiContext.mouseScrolled(mouseX, mouseY, scrollY)) return true;
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 }

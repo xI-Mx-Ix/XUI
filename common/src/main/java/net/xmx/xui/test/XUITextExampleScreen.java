@@ -5,27 +5,27 @@
 package net.xmx.xui.test;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.impl.UIRenderImpl;
 
 /**
- * Example screen demonstrating the multi-line and wrapping capabilities of UIText.
+ * Example screen demonstrating the multi-line and wrapping capabilities of UIText via {@link UIContext}.
  * Shows how to mix single lines, styled components, and wrapped blocks within one widget.
  *
  * @author xI-Mx-Ix
  */
 public class XUITextExampleScreen extends Screen {
 
-    private UIWidget root;
+    private final UIContext uiContext = new UIContext();
     private long lastFrameTime = 0;
 
     public XUITextExampleScreen() {
@@ -34,10 +34,17 @@ public class XUITextExampleScreen extends Screen {
 
     @Override
     protected void init() {
-        // 1. Root Container
-        root = new UIPanel();
-        root.setWidth(Constraints.pixel(this.width))
-                .setHeight(Constraints.pixel(this.height));
+        int wW = Minecraft.getInstance().getWindow().getWidth();
+        int wH = Minecraft.getInstance().getWindow().getHeight();
+        uiContext.updateLayout(wW, wH);
+
+        if (!uiContext.isInitialized()) {
+            buildUI();
+        }
+    }
+
+    private void buildUI() {
+        UIPanel root = uiContext.getRoot();
         root.style().set(Properties.BACKGROUND_COLOR, 0xFF101010);
 
         // 2. Main Paper/Card Panel
@@ -61,8 +68,6 @@ public class XUITextExampleScreen extends Screen {
                 .setY(Constraints.pixel(20));
 
         // --- WIDGET 2: Multi-line List ---
-        // CHANGED: Used UIWrappedText instead of UIText.
-        // UIText appends horizontally (single line).
         // UIWrappedText supports adding multiple vertical lines.
         UIWrappedText featureList = new UIWrappedText();
 
@@ -78,7 +83,6 @@ public class XUITextExampleScreen extends Screen {
                 .setY(Constraints.sibling(header, 30, true)); // Position below header
 
         // --- WIDGET 3: Mixed Wrapping (Introduction + Long Text) ---
-        // This remains UIWrappedText as it uses automatic wrapping for the paragraph.
         UIWrappedText description = new UIWrappedText();
         description.setText(Component.literal("Technical Details:").withStyle(ChatFormatting.RED));
 
@@ -123,18 +127,30 @@ public class XUITextExampleScreen extends Screen {
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
-        root.render(UIRenderImpl.getInstance(), mouseX, mouseY, deltaTime);
+        uiContext.render(mouseX, mouseY, deltaTime);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (root.mouseClicked(mouseX, mouseY, button)) return true;
+        if (uiContext.mouseClicked(mouseX, mouseY, button)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (root.mouseReleased(mouseX, mouseY, button)) return true;
+        if (uiContext.mouseReleased(mouseX, mouseY, button)) return true;
         return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (uiContext.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (uiContext.mouseScrolled(mouseX, mouseY, scrollY)) return true;
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 }

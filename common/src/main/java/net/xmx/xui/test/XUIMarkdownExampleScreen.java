@@ -4,26 +4,25 @@
  */
 package net.xmx.xui.test;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIScrollPanel;
 import net.xmx.xui.core.components.markdown.UIMarkdown;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.impl.UIRenderImpl;
 
 /**
- * Example screen demonstrating the expanded UIMarkdown widget features.
+ * Example screen demonstrating the expanded UIMarkdown widget features using {@link UIContext}.
  *
  * @author xI-Mx-Ix
  */
 public class XUIMarkdownExampleScreen extends Screen {
 
-    private UIWidget root;
-    private UIScrollPanel scrollPanel;
+    private final UIContext uiContext = new UIContext();
     private long lastFrameTime = 0;
 
     // A sample markdown string without images
@@ -72,10 +71,17 @@ public class XUIMarkdownExampleScreen extends Screen {
 
     @Override
     protected void init() {
-        // Root
-        root = new UIPanel();
-        root.setWidth(Constraints.pixel(this.width))
-                .setHeight(Constraints.pixel(this.height));
+        int wW = Minecraft.getInstance().getWindow().getWidth();
+        int wH = Minecraft.getInstance().getWindow().getHeight();
+        uiContext.updateLayout(wW, wH);
+
+        if (!uiContext.isInitialized()) {
+            buildUI();
+        }
+    }
+
+    private void buildUI() {
+        UIPanel root = uiContext.getRoot();
         root.style().set(Properties.BACKGROUND_COLOR, 0xFF121212);
 
         // Container Panel
@@ -92,7 +98,7 @@ public class XUIMarkdownExampleScreen extends Screen {
                 .set(Properties.BORDER_THICKNESS, 1.0f);
 
         // Scroll Panel
-        scrollPanel = new UIScrollPanel();
+        UIScrollPanel scrollPanel = new UIScrollPanel();
         scrollPanel.setX(Constraints.pixel(20))
                 .setY(Constraints.pixel(20))
                 .setWidth(Constraints.pixel(460))
@@ -118,34 +124,32 @@ public class XUIMarkdownExampleScreen extends Screen {
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
-        root.render(UIRenderImpl.getInstance(), mouseX, mouseY, deltaTime);
+        uiContext.render(mouseX, mouseY, deltaTime);
     }
+
+    // --- Input Forwarding ---
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (root.mouseClicked(mouseX, mouseY, button)) return true;
+        if (uiContext.mouseClicked(mouseX, mouseY, button)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (root.mouseReleased(mouseX, mouseY, button)) return true;
+        if (uiContext.mouseReleased(mouseX, mouseY, button)) return true;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (scrollPanel != null && scrollPanel.mouseScrolled(mouseX, mouseY, scrollY)) {
-            return true;
-        }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (uiContext.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (scrollPanel != null) {
-            scrollPanel.mouseDragged(mouseX, mouseY, button, dragX, dragY);
-        }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (uiContext.mouseScrolled(mouseX, mouseY, scrollY)) return true;
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 }

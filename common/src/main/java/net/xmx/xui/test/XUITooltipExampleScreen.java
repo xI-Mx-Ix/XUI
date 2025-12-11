@@ -5,30 +5,30 @@
 package net.xmx.xui.test;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UITooltip;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.impl.UIRenderImpl;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Example screen demonstrating the UITooltip system.
+ * Example screen demonstrating the UITooltip system via {@link UIContext}.
  * Shows various tooltip configurations (simple, multi-line, rich text).
  *
  * @author xI-Mx-Ix
  */
 public class XUITooltipExampleScreen extends Screen {
 
-    private UIWidget root;
+    private final UIContext uiContext = new UIContext();
     private long lastFrameTime = 0;
 
     public XUITooltipExampleScreen() {
@@ -37,10 +37,17 @@ public class XUITooltipExampleScreen extends Screen {
 
     @Override
     protected void init() {
-        // 1. Setup Root
-        root = new UIPanel();
-        root.setWidth(Constraints.pixel(this.width))
-                .setHeight(Constraints.pixel(this.height));
+        int wW = Minecraft.getInstance().getWindow().getWidth();
+        int wH = Minecraft.getInstance().getWindow().getHeight();
+        uiContext.updateLayout(wW, wH);
+
+        if (!uiContext.isInitialized()) {
+            buildUI();
+        }
+    }
+
+    private void buildUI() {
+        UIPanel root = uiContext.getRoot();
         root.style().set(Properties.BACKGROUND_COLOR, 0xFF181818);
 
         // 2. Create a container for buttons
@@ -163,6 +170,30 @@ public class XUITooltipExampleScreen extends Screen {
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
-        root.render(UIRenderImpl.getInstance(), mouseX, mouseY, deltaTime);
+        uiContext.render(mouseX, mouseY, deltaTime);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (uiContext.mouseClicked(mouseX, mouseY, button)) return true;
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (uiContext.mouseReleased(mouseX, mouseY, button)) return true;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (uiContext.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (uiContext.mouseScrolled(mouseX, mouseY, scrollY)) return true;
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 }
