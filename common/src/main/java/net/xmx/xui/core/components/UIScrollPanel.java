@@ -447,7 +447,7 @@ public class UIScrollPanel extends UIWidget {
     }
 
     @Override
-    public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks) {
+    public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
         if (!isVisible) return;
 
         updateHoverState(mouseX, mouseY);
@@ -471,7 +471,7 @@ public class UIScrollPanel extends UIWidget {
         }
 
         // Draw the panel itself (background)
-        drawSelf(renderer, mouseX, mouseY, partialTicks, state);
+        drawSelf(renderer, mouseX, mouseY, partialTick, deltaTime, state);
 
         // Apply visual translation for scrolling using the renderer.
         // This shifts the coordinate system up by scrollOffset.
@@ -483,7 +483,7 @@ public class UIScrollPanel extends UIWidget {
         handlingChildEvent = true;
         try {
             for (UIWidget child : children) {
-                child.render(renderer, mouseX, (int) (mouseY + scrollOffset), partialTicks);
+                child.render(renderer, mouseX, (int) (mouseY + scrollOffset), partialTick, deltaTime);
             }
         } finally {
             handlingChildEvent = false;
@@ -499,14 +499,14 @@ public class UIScrollPanel extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, UIState state) {
+    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
         // Update hover logic
         updateScrollbarHoverState(mouseX, mouseY);
 
         // Animate scrollbar opacity
         float opacityDiff = targetScrollbarOpacity - scrollbarOpacity;
         if (Math.abs(opacityDiff) > 0.001f) {
-            float lerpFactor = 1.0f - (float) Math.exp(-SCROLLBAR_FADE_SPEED * partialTicks);
+            float lerpFactor = 1.0f - (float) Math.exp(-SCROLLBAR_FADE_SPEED * deltaTime);
             scrollbarOpacity += opacityDiff * lerpFactor;
         } else {
             scrollbarOpacity = targetScrollbarOpacity;
@@ -515,29 +515,29 @@ public class UIScrollPanel extends UIWidget {
         // Animate scroll offset (Smooth scrolling)
         float scrollDiff = targetScrollOffset - scrollOffset;
         if (Math.abs(scrollDiff) > 0.1f) {
-            float lerpFactor = 1.0f - (float) Math.exp(-15.0f * partialTicks);
+            float lerpFactor = 1.0f - (float) Math.exp(-15.0f * deltaTime);
             scrollOffset += scrollDiff * lerpFactor;
         } else {
             scrollOffset = targetScrollOffset;
         }
 
         // Draw Panel Background
-        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, partialTicks);
+        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
         if ((bgColor >>> 24) > 0) {
-            float radius = getFloat(Properties.BORDER_RADIUS, state, partialTicks);
+            float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
             renderer.drawRect(this.getX(), this.getY(), this.getWidth(), this.getHeight(), bgColor, radius);
         }
 
         // Draw Scrollbar (Track + Thumb)
         if (isScrollable() && scrollbarOpacity > 0.01f) {
-            drawScrollbar(renderer, state, partialTicks);
+            drawScrollbar(renderer, state);
         }
     }
 
     /**
      * Renders the scrollbar visuals.
      */
-    private void drawScrollbar(UIRenderInterface renderer, UIState state, float partialTicks) {
+    private void drawScrollbar(UIRenderInterface renderer, UIState state) {
         float scrollbarWidth = style().getValue(state, SCROLLBAR_WIDTH);
         float scrollbarPadding = style().getValue(state, SCROLLBAR_PADDING);
         float scrollbarRadius = style().getValue(state, SCROLLBAR_RADIUS);

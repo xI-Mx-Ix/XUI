@@ -63,15 +63,15 @@ public class UIButton extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, UIState state) {
+    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
         // 1. Calculate animated values using the Animation Manager
-        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, partialTicks);
-        int txtColor = getColor(Properties.TEXT_COLOR, state, partialTicks);
-        int borderColor = getColor(Properties.BORDER_COLOR, state, partialTicks);
+        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
+        int txtColor = getColor(Properties.TEXT_COLOR, state, deltaTime);
+        int borderColor = getColor(Properties.BORDER_COLOR, state, deltaTime);
 
-        float radius = getFloat(Properties.BORDER_RADIUS, state, partialTicks);
-        float scale = getFloat(Properties.SCALE, state, partialTicks);
-        float borderThick = getFloat(Properties.BORDER_THICKNESS, state, partialTicks);
+        float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
+        float scale = getFloat(Properties.SCALE, state, deltaTime);
+        float borderThick = getFloat(Properties.BORDER_THICKNESS, state, deltaTime);
 
         // 2. Math for Scaling from Center (Zoom effect)
         float scaledW = width * scale;

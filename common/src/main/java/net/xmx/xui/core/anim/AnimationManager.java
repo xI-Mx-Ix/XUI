@@ -28,15 +28,24 @@ public class AnimationManager {
      * @return The interpolated value for the current frame.
      */
     public float getAnimatedFloat(UIProperty<Float> prop, float target, float speed, float dt) {
+        // Sanity Check: Clamp dt to prevent instant jumps if the game lags or partialTicks was passed by mistake.
+        // Max 0.1s (10 FPS) per frame calculation.
+        float safeDt = Math.min(dt, 0.1f);
+
         float current = (float) currentValues.getOrDefault(prop, target);
 
         float diff = target - current;
+        // If difference is negligible, snap to target to save CPU
         if (Math.abs(diff) < 0.001f) {
             current = target;
         } else {
-            // Exponential decay interpolation: lerp factor = 1 - e^(-speed * dt)
-            // This ensures smooth, framerate-independent animation
-            float lerpFactor = 1.0f - (float) Math.exp(-speed * dt);
+            // Exponential decay interpolation
+            // Formula: current + (target - current) * (1 - e^(-speed * dt))
+            float lerpFactor = 1.0f - (float) Math.exp(-speed * safeDt);
+
+            // Safety: Ensure lerpFactor is between 0 and 1
+            lerpFactor = Math.max(0.0f, Math.min(1.0f, lerpFactor));
+
             current += diff * lerpFactor;
         }
 
@@ -49,21 +58,33 @@ public class AnimationManager {
      *
      * @param prop   The property key.
      * @param target The target ARGB color.
-     * @param speed  The interpolation speed (higher = faster, typical range 5-20).
+     * @param speed  The interpolation speed.
      * @param dt     Delta time in seconds.
      * @return The interpolated color for the current frame.
      */
     public int getAnimatedColor(UIProperty<Integer> prop, int target, float speed, float dt) {
+        // Sanity Check: Clamp dt
+        float safeDt = Math.min(dt, 0.1f);
+
         int current = (int) currentValues.getOrDefault(prop, target);
 
         if (current == target) return current;
 
         // Exponential decay interpolation
-        float lerpFactor = 1.0f - (float) Math.exp(-speed * dt);
-        // Clamp to prevent overshoot
-        if (lerpFactor > 1.0f) lerpFactor = 1.0f;
+        float lerpFactor = 1.0f - (float) Math.exp(-speed * safeDt);
+
+        // Safety clamp
+        if (lerpFactor >= 1.0f) {
+            currentValues.put(prop, target);
+            return target;
+        }
 
         int next = interpolateColor(current, target, lerpFactor);
+
+        // If the color is extremely close to target (due to integer rounding), snap to target
+        if (isColorClose(next, target)) {
+            next = target;
+        }
 
         currentValues.put(prop, next);
         return next;
@@ -86,5 +107,13 @@ public class AnimationManager {
         int b = (int) (b1 + (b2 - b1) * factor);
 
         return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    private boolean isColorClose(int c1, int c2) {
+        int rDiff = Math.abs(((c1 >> 16) & 0xFF) - ((c2 >> 16) & 0xFF));
+        int gDiff = Math.abs(((c1 >> 8) & 0xFF) - ((c2 >> 8) & 0xFF));
+        int bDiff = Math.abs((c1 & 0xFF) - (c2 & 0xFF));
+        int aDiff = Math.abs(((c1 >> 24) & 0xFF) - ((c2 >> 24) & 0xFF));
+        return rDiff < 2 && gDiff < 2 && bDiff < 2 && aDiff < 2;
     }
 }

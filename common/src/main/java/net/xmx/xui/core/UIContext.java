@@ -49,6 +49,12 @@ public class UIContext {
     private double scaleFactor = 1.0;
 
     /**
+     * Timestamp of the last frame render in milliseconds.
+     * Used to calculate the delta time for animations internally.
+     */
+    private long lastFrameTime = 0;
+
+    /**
      * The reference height for the UI design in logical pixels.
      * <p>
      * The UI scale is calculated so that the logical height of the screen is roughly
@@ -123,6 +129,7 @@ public class UIContext {
      * <p>
      * This method orchestrates the rendering process by:
      * <ol>
+     *   <li>Calculating the {@code deltaTime} based on wall-clock time for animations.</li>
      *   <li>Injecting the custom {@code scaleFactor} into the {@link UIRenderImpl}.</li>
      *   <li>Transforming the raw Minecraft mouse coordinates into logical coordinates.</li>
      *   <li>Creating a new {@link GuiGraphics} instance with a scaled {@code PoseStack}
@@ -132,9 +139,15 @@ public class UIContext {
      *
      * @param mouseX       The mouse X coordinate provided by Minecraft (already scaled by MC's internal scale).
      * @param mouseY       The mouse Y coordinate provided by Minecraft (already scaled by MC's internal scale).
-     * @param partialTicks The partial tick time used for smooth animations.
+     * @param partialTick The partial tick time used for smooth rendering interpolation (0.0 to 1.0).
      */
-    public void render(int mouseX, int mouseY, float partialTicks) {
+    public void render(int mouseX, int mouseY, float partialTick) {
+        // 0. Calculate Delta Time for Animations (Wall-clock time)
+        // This ensures animations run at constant speed regardless of framerate or partial ticks.
+        long now = System.currentTimeMillis();
+        float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
+        lastFrameTime = now;
+
         // 1. Set the custom scale in the render implementation.
         // This allows the UIRenderer (which handles shaders/VBOs) to project geometry correctly
         // and perform pixel snapping.
@@ -166,7 +179,8 @@ public class UIContext {
         UIRenderImpl.getInstance().setGuiGraphics(graphics);
 
         // Render the root widget and all its descendants recursively.
-        root.render(UIRenderImpl.getInstance(), (int) logicalMouseX, (int) logicalMouseY, partialTicks);
+        // We pass BOTH partialTick (for render interpolation) and deltaTime (for state updates).
+        root.render(UIRenderImpl.getInstance(), (int) logicalMouseX, (int) logicalMouseY, partialTick, deltaTime);
 
         // Flush the render buffers (endBatch) before popping the pose.
         // This forces any text or geometry buffered by GuiGraphics to be drawn to the screen

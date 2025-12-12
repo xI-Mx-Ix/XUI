@@ -32,7 +32,6 @@ public class XUIEditBoxExampleScreen extends Screen {
 
     // The context holds the widget tree and manages scaling
     private final UIContext uiContext = new UIContext();
-    private long lastFrameTime = 0;
 
     public XUIEditBoxExampleScreen() {
         super(Component.literal("EditBox Demo"));
@@ -151,13 +150,8 @@ public class XUIEditBoxExampleScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-
-        long now = System.currentTimeMillis();
-        float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
-        lastFrameTime = now;
-
         // Delegate rendering to the context
-        uiContext.render(mouseX, mouseY, deltaTime);
+        uiContext.render(mouseX, mouseY, partialTick);
     }
 
     // --- Input Forwarding via UIContext ---

@@ -26,7 +26,6 @@ import net.xmx.xui.core.style.Properties;
 public class XUITextExampleScreen extends Screen {
 
     private final UIContext uiContext = new UIContext();
-    private long lastFrameTime = 0;
 
     public XUITextExampleScreen() {
         super(Component.literal("Text Layout Demo"));
@@ -122,12 +121,8 @@ public class XUITextExampleScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-
-        long now = System.currentTimeMillis();
-        float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
-        lastFrameTime = now;
-
-        uiContext.render(mouseX, mouseY, deltaTime);
+        // Delegate rendering to the context
+        uiContext.render(mouseX, mouseY, partialTick);
     }
 
     @Override

@@ -90,14 +90,20 @@ public class MarkdownTaskListItem extends UIPanel {
                     .set(Properties.BACKGROUND_COLOR, 0xFF202020)
                     .set(Properties.BORDER_COLOR, 0xFF606060)
                     .set(Properties.BORDER_THICKNESS, 1.0f)
-                    .set(Properties.BORDER_RADIUS, 2.0f);
+                    .set(Properties.BORDER_RADIUS, 2.0f)
+
+                    // States for animation (Hover effect)
+                    .set(UIState.HOVER, Properties.BACKGROUND_COLOR, 0xFF303030)
+                    .set(UIState.HOVER, Properties.BORDER_COLOR, 0xFF808080);
         }
 
         @Override
-        protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, UIState state) {
-            int bg = style().getValue(state, Properties.BACKGROUND_COLOR);
-            int border = style().getValue(state, Properties.BORDER_COLOR);
-            float radius = style().getValue(state, Properties.BORDER_RADIUS);
+        protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
+            // FIX: Nutze Helper-Methoden mit deltaTime statt style().getValue()
+            // Damit werden Hover-Effekte auch hier weich animiert.
+            int bg = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
+            int border = getColor(Properties.BORDER_COLOR, state, deltaTime);
+            float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
 
             // Draw Box
             renderer.drawRect(x, y, width, height, bg, radius);

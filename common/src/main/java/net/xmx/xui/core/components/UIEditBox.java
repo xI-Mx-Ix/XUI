@@ -141,17 +141,17 @@ public class UIEditBox extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, UIState state) {
+    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
         // Retrieve style properties and animated colors
-        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, partialTicks);
-        int borderColor = getColor(Properties.BORDER_COLOR, state, partialTicks);
-        int textColor = getColor(Properties.TEXT_COLOR, state, partialTicks);
-        int hintColor = getColor(HINT_COLOR, state, partialTicks); // Retrieve hint color
-        int cursorColor = getColor(CURSOR_COLOR, state, partialTicks);
-        int selectionColor = getColor(SELECTION_COLOR, state, partialTicks);
+        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
+        int borderColor = getColor(Properties.BORDER_COLOR, state, deltaTime);
+        int textColor = getColor(Properties.TEXT_COLOR, state, deltaTime);
+        int hintColor = getColor(HINT_COLOR, state, deltaTime); // Retrieve hint color
+        int cursorColor = getColor(CURSOR_COLOR, state, deltaTime);
+        int selectionColor = getColor(SELECTION_COLOR, state, deltaTime);
 
-        float radius = getFloat(Properties.BORDER_RADIUS, state, partialTicks);
-        float borderThick = getFloat(Properties.BORDER_THICKNESS, state, partialTicks);
+        float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
+        float borderThick = getFloat(Properties.BORDER_THICKNESS, state, deltaTime);
 
         // Render the background and border of the edit box
         renderer.drawRect(x, y, width, height, bgColor, radius);

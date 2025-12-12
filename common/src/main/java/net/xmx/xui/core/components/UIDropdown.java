@@ -61,7 +61,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      */
     public UIDropdown addOption(Component option) {
         this.options.add(option);
-        if (this.selectedIndex == -1 && !this.options.isEmpty()) {
+        if (this.selectedIndex == -1) {
             this.selectedIndex = 0;
         }
         return this;
@@ -105,21 +105,21 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, UIState state) {
+    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
         updateOverlayGeometry();
 
         // Calculate the background color for the header based on the current interaction state (e.g. Hover)
-        int headerBgColor = getColor(Properties.BACKGROUND_COLOR, state, partialTicks);
+        int headerBgColor = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
 
         // Calculate the background color for the list overlay.
         // This always uses the DEFAULT state to ensure the list remains dark even when the header is hovered.
-        int listBgColor = getColor(Properties.BACKGROUND_COLOR, UIState.DEFAULT, partialTicks);
+        int listBgColor = getColor(Properties.BACKGROUND_COLOR, UIState.DEFAULT, deltaTime);
 
-        int borderColor = getColor(Properties.BORDER_COLOR, state, partialTicks);
-        int textColor = getColor(Properties.TEXT_COLOR, state, partialTicks);
-        int arrowColor = getColor(ARROW_COLOR, state, partialTicks);
-        float radius = getFloat(Properties.BORDER_RADIUS, state, partialTicks);
-        float borderThick = getFloat(Properties.BORDER_THICKNESS, state, partialTicks);
+        int borderColor = getColor(Properties.BORDER_COLOR, state, deltaTime);
+        int textColor = getColor(Properties.TEXT_COLOR, state, deltaTime);
+        int arrowColor = getColor(ARROW_COLOR, state, deltaTime);
+        float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
+        float borderThick = getFloat(Properties.BORDER_THICKNESS, state, deltaTime);
 
         float rTL = radius, rTR = radius, rBR = radius, rBL = radius;
 

@@ -171,8 +171,8 @@ public class UIWrappedText extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, UIState state) {
-        int color = getColor(Properties.TEXT_COLOR, state, partialTicks);
+    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
+        int color = getColor(Properties.TEXT_COLOR, state, deltaTime);
 
         float currentY = this.y;
 

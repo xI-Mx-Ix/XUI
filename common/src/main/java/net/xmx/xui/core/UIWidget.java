@@ -148,9 +148,10 @@ public abstract class UIWidget {
      * @param renderer     The render interface.
      * @param mouseX       Current mouse X position.
      * @param mouseY       Current mouse Y position.
-     * @param partialTicks Time delta for animation smoothing.
+     * @param partialTick  The normalized progress between two game ticks (0.0 - 1.0). Used for smoothing movement/rendering.
+     * @param deltaTime    The time elapsed since the last frame in seconds. Used for animation logic.
      */
-    public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks) {
+    public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
         if (!isVisible) return;
 
         updateHoverState(mouseX, mouseY);
@@ -169,11 +170,12 @@ public abstract class UIWidget {
         }
 
         // Render Widget Content
-        drawSelf(renderer, mouseX, mouseY, partialTicks, state);
+        // We pass both time values: partialTick for rendering interpolation, deltaTime for animation updates.
+        drawSelf(renderer, mouseX, mouseY, partialTick, deltaTime, state);
 
         // Render Children
         for (UIWidget child : children) {
-            child.render(renderer, mouseX, mouseY, partialTicks);
+            child.render(renderer, mouseX, mouseY, partialTick, deltaTime);
         }
 
         // Revert visual effects (in reverse order to properly unwind stack-based effects)
@@ -188,13 +190,15 @@ public abstract class UIWidget {
      * @param renderer     The render interface.
      * @param mouseX       Mouse X.
      * @param mouseY       Mouse Y.
-     * @param partialTicks Time delta.
+     * @param partialTick  The normalized progress between game ticks (for interpolation).
+     * @param deltaTime    The time elapsed since last frame in seconds (for animations).
      * @param state        The current interactive state (Default, Hover, Active).
      */
-    protected abstract void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, UIState state);
+    protected abstract void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime, UIState state);
 
     /**
      * Helper to retrieve an animated color value based on the current state.
+     * Uses deltaTime to progress the animation.
      */
     protected int getColor(UIProperty<Integer> prop, UIState currentState, float dt) {
         int target = styleSheet.getValue(currentState, prop);
@@ -203,6 +207,7 @@ public abstract class UIWidget {
 
     /**
      * Helper to retrieve an animated float value based on the current state.
+     * Uses deltaTime to progress the animation.
      */
     protected float getFloat(UIProperty<Float> prop, UIState currentState, float dt) {
         float target = styleSheet.getValue(currentState, prop);

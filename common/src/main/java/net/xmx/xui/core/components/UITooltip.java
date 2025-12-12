@@ -196,13 +196,17 @@ public class UITooltip extends UIPanel {
         super.layout();
     }
 
+    /**
+     * Overrides the main render method to handle tooltip logic (positioning, opacity, Z-ordering).
+     * This avoids recursion issues by wrapping the call to super.render().
+     */
     @Override
-    public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks) {
+    public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime) {
         // If no target is set, do not process logic
         if (target == null) return;
 
         // Update Logic using logic coordinates passed by UIContext
-        updateState(partialTicks, mouseX, mouseY);
+        updateState(deltaTime, mouseX, mouseY);
 
         // Early exit if completely invisible
         if (currentOpacity <= 0.001f) {
@@ -227,10 +231,14 @@ public class UITooltip extends UIPanel {
         style().set(UIState.DEFAULT, Properties.BORDER_COLOR, applyAlpha(baseBorder, currentOpacity));
         contentText.style().set(UIState.DEFAULT, Properties.TEXT_COLOR, applyAlpha(baseText, currentOpacity));
 
-        // Render Self and Children
-        // We push Z translation to ensure tooltip is on top
+        // Render Self (Background via drawSelf) and Children (Text)
+        // We push Z translation to ensure tooltip is on top of everything
         renderer.translate(0, 0, 500.0f);
-        super.render(renderer, mouseX, mouseY, partialTicks);
+
+        // IMPORTANT: Call super.render, NOT super.drawSelf here.
+        // super.render calls this.drawSelf (for background) AND renders children (text).
+        super.render(renderer, mouseX, mouseY, partialTicks, deltaTime);
+
         renderer.translate(0, 0, -500.0f);
 
         // Restore original style values
@@ -238,6 +246,15 @@ public class UITooltip extends UIPanel {
         style().set(UIState.DEFAULT, Properties.BORDER_COLOR, baseBorder);
         style().set(UIState.DEFAULT, Properties.OPACITY, previousOpacity);
         contentText.style().set(UIState.DEFAULT, Properties.TEXT_COLOR, baseText);
+    }
+
+    /**
+     * Draws the background and border of the tooltip.
+     * Delegates to UIPanel implementation to avoid code duplication and recursion.
+     */
+    @Override
+    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
+        super.drawSelf(renderer, mouseX, mouseY, partialTicks, deltaTime, state);
     }
 
     private void updateState(float dt, int mouseX, int mouseY) {
@@ -315,8 +332,18 @@ public class UITooltip extends UIPanel {
      * Calculates the position of the tooltip based on mouse coordinates.
      */
     private void calculateSmartPosition(int mouseX, int mouseY) {
-        int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        // Determine logical screen bounds
+        float screenWidth;
+        float screenHeight;
+
+        if (getParent() != null) {
+            screenWidth = getParent().getWidth();
+            screenHeight = getParent().getHeight();
+        } else {
+            // Fallback (might not match logical scaling, but prevents crash)
+            screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+            screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        }
 
         // Retrieve offsets from style
         float offX = style().getValue(UIState.DEFAULT, OFFSET_X);
@@ -340,15 +367,12 @@ public class UITooltip extends UIPanel {
         if (newY < 5) newY = 5;
 
         // Update constraints directly for the rendering pass
-        this.x = newX;
-        this.y = newY;
+        this.xConstraint = Constraints.pixel(newX);
+        this.yConstraint = Constraints.pixel(newY);
 
-        // Update children positions relative to new X/Y
-        for (UIWidget child : children) {
-            this.xConstraint = Constraints.pixel(newX);
-            this.yConstraint = Constraints.pixel(newY);
-            super.layout();
-        }
+        // Update layout immediately for self and children
+        // Do NOT loop over children here; layout() propagates automatically.
+        super.layout();
     }
 
     private int applyAlpha(int color, float alpha) {

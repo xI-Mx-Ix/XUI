@@ -31,11 +31,11 @@ public class UIPanel extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, UIState state) {
-        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, partialTicks);
-        int borderColor = getColor(Properties.BORDER_COLOR, state, partialTicks);
-        float radius = getFloat(Properties.BORDER_RADIUS, state, partialTicks);
-        float thickness = getFloat(Properties.BORDER_THICKNESS, state, partialTicks);
+    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
+        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
+        int borderColor = getColor(Properties.BORDER_COLOR, state, deltaTime);
+        float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
+        float thickness = getFloat(Properties.BORDER_THICKNESS, state, deltaTime);
 
         // 1. Draw the Border (if thickness > 0)
         if (thickness > 0 && (borderColor >>> 24) > 0) {
