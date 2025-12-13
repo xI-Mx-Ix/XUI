@@ -7,7 +7,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'xui'
+rootProject.name = 'XUI'
 
 include 'common'
 include 'fabric'
