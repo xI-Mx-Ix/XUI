@@ -27,9 +27,9 @@ import java.util.Random;
  */
 public class UICustomFont extends UIFont {
 
-    private LoadedFont regular;
-    private LoadedFont bold;
-    private LoadedFont italic;
+    private UILoadedFont regular;
+    private UILoadedFont bold;
+    private UILoadedFont italic;
 
     /**
      * The internal texture resolution size.
@@ -50,17 +50,17 @@ public class UICustomFont extends UIFont {
     // --- Configuration ---
 
     public UICustomFont setRegular(String path) {
-        this.regular = new LoadedFont(path, TEXTURE_FONT_SIZE);
+        this.regular = new UILoadedFont(path, TEXTURE_FONT_SIZE);
         return this;
     }
 
     public UICustomFont setBold(String path) {
-        this.bold = new LoadedFont(path, TEXTURE_FONT_SIZE);
+        this.bold = new UILoadedFont(path, TEXTURE_FONT_SIZE);
         return this;
     }
 
     public UICustomFont setItalic(String path) {
-        this.italic = new LoadedFont(path, TEXTURE_FONT_SIZE);
+        this.italic = new UILoadedFont(path, TEXTURE_FONT_SIZE);
         return this;
     }
 
@@ -82,7 +82,7 @@ public class UICustomFont extends UIFont {
     }
 
     private float getSingleComponentWidth(UIComponent component) {
-        LoadedFont font = resolveFontData(component);
+        UILoadedFont font = resolveFontData(component);
         if (font == null || component.getText() == null) return 0;
 
         // Calculate scale factor (e.g., 9 / 48 = 0.1875)
@@ -102,9 +102,21 @@ public class UICustomFont extends UIFont {
 
     @Override
     public void draw(UIRenderImpl context, UIComponent component, float x, float y, int color, boolean shadow) {
-        UIRenderer.getInstance().getText().begin(context.getCurrentScale());
-        drawComponentRecursive(context, component, x, y, x, color);
-        UIRenderer.getInstance().getText().end();
+        UIRenderer renderer = UIRenderer.getInstance();
+
+        // Capture the current OpenGL state (including the active VAO)
+        // and configure the state required for UI rendering.
+        renderer.getStateManager().capture();
+        renderer.getStateManager().setupForUI();
+
+        try {
+            renderer.getText().begin(context.getCurrentScale());
+            drawComponentRecursive(context, component, x, y, x, color);
+            renderer.getText().end();
+        } finally {
+            // Restore the previous OpenGL state to ensure compatibility with the game engine.
+            renderer.getStateManager().restore();
+        }
     }
 
     private float drawComponentRecursive(UIRenderImpl context, UIComponent comp, float currentX, float currentY, float startX, int defaultColor) {
@@ -118,23 +130,38 @@ public class UICustomFont extends UIFont {
     @Override
     public void drawWrapped(UIRenderImpl context, UIComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
         List<LineLayout> lines = computeWrappedLayout(component, maxWidth);
-        UIRenderer.getInstance().getText().begin(context.getCurrentScale());
+        UIRenderer renderer = UIRenderer.getInstance();
 
-        float currentY = y;
-        float lineHeight = getLineHeight();
+        // Capture the current OpenGL state (including the active VAO)
+        // and configure the state required for UI rendering.
+        renderer.getStateManager().capture();
+        renderer.getStateManager().setupForUI();
 
-        for (LineLayout line : lines) {
-            float currentX = x;
-            for (LineSegment segment : line.segments) {
-                String originalText = segment.component.getText();
-                segment.component.setText(segment.text);
-                currentX = drawSingleString(context, segment.component, currentX, currentY, x, color);
-                segment.component.setText(originalText);
+        try {
+            renderer.getText().begin(context.getCurrentScale());
+
+            float currentY = y;
+            float lineHeight = getLineHeight();
+
+            for (LineLayout line : lines) {
+                float currentX = x;
+                for (LineSegment segment : line.segments) {
+                    // Temporarily swap text content to render individual segments
+                    String originalText = segment.component.getText();
+                    segment.component.setText(segment.text);
+
+                    currentX = drawSingleString(context, segment.component, currentX, currentY, x, color);
+
+                    segment.component.setText(originalText);
+                }
+                currentY += lineHeight;
             }
-            currentY += lineHeight;
-        }
 
-        UIRenderer.getInstance().getText().end();
+            renderer.getText().end();
+        } finally {
+            // Restore the previous OpenGL state to ensure compatibility with the game engine.
+            renderer.getStateManager().restore();
+        }
     }
 
     // --- Core Draw Logic ---
@@ -143,7 +170,7 @@ public class UICustomFont extends UIFont {
         String text = comp.getText();
         if (text == null || text.isEmpty()) return x;
 
-        LoadedFont fontData = resolveFontData(comp);
+        UILoadedFont fontData = resolveFontData(comp);
         if (fontData == null) return x;
 
         // Calculate scaling factor to map High-Res Texture -> 9px Visual
@@ -252,7 +279,7 @@ public class UICustomFont extends UIFont {
             String text = comp.getText();
             if (text == null || text.isEmpty()) continue;
 
-            LoadedFont font = resolveFontData(comp);
+            UILoadedFont font = resolveFontData(comp);
             if (font == null) continue;
 
             // Calculate scale once for this component
@@ -297,7 +324,7 @@ public class UICustomFont extends UIFont {
         }
     }
 
-    private LoadedFont resolveFontData(UIComponent comp) {
+    private UILoadedFont resolveFontData(UIComponent comp) {
         if (comp.isBold()) return bold != null ? bold : regular;
         if (comp.isItalic()) return italic != null ? italic : regular;
         return regular;

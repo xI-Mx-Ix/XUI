@@ -26,7 +26,7 @@ import java.nio.channels.ReadableByteChannel;
  *
  * @author xI-Mx-Ix
  */
-class LoadedFont {
+public class UILoadedFont {
 
     private final int textureId;
     private final STBTTPackedchar.Buffer charData;
@@ -47,7 +47,7 @@ class LoadedFont {
      * @param resourcePath The path to the .ttf file.
      * @param size         The desired point size.
      */
-    public LoadedFont(String resourcePath, float size) {
+    public UILoadedFont(String resourcePath, float size) {
         this.fontSize = size;
 
         // 1. Read the TTF file into a direct ByteBuffer
@@ -151,7 +151,7 @@ class LoadedFont {
      * Utility to load a file from the classpath into a Direct ByteBuffer.
      */
     private ByteBuffer loadResourceToBuffer(String path) throws IOException {
-        InputStream stream = LoadedFont.class.getClassLoader().getResourceAsStream(path);
+        InputStream stream = UILoadedFont.class.getClassLoader().getResourceAsStream(path);
         if (stream == null) throw new IOException("Resource not found: " + path);
 
         try (ReadableByteChannel rbc = Channels.newChannel(stream)) {

@@ -35,10 +35,20 @@ public class UIRenderer {
 
     // --- Accessors ---
 
+    /**
+     * Retrieves the state manager responsible for capturing and restoring OpenGL state.
+     * This allows external renderers (like Fonts) to isolate their draw calls from the game engine.
+     *
+     * @return The GLState instance.
+     */
+    public GLState getStateManager() {
+        return stateManager;
+    }
+
     public UIScissorManager getScissor() {
         return scissorManager;
     }
-    
+
     public UITextRenderer getText() {
         return textRenderer;
     }
@@ -52,11 +62,11 @@ public class UIRenderer {
     public void drawRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL, double guiScale) {
         stateManager.capture();
         stateManager.setupForUI();
-        
+
         geometryRenderer.begin(guiScale);
         geometryRenderer.drawRect(x, y, width, height, color, rTL, rTR, rBR, rBL);
         geometryRenderer.end();
-        
+
         stateManager.restore();
     }
 
@@ -66,11 +76,11 @@ public class UIRenderer {
     public void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL, double guiScale) {
         stateManager.capture();
         stateManager.setupForUI();
-        
+
         geometryRenderer.begin(guiScale);
         geometryRenderer.drawOutline(x, y, width, height, color, thickness, rTL, rTR, rBR, rBL);
         geometryRenderer.end();
-        
+
         stateManager.restore();
     }
 }
