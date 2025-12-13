@@ -11,7 +11,7 @@ import net.xmx.xui.core.font.UIFontAtlas;
 import net.xmx.xui.core.font.data.MSDFData;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.gl.vertex.UIMeshBuffer;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 import net.xmx.xui.impl.UIRenderImpl;
 
 import java.util.ArrayList;
@@ -105,12 +105,12 @@ public class UICustomFont extends UIFont {
     }
 
     @Override
-    public float getWidth(UIComponent component) {
+    public float getWidth(UITextComponent component) {
         return layoutEngine.computeWidth(component);
     }
 
     @Override
-    public float getWordWrapHeight(UIComponent component, float maxWidth) {
+    public float getWordWrapHeight(UITextComponent component, float maxWidth) {
         List<TextLine> layout = layoutEngine.computeWrappedLayout(component, maxWidth);
         return layout.size() * getLineHeight();
     }
@@ -118,14 +118,14 @@ public class UICustomFont extends UIFont {
     // --- Rendering Orchestration ---
 
     @Override
-    public void draw(UIRenderImpl context, UIComponent component, float x, float y, int color, boolean shadow) {
+    public void draw(UIRenderImpl context, UITextComponent component, float x, float y, int color, boolean shadow) {
         renderTextBatch(context, x, y, () -> {
             drawComponentRecursive(context, component, x, y, x, color);
         });
     }
 
     @Override
-    public void drawWrapped(UIRenderImpl context, UIComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
+    public void drawWrapped(UIRenderImpl context, UITextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
         List<TextLine> lines = layoutEngine.computeWrappedLayout(component, maxWidth);
         
         renderTextBatch(context, x, y, () -> {
@@ -192,9 +192,9 @@ public class UICustomFont extends UIFont {
         }
     }
 
-    private float drawComponentRecursive(UIRenderImpl context, UIComponent comp, float currentX, float currentY, float startX, int defaultColor) {
+    private float drawComponentRecursive(UIRenderImpl context, UITextComponent comp, float currentX, float currentY, float startX, int defaultColor) {
         float newX = drawSingleString(context, comp, currentX, currentY, startX, defaultColor);
-        for (UIComponent sibling : comp.getSiblings()) {
+        for (UITextComponent sibling : comp.getSiblings()) {
             newX = drawComponentRecursive(context, sibling, newX, currentY, startX, defaultColor);
         }
         return newX;
@@ -205,7 +205,7 @@ public class UICustomFont extends UIFont {
      *
      * @return The X coordinate after rendering the text.
      */
-    private float drawSingleString(UIRenderImpl context, UIComponent comp, float x, float y, float startX, int defaultColor) {
+    private float drawSingleString(UIRenderImpl context, UITextComponent comp, float x, float y, float startX, int defaultColor) {
         String text = comp.getText();
         if (text == null || text.isEmpty()) return x;
 
@@ -319,7 +319,7 @@ public class UICustomFont extends UIFont {
      * @param comp The component to query.
      * @return The loaded font instance (regular, bold, or italic).
      */
-    public UIFontAtlas resolveFont(UIComponent comp) {
+    public UIFontAtlas resolveFont(UITextComponent comp) {
         if (comp.isBold()) return bold != null ? bold : regular;
         if (comp.isItalic()) return italic != null ? italic : regular;
         return regular;

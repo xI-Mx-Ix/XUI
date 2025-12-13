@@ -11,7 +11,7 @@ import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 /**
  * Represents a Task List Item in Markdown (- [ ] or - [x]).
@@ -37,7 +37,7 @@ public class MarkdownTaskListItem extends UIPanel {
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
 
-        int fontHeight = UIComponent.getFontHeight();
+        int fontHeight = UITextComponent.getFontHeight();
         float boxSize = 10.0f;
 
         // Calculate Y offset:

@@ -8,7 +8,7 @@ import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 import net.xmx.xui.util.URLUtil;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
@@ -42,7 +42,7 @@ public class MarkdownParagraph extends UIPanel {
         buildFlow(rawText);
 
         // After flow is built, set height.
-        this.renderHeight = currentLayoutY + UIComponent.getFontHeight();
+        this.renderHeight = currentLayoutY + UITextComponent.getFontHeight();
         this.setHeight(Constraints.pixel(renderHeight));
     }
 
@@ -55,7 +55,7 @@ public class MarkdownParagraph extends UIPanel {
 
         // Current X position relative to the container for this paragraph flow
         float cursorX = 0;
-        float fontHeight = UIComponent.getFontHeight();
+        float fontHeight = UITextComponent.getFontHeight();
 
         while (matcher.find()) {
             // 1. Text before the link
@@ -96,13 +96,13 @@ public class MarkdownParagraph extends UIPanel {
             if (word.isEmpty()) continue;
 
             // Parse styles (bold/italic/code) using MarkdownUtils
-            UIComponent wordComp = MarkdownUtils.parseInline(word);
+            UITextComponent wordComp = MarkdownUtils.parseInline(word);
             if (isLink) {
                 // Style links as Blue (0xFF5555FF) and Underlined
                 wordComp = wordComp.copy().setColor(0xFF5555FF).setUnderline(true);
             }
 
-            int wordWidth = UIComponent.getTextWidth(wordComp);
+            int wordWidth = UITextComponent.getTextWidth(wordComp);
 
             // Check if we need to wrap
             if (currentX + wordWidth > contentWidth) {
@@ -121,7 +121,7 @@ public class MarkdownParagraph extends UIPanel {
     /**
      * Creates and adds a small text widget for a specific segment (word or link).
      */
-    private void addSegmentWidget(UIComponent content, float x, float y, int w, float h, boolean isLink, String url) {
+    private void addSegmentWidget(UITextComponent content, float x, float y, int w, float h, boolean isLink, String url) {
         UIText widget = new UIText();
         widget.setText(content);
 

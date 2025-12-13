@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.components;
 
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
@@ -27,7 +27,7 @@ public class UIWrappedText extends UIWidget {
      * Internal container for a text line configuration.
      */
     private static class TextLine {
-        final UIComponent content;
+        final UITextComponent content;
         final boolean wrap;
 
         /**
@@ -37,7 +37,7 @@ public class UIWrappedText extends UIWidget {
          * @param wrap    True if this line should wrap within the widget's width;
          *                False to force it to render as a single line (potentially overflowing).
          */
-        TextLine(UIComponent content, boolean wrap) {
+        TextLine(UITextComponent content, boolean wrap) {
             this.content = content;
             this.wrap = wrap;
         }
@@ -62,7 +62,7 @@ public class UIWrappedText extends UIWidget {
      * @param text The component to add as a new line.
      * @return This widget instance for chaining.
      */
-    public UIWrappedText addText(UIComponent text) {
+    public UIWrappedText addText(UITextComponent text) {
         return addText(text, false);
     }
 
@@ -74,7 +74,7 @@ public class UIWrappedText extends UIWidget {
      *             If false, it extends as far as needed (potentially overflowing).
      * @return This widget instance for chaining.
      */
-    public UIWrappedText addText(UIComponent text, boolean wrap) {
+    public UIWrappedText addText(UITextComponent text, boolean wrap) {
         this.lines.add(new TextLine(text, wrap));
         return this;
     }
@@ -86,7 +86,7 @@ public class UIWrappedText extends UIWidget {
      * @return This widget instance for chaining.
      */
     public UIWrappedText setText(String text) {
-        return setText(UIComponent.literal(text));
+        return setText(UITextComponent.literal(text));
     }
 
     /**
@@ -95,7 +95,7 @@ public class UIWrappedText extends UIWidget {
      * @param text The new text component.
      * @return This widget instance for chaining.
      */
-    public UIWrappedText setText(UIComponent text) {
+    public UIWrappedText setText(UITextComponent text) {
         this.lines.clear();
         this.addText(text, false);
         return this;
@@ -144,12 +144,12 @@ public class UIWrappedText extends UIWidget {
         for (TextLine line : lines) {
             if (line.wrap) {
                 // For wrapping lines, height depends on the current resolved width
-                totalHeight += UIComponent.getWordWrapHeight(line.content, (int) this.width);
+                totalHeight += UITextComponent.getWordWrapHeight(line.content, (int) this.width);
                 anyLineWraps = true;
             } else {
                 // For non-wrapping lines, standard height and width calculation
-                totalHeight += UIComponent.getFontHeight();
-                int lineWidth = UIComponent.getTextWidth(line.content);
+                totalHeight += UITextComponent.getFontHeight();
+                int lineWidth = UITextComponent.getTextWidth(line.content);
                 if (lineWidth > maxLineWidth) {
                     maxLineWidth = lineWidth;
                 }
@@ -182,15 +182,15 @@ public class UIWrappedText extends UIWidget {
             if (line.wrap) {
                 // Render wrapped block
                 renderer.drawWrappedText(line.content, lineDrawX, currentY, this.width, color, shadow);
-                lineHeight = UIComponent.getWordWrapHeight(line.content, (int) this.width);
+                lineHeight = UITextComponent.getWordWrapHeight(line.content, (int) this.width);
             } else {
                 // Render single line
                 if (centered) {
                     // Center this specific line within the widget width
-                    lineDrawX = this.x + (this.width - UIComponent.getTextWidth(line.content)) / 2.0f;
+                    lineDrawX = this.x + (this.width - UITextComponent.getTextWidth(line.content)) / 2.0f;
                 }
                 renderer.drawText(line.content, lineDrawX, currentY, color, shadow);
-                lineHeight = UIComponent.getFontHeight();
+                lineHeight = UITextComponent.getFontHeight();
             }
 
             // Advance Y position for the next line

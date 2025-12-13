@@ -9,11 +9,11 @@ import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 /**
  * A standard text component representing a single line of text.
- * It supports adding multiple text segments (horizontal concatenation) via {@link #addText(UIComponent)},
+ * It supports adding multiple text segments (horizontal concatenation) via {@link #addText(UITextComponent)},
  * but does not support automatic line wrapping.
  * The widget automatically resizes its width and height to fit the content.
  *
@@ -21,8 +21,8 @@ import net.xmx.xui.core.text.UIComponent;
  */
 public class UIText extends UIWidget {
 
-    // We use UIComponent to accumulate appended text segments into a single logic line.
-    private UIComponent content;
+    // We use UITextComponent to accumulate appended text segments into a single logic line.
+    private UITextComponent content;
     private boolean centered = false;
     private boolean shadow = true;
 
@@ -31,7 +31,7 @@ public class UIText extends UIWidget {
      * The default text color is set to white.
      */
     public UIText() {
-        this.content = UIComponent.empty();
+        this.content = UITextComponent.empty();
         this.style().set(Properties.TEXT_COLOR, 0xFFFFFFFF);
     }
 
@@ -42,7 +42,7 @@ public class UIText extends UIWidget {
      * @param text The component to append.
      * @return This widget instance for chaining.
      */
-    public UIText addText(UIComponent text) {
+    public UIText addText(UITextComponent text) {
         this.content.append(text);
         return this;
     }
@@ -54,7 +54,7 @@ public class UIText extends UIWidget {
      * @return This widget instance for chaining.
      */
     public UIText setText(String text) {
-        return setText(UIComponent.literal(text));
+        return setText(UITextComponent.literal(text));
     }
 
     /**
@@ -63,7 +63,7 @@ public class UIText extends UIWidget {
      * @param text The component to set.
      * @return This widget instance for chaining.
      */
-    public UIText setText(UIComponent text) {
+    public UIText setText(UITextComponent text) {
         // Since we need a mutable accumulator, we copy the input
         this.content = text.copy();
         return this;
@@ -74,7 +74,7 @@ public class UIText extends UIWidget {
      *
      * @return The text component.
      */
-    public UIComponent getText() {
+    public UITextComponent getText() {
         return this.content;
     }
 
@@ -111,8 +111,8 @@ public class UIText extends UIWidget {
         if (!isVisible) return;
 
         // Calculate required dimensions for the single line
-        int textWidth = UIComponent.getTextWidth(this.content);
-        int textHeight = UIComponent.getFontHeight();
+        int textWidth = UITextComponent.getTextWidth(this.content);
+        int textHeight = UITextComponent.getFontHeight();
 
         // Apply dimensions to constraints
         this.widthConstraint = Constraints.pixel(textWidth);
@@ -140,7 +140,7 @@ public class UIText extends UIWidget {
 
         // Calculate centering offset if enabled
         if (centered) {
-            drawX = this.x + (this.width - UIComponent.getTextWidth(this.content)) / 2.0f;
+            drawX = this.x + (this.width - UITextComponent.getTextWidth(this.content)) / 2.0f;
         }
 
         renderer.drawText(this.content, drawX, drawY, color, shadow);

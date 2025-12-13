@@ -4,7 +4,6 @@
  */
 package net.xmx.xui.test;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,7 +15,7 @@ import net.xmx.xui.core.components.UIEditBox;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 /**
  * Example screen demonstrating the {@link UIEditBox} component within a {@link UIContext}.
@@ -77,7 +76,7 @@ public class XUIEditBoxExampleScreen extends Screen {
 
         // --- Header ---
         UIText title = new UIText();
-        title.setText(UIComponent.literal("Registration Form").setBold(true));
+        title.setText(UITextComponent.literal("Registration Form").setBold(true));
         title.setCentered(true)
                 .setX(Constraints.center())
                 .setY(Constraints.pixel(15));

@@ -5,7 +5,7 @@
 package net.xmx.xui.core.components;
 
 import net.minecraft.client.Minecraft;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
@@ -31,7 +31,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      */
     public static final UIProperty<Integer> ARROW_COLOR = new UIProperty<>("dropdown_arrow_color", 0xFFAAAAAA);
 
-    private final List<UIComponent> options = new ArrayList<>();
+    private final List<UITextComponent> options = new ArrayList<>();
 
     private int selectedIndex = -1;
     private boolean isOpen = false;
@@ -47,7 +47,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
     /**
      * Constructs an empty dropdown.
-     * Add options using {@link #addOption(UIComponent)} or {@link #setOptions(List)}.
+     * Add options using {@link #addOption(UITextComponent)} or {@link #setOptions(List)}.
      */
     public UIDropdown() {
         setupDefaultStyles();
@@ -59,7 +59,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      * @param option The option component to add.
      * @return This dropdown instance.
      */
-    public UIDropdown addOption(UIComponent option) {
+    public UIDropdown addOption(UITextComponent option) {
         this.options.add(option);
         if (this.selectedIndex == -1) {
             this.selectedIndex = 0;
@@ -73,7 +73,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      * @param options The list of options.
      * @return This dropdown instance.
      */
-    public UIDropdown setOptions(List<UIComponent> options) {
+    public UIDropdown setOptions(List<UITextComponent> options) {
         this.options.clear();
         this.options.addAll(options);
         if (!this.options.isEmpty()) {
@@ -142,7 +142,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         }
 
         if (selectedIndex >= 0 && selectedIndex < options.size()) {
-            float textY = y + (height - UIComponent.getFontHeight()) / 2.0f;
+            float textY = y + (height - UITextComponent.getFontHeight()) / 2.0f;
             renderer.drawText(options.get(selectedIndex), x + 5, textY, textColor, false);
         }
 
@@ -217,8 +217,8 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 renderer.drawRect(x, optY, width, optionHeight, baseHoverColor, 0);
             }
 
-            UIComponent text = options.get(i);
-            float textY = optY + (optionHeight - UIComponent.getFontHeight()) / 2.0f;
+            UITextComponent text = options.get(i);
+            float textY = optY + (optionHeight - UITextComponent.getFontHeight()) / 2.0f;
             renderer.drawText(text, x + 5, textY, textColor, false);
         }
     }

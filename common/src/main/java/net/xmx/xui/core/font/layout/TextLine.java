@@ -4,7 +4,8 @@
  */
 package net.xmx.xui.core.font.layout;
 
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class TextLine {
      * @param text      The specific text substring for this segment.
      * @param width     The pixel width of this segment.
      */
-    public void add(UIComponent component, String text, float width) {
+    public void add(UITextComponent component, String text, float width) {
         this.segments.add(new Segment(component, text));
         this.width += width;
     }
@@ -48,5 +49,5 @@ public class TextLine {
     /**
      * Internal record representing a piece of text within a line.
      */
-    public record Segment(UIComponent component, String text) {}
+    public record Segment(UITextComponent component, String text) {}
 }

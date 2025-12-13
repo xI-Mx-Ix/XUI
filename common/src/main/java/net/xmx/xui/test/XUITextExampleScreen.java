@@ -16,7 +16,7 @@ import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.font.UIDefaultFonts;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 /**
  * Example screen demonstrating the advanced text rendering capabilities of XUI.
@@ -74,7 +74,7 @@ public class XUITextExampleScreen extends Screen {
 
         // --- WIDGET 1: Header (Roboto Bold) ---
         UIText header = new UIText();
-        header.setText(UIComponent.literal("Typography Showcase")
+        header.setText(UITextComponent.literal("Typography Showcase")
                 .setColor(0xFF4FC3F7) // Light Blue
                 .setBold(true)
                 .setFont(UIDefaultFonts.getRoboto()));
@@ -87,23 +87,23 @@ public class XUITextExampleScreen extends Screen {
         UIWrappedText fontCompare = new UIWrappedText();
 
         // Title
-        fontCompare.setText(UIComponent.literal("1. Font Families")
+        fontCompare.setText(UITextComponent.literal("1. Font Families")
                 .setColor(0xFFAAAAAA)
                 .setUnderline(true)
                 .setFont(UIDefaultFonts.getRoboto()));
 
         // Vanilla Line
-        fontCompare.addText(UIComponent.literal("Vanilla: The quick brown fox jumps.")
+        fontCompare.addText(UITextComponent.literal("Vanilla: The quick brown fox jumps.")
                 .setColor(0xFFFFFFFF)
                 .setFont(UIDefaultFonts.getVanilla()), false);
 
         // Roboto Line
-        fontCompare.addText(UIComponent.literal("Roboto: The quick brown fox jumps.")
+        fontCompare.addText(UITextComponent.literal("Roboto: The quick brown fox jumps.")
                 .setColor(0xFFDDDDDD)
                 .setFont(UIDefaultFonts.getRoboto()), false);
 
         // JetBrains Mono Line
-        fontCompare.addText(UIComponent.literal("JB Mono: The quick brown fox jumps.")
+        fontCompare.addText(UITextComponent.literal("JB Mono: The quick brown fox jumps.")
                 .setColor(0xFFB9FBC0) // Light Green
                 .setFont(UIDefaultFonts.getJetBrainsMono()), false);
 
@@ -114,27 +114,27 @@ public class XUITextExampleScreen extends Screen {
         // --- WIDGET 3: Rich Styles & Obfuscation ---
         UIWrappedText styleShowcase = new UIWrappedText();
 
-        styleShowcase.setText(UIComponent.literal("2. Rich Styles & Magic")
+        styleShowcase.setText(UITextComponent.literal("2. Rich Styles & Magic")
                 .setColor(0xFFAAAAAA)
                 .setUnderline(true)
                 .setFont(UIDefaultFonts.getRoboto()));
 
         // Mixed styles in one line using Roboto
-        UIComponent mixedLine = UIComponent.literal("We support ")
+        UITextComponent mixedLine = UITextComponent.literal("We support ")
                 .setFont(UIDefaultFonts.getRoboto())
-                .append(UIComponent.literal("Bold, ").setBold(true).setColor(0xFFE57373))
-                .append(UIComponent.literal("Italic, ").setItalic(true).setColor(0xFFFFF176))
-                .append(UIComponent.literal("Underline ").setUnderline(true).setColor(0xFF64B5F6))
-                .append(UIComponent.literal("& ").setColor(0xFF888888))
-                .append(UIComponent.literal("Strikethrough").setStrikethrough(true).setColor(0xFFA1887F));
+                .append(UITextComponent.literal("Bold, ").setBold(true).setColor(0xFFE57373))
+                .append(UITextComponent.literal("Italic, ").setItalic(true).setColor(0xFFFFF176))
+                .append(UITextComponent.literal("Underline ").setUnderline(true).setColor(0xFF64B5F6))
+                .append(UITextComponent.literal("& ").setColor(0xFF888888))
+                .append(UITextComponent.literal("Strikethrough").setStrikethrough(true).setColor(0xFFA1887F));
 
         styleShowcase.addText(mixedLine, false);
 
         // Obfuscation test (Matrix effect)
-        UIComponent magicLine = UIComponent.literal("Secret Data: ")
+        UITextComponent magicLine = UITextComponent.literal("Secret Data: ")
                 .setFont(UIDefaultFonts.getJetBrainsMono())
                 .setColor(0xFF888888)
-                .append(UIComponent.literal("kjd8s7d8s7d").setObfuscated(true).setColor(0xFFFF5555));
+                .append(UITextComponent.literal("kjd8s7d8s7d").setObfuscated(true).setColor(0xFFFF5555));
 
         styleShowcase.addText(magicLine, false);
 
@@ -145,7 +145,7 @@ public class XUITextExampleScreen extends Screen {
         // --- WIDGET 4: Word Wrapping Paragraph ---
         UIWrappedText paragraph = new UIWrappedText();
 
-        paragraph.setText(UIComponent.literal("3. Word Wrapping (Roboto)")
+        paragraph.setText(UITextComponent.literal("3. Word Wrapping (Roboto)")
                 .setColor(0xFFAAAAAA)
                 .setUnderline(true)
                 .setFont(UIDefaultFonts.getRoboto()));
@@ -154,12 +154,12 @@ public class XUITextExampleScreen extends Screen {
                 "This paragraph demonstrates automatic line wrapping within the container bounds. " +
                 "It handles spaces, punctuation, and mixed font styles seamlessly.";
 
-        UIComponent bodyText = UIComponent.literal(lore)
+        UITextComponent bodyText = UITextComponent.literal(lore)
                 .setColor(0xFFE0E0E0)
                 .setFont(UIDefaultFonts.getRoboto());
 
         // Append a highlighed Mono section at the end
-        bodyText.append(UIComponent.literal(" [System Status: OK]")
+        bodyText.append(UITextComponent.literal(" [System Status: OK]")
                 .setFont(UIDefaultFonts.getJetBrainsMono())
                 .setColor(0xFF00E676));
 
@@ -171,7 +171,7 @@ public class XUITextExampleScreen extends Screen {
 
         // --- Close Button ---
         UIButton closeBtn = new UIButton();
-        closeBtn.setLabel(UIComponent.literal("Close").setFont(UIDefaultFonts.getRoboto()));
+        closeBtn.setLabel(UITextComponent.literal("Close").setFont(UIDefaultFonts.getRoboto()));
         closeBtn.setX(Constraints.center())
                 .setY(Constraints.anchorEnd(20))
                 .setWidth(Constraints.pixel(100))

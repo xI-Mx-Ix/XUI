@@ -8,7 +8,7 @@ import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 /**
  * Represents a Header element in Markdown (#, ##, ###).
@@ -27,14 +27,14 @@ public class MarkdownHeader extends UIPanel {
      * @param color        The color associated with the header level (ARGB Integer).
      * @param contentWidth The available width for wrapping.
      */
-    public MarkdownHeader(UIComponent text, int color, float contentWidth) {
+    public MarkdownHeader(UITextComponent text, int color, float contentWidth) {
         // Transparent background
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
 
         // Use color and style to distinguish headers.
         // We create a copy to apply styles without mutating the original component.
-        UIComponent styled = text.copy().setBold(true).setColor(color);
+        UITextComponent styled = text.copy().setBold(true).setColor(color);
 
         UIWrappedText widget = MarkdownUtils.createWrappingText(styled, 0, contentWidth);
         

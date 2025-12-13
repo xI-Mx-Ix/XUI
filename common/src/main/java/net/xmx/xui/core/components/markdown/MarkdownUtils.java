@@ -6,7 +6,7 @@ package net.xmx.xui.core.components.markdown;
 
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIWrappedText;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,10 +41,10 @@ public class MarkdownUtils {
      * @param contentWidth The total available width.
      * @return A configured UIWrappedText widget with layout calculated.
      */
-    public static UIWrappedText createWrappingText(UIComponent content, float widthOffset, float contentWidth) {
+    public static UIWrappedText createWrappingText(UITextComponent content, float widthOffset, float contentWidth) {
         UIWrappedText widget = new UIWrappedText();
         // Add empty line for padding logic
-        widget.addText(UIComponent.empty());
+        widget.addText(UITextComponent.empty());
         // Add actual content with wrapping enabled
         widget.addText(content, true);
 
@@ -68,7 +68,7 @@ public class MarkdownUtils {
      * @param text The raw text.
      * @return A component with formatting codes applied.
      */
-    public static UIComponent parseInline(String text) {
+    public static UITextComponent parseInline(String text) {
         // Escape existing section signs to prevent injection
         String safe = text.replace("§", "");
 
@@ -84,7 +84,7 @@ public class MarkdownUtils {
         // Replace Code `...` (Yellow/Gray)
         safe = safe.replaceAll("`(.*?)`", "§7$1§r");
 
-        return UIComponent.literal(safe);
+        return UITextComponent.literal(safe);
     }
 
     /**
@@ -93,8 +93,8 @@ public class MarkdownUtils {
      * @param code The raw code string.
      * @return A Component with colors applied to keywords, strings, etc.
      */
-    public static UIComponent highlightCode(String code) {
-        UIComponent result = UIComponent.empty();
+    public static UITextComponent highlightCode(String code) {
+        UITextComponent result = UITextComponent.empty();
         Matcher matcher = CODE_TOKEN_PATTERN.matcher(code);
         int lastEnd = 0;
 
@@ -102,7 +102,7 @@ public class MarkdownUtils {
             // Append un-matched segment (plain text / symbols) as gray
             String plain = code.substring(lastEnd, matcher.start());
             if (!plain.isEmpty()) {
-                result.append(UIComponent.literal(plain).setColor(0xFFAAAAAA)); // Gray
+                result.append(UITextComponent.literal(plain).setColor(0xFFAAAAAA)); // Gray
             }
 
             String token = matcher.group();
@@ -118,13 +118,13 @@ public class MarkdownUtils {
                 color = 0xFFFFAA00; // Gold (Keywords)
             }
 
-            result.append(UIComponent.literal(token).setColor(color));
+            result.append(UITextComponent.literal(token).setColor(color));
             lastEnd = matcher.end();
         }
 
         String tail = code.substring(lastEnd);
         if (!tail.isEmpty()) {
-            result.append(UIComponent.literal(tail).setColor(0xFFAAAAAA)); // Gray
+            result.append(UITextComponent.literal(tail).setColor(0xFFAAAAAA)); // Gray
         }
 
         return result;

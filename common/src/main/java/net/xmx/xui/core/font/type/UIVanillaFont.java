@@ -11,7 +11,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 import net.xmx.xui.impl.UIRenderImpl;
 
 /**
@@ -32,17 +32,17 @@ public class UIVanillaFont extends UIFont {
     }
 
     @Override
-    public float getWidth(UIComponent component) {
+    public float getWidth(UITextComponent component) {
         return Minecraft.getInstance().font.width(toMinecraftComponent(component));
     }
 
     @Override
-    public float getWordWrapHeight(UIComponent component, float maxWidth) {
+    public float getWordWrapHeight(UITextComponent component, float maxWidth) {
         return Minecraft.getInstance().font.wordWrapHeight(toMinecraftComponent(component), (int) maxWidth);
     }
 
     @Override
-    public void draw(UIRenderImpl context, UIComponent component, float x, float y, int color, boolean shadow) {
+    public void draw(UIRenderImpl context, UITextComponent component, float x, float y, int color, boolean shadow) {
         GuiGraphics graphics = context.getGuiGraphics();
         if (graphics == null) return;
 
@@ -56,7 +56,7 @@ public class UIVanillaFont extends UIFont {
     }
 
     @Override
-    public void drawWrapped(UIRenderImpl context, UIComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
+    public void drawWrapped(UIRenderImpl context, UITextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
         GuiGraphics graphics = context.getGuiGraphics();
         if (graphics == null) return;
 
@@ -68,7 +68,7 @@ public class UIVanillaFont extends UIFont {
     /**
      * Helper to convert XUI Component tree to Minecraft Component tree.
      */
-    private Component toMinecraftComponent(UIComponent uiComp) {
+    private Component toMinecraftComponent(UITextComponent uiComp) {
         MutableComponent mcComp = Component.literal(uiComp.getText());
         Style style = Style.EMPTY
                 .withBold(uiComp.isBold())
@@ -83,7 +83,7 @@ public class UIVanillaFont extends UIFont {
 
         mcComp.setStyle(style);
 
-        for (UIComponent sibling : uiComp.getSiblings()) {
+        for (UITextComponent sibling : uiComp.getSiblings()) {
             mcComp.append(toMinecraftComponent(sibling));
         }
 

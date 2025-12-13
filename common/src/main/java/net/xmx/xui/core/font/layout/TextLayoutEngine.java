@@ -7,7 +7,7 @@ package net.xmx.xui.core.font.layout;
 import net.xmx.xui.core.font.UIFontAtlas;
 import net.xmx.xui.core.font.data.MSDFData;
 import net.xmx.xui.core.font.type.UICustomFont;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,9 +39,9 @@ public class TextLayoutEngine {
      * @param component The root component.
      * @return The total width in pixels.
      */
-    public float computeWidth(UIComponent component) {
+    public float computeWidth(UITextComponent component) {
         float width = getSingleComponentWidth(component);
-        for (UIComponent sibling : component.getSiblings()) {
+        for (UITextComponent sibling : component.getSiblings()) {
             width += computeWidth(sibling);
         }
         return width;
@@ -50,7 +50,7 @@ public class TextLayoutEngine {
     /**
      * Measures a single component's text string.
      */
-    private float getSingleComponentWidth(UIComponent component) {
+    private float getSingleComponentWidth(UITextComponent component) {
         String text = component.getText();
         if (text == null || text.isEmpty()) return 0;
 
@@ -74,16 +74,16 @@ public class TextLayoutEngine {
      * @param maxWidth The maximum width in pixels.
      * @return A list of {@link TextLine} objects containing the layout.
      */
-    public List<TextLine> computeWrappedLayout(UIComponent root, float maxWidth) {
+    public List<TextLine> computeWrappedLayout(UITextComponent root, float maxWidth) {
         List<TextLine> lines = new ArrayList<>();
         TextLine currentLine = new TextLine();
         float currentLineWidth = 0;
 
         // Flatten the tree for easier iteration
-        List<UIComponent> flatList = new ArrayList<>();
+        List<UITextComponent> flatList = new ArrayList<>();
         flatten(root, flatList);
 
-        for (UIComponent comp : flatList) {
+        for (UITextComponent comp : flatList) {
             String text = comp.getText();
             if (text == null || text.isEmpty()) continue;
 
@@ -132,8 +132,8 @@ public class TextLayoutEngine {
         return lines;
     }
 
-    private void flatten(UIComponent comp, List<UIComponent> list) {
+    private void flatten(UITextComponent comp, List<UITextComponent> list) {
         list.add(comp);
-        for (UIComponent s : comp.getSiblings()) flatten(s, list);
+        for (UITextComponent s : comp.getSiblings()) flatten(s, list);
     }
 }

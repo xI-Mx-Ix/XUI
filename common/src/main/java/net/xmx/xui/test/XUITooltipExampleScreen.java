@@ -4,7 +4,6 @@
  */
 package net.xmx.xui.test;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,7 +15,7 @@ import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UITooltip;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,24 +120,24 @@ public class XUITooltipExampleScreen extends Screen {
                 .setWidth(Constraints.pixel(200))
                 .setHeight(Constraints.pixel(30));
 
-        // Use UIComponent list instead of Minecraft Component list
-        List<UIComponent> richLines = new ArrayList<>();
+        // Use UITextComponent list instead of Minecraft Component list
+        List<UITextComponent> richLines = new ArrayList<>();
 
         // Header: Gold + Bold
-        richLines.add(UIComponent.literal("Header Info").setColor(0xFFFFAA00).setBold(true));
+        richLines.add(UITextComponent.literal("Header Info").setColor(0xFFFFAA00).setBold(true));
 
         // Rarity: Light Purple
-        richLines.add(UIComponent.literal("Rarity: Legendary").setColor(0xFFFF55FF));
+        richLines.add(UITextComponent.literal("Rarity: Legendary").setColor(0xFFFF55FF));
 
         // Spacer
-        richLines.add(UIComponent.empty());
+        richLines.add(UITextComponent.empty());
 
         // Stats Header: Gray
-        richLines.add(UIComponent.literal("Stats:").setColor(0xFFAAAAAA));
+        richLines.add(UITextComponent.literal("Stats:").setColor(0xFFAAAAAA));
 
         // Stats Values: Red and Blue
-        richLines.add(UIComponent.literal(" +50 Strength").setColor(0xFFFF5555));
-        richLines.add(UIComponent.literal(" +10 Speed").setColor(0xFF5555FF));
+        richLines.add(UITextComponent.literal(" +50 Strength").setColor(0xFFFF5555));
+        richLines.add(UITextComponent.literal(" +10 Speed").setColor(0xFF5555FF));
 
         UITooltip tipRich = new UITooltip();
         tipRich.setTarget(btnRich)

@@ -8,7 +8,7 @@ import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +67,7 @@ public class MarkdownTable extends UIPanel {
 
             for (int c = 0; c < columns && c < row.size(); c++) {
                 String text = row.get(c);
-                int textWidth = UIComponent.getTextWidth(MarkdownUtils.parseInline(text));
+                int textWidth = UITextComponent.getTextWidth(MarkdownUtils.parseInline(text));
                 if (textWidth + cellPadding > colWidths[c]) {
                     colWidths[c] = textWidth + cellPadding;
                 }
@@ -87,7 +87,7 @@ public class MarkdownTable extends UIPanel {
 
         // Build UI Components
         float currentY = 0;
-        float rowHeight = UIComponent.getFontHeight() + 8; // Text + padding
+        float rowHeight = UITextComponent.getFontHeight() + 8; // Text + padding
 
         for (int r = 0; r < rows.size(); r++) {
             List<String> row = rows.get(r);
@@ -123,7 +123,7 @@ public class MarkdownTable extends UIPanel {
 
             for (int c = 0; c < columns && c < row.size(); c++) {
                 String cellText = row.get(c);
-                UIComponent content = MarkdownUtils.parseInline(cellText);
+                UITextComponent content = MarkdownUtils.parseInline(cellText);
                 
                 if (isHeader) {
                     // Header text is Bold and Yellow

@@ -8,7 +8,7 @@ import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 import java.util.List;
 
@@ -34,10 +34,10 @@ public class MarkdownCodeBlock extends UIPanel {
 
         String code = sb.toString();
         // Retrieve the font height from the render implementation to support custom fonts
-        int fontHeight = UIComponent.getFontHeight();
+        int fontHeight = UITextComponent.getFontHeight();
 
-        // Apply syntax highlighting to the raw code string, returning a styled UIComponent tree
-        UIComponent coloredCode = MarkdownUtils.highlightCode(code);
+        // Apply syntax highlighting to the raw code string, returning a styled UITextComponent tree
+        UITextComponent coloredCode = MarkdownUtils.highlightCode(code);
 
         // Create wrapping text widget to handle line breaks
         UIWrappedText content = MarkdownUtils.createWrappingText(coloredCode, 0, contentWidth);

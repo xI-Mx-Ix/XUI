@@ -9,7 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 /**
  * Concrete implementation of the {@link UIRenderInterface}.
@@ -108,7 +108,7 @@ public class UIRenderImpl implements UIRenderInterface {
     // --- Text Rendering (Delegation to Font Abstraction) ---
 
     @Override
-    public void drawText(UIComponent text, float x, float y, int color, boolean shadow) {
+    public void drawText(UITextComponent text, float x, float y, int color, boolean shadow) {
         if (guiGraphics == null || text == null || text.getFont() == null) return;
 
         float ax = alignX(x);
@@ -118,7 +118,7 @@ public class UIRenderImpl implements UIRenderInterface {
     }
 
     @Override
-    public void drawWrappedText(UIComponent text, float x, float y, float width, int color, boolean shadow) {
+    public void drawWrappedText(UITextComponent text, float x, float y, float width, int color, boolean shadow) {
         if (guiGraphics == null || text == null || text.getFont() == null) return;
 
         float ax = alignX(x);

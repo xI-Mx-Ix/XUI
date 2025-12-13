@@ -13,14 +13,14 @@ import java.util.List;
 /**
  * Represents a text component with specific content, style, and font family.
  * <p>
- * This class mimics the structure of Minecraft's {@code Component} system, supporting
+ * This class mimics the structure of Minecraft's component system, supporting
  * a hierarchy of siblings to allow rendering multi-colored or multi-styled text
  * as a single logical unit.
  * </p>
  *
  * @author xI-Mx-Ix
  */
-public class UIComponent {
+public class UITextComponent {
 
     private String text;
     private UIFont font;
@@ -34,14 +34,14 @@ public class UIComponent {
     private Boolean obfuscated = null;
 
     // Hierarchy
-    private final List<UIComponent> siblings = new ArrayList<>();
+    private final List<UITextComponent> siblings = new ArrayList<>();
 
     /**
      * Constructs a new component with the Vanilla font by default.
      *
      * @param text The text content.
      */
-    public UIComponent(String text) {
+    public UITextComponent(String text) {
         this(text, UIDefaultFonts.getVanilla());
     }
 
@@ -51,7 +51,7 @@ public class UIComponent {
      * @param text The text content.
      * @param font The font family to use.
      */
-    public UIComponent(String text, UIFont font) {
+    public UITextComponent(String text, UIFont font) {
         this.text = text;
         this.font = font;
     }
@@ -62,8 +62,8 @@ public class UIComponent {
      * @param text The text.
      * @return The new component.
      */
-    public static UIComponent literal(String text) {
-        return new UIComponent(text);
+    public static UITextComponent literal(String text) {
+        return new UITextComponent(text);
     }
 
     /**
@@ -71,8 +71,8 @@ public class UIComponent {
      *
      * @return An empty component.
      */
-    public static UIComponent empty() {
-        return new UIComponent("");
+    public static UITextComponent empty() {
+        return new UITextComponent("");
     }
 
     /**
@@ -82,7 +82,7 @@ public class UIComponent {
      * @param sibling The component to append.
      * @return This component for chaining.
      */
-    public UIComponent append(UIComponent sibling) {
+    public UITextComponent append(UITextComponent sibling) {
         this.siblings.add(sibling);
         return this;
     }
@@ -94,8 +94,8 @@ public class UIComponent {
      * @param text The text to append.
      * @return This component for chaining.
      */
-    public UIComponent append(String text) {
-        this.siblings.add(new UIComponent(text, this.font));
+    public UITextComponent append(String text) {
+        this.siblings.add(new UITextComponent(text, this.font));
         return this;
     }
 
@@ -105,8 +105,8 @@ public class UIComponent {
      *
      * @return A copy of this component.
      */
-    public UIComponent copy() {
-        UIComponent copy = new UIComponent(this.text, this.font);
+    public UITextComponent copy() {
+        UITextComponent copy = new UITextComponent(this.text, this.font);
         copy.color = this.color;
         copy.bold = this.bold;
         copy.italic = this.italic;
@@ -122,7 +122,7 @@ public class UIComponent {
         return text;
     }
 
-    public UIComponent setText(String text) {
+    public UITextComponent setText(String text) {
         this.text = text;
         return this;
     }
@@ -138,50 +138,87 @@ public class UIComponent {
      * @param font The font family.
      * @return This component.
      */
-    public UIComponent setFont(UIFont font) {
+    public UITextComponent setFont(UIFont font) {
         this.font = font;
         return this;
     }
 
-    public List<UIComponent> getSiblings() {
+    public List<UITextComponent> getSiblings() {
         return siblings;
     }
 
     // --- Styling Fluent API ---
 
-    public UIComponent setColor(int color) {
+    public UITextComponent setColor(int color) {
         this.color = color;
         return this;
     }
 
-    public UIComponent setBold(boolean bold) {
+    /**
+     * Applies a standard UIFormatting style or color to this component.
+     *
+     * @param format The formatting to apply.
+     * @return This component.
+     */
+    public UITextComponent applyFormatting(UIFormatting format) {
+        if (format == null) return this;
+
+        if (format == UIFormatting.RESET) {
+            this.color = null;
+            this.bold = null;
+            this.italic = null;
+            this.underline = null;
+            this.strikethrough = null;
+            this.obfuscated = null;
+            return this;
+        }
+
+        if (format.isColor()) {
+            this.color = format.getColor();
+            // In vanilla MC, setting a color usually resets styles, 
+            // but we'll keep it additive here unless you want strictly vanilla behavior.
+        } else if (format.isStyle()) {
+            switch (format) {
+                case BOLD -> this.bold = true;
+                case ITALIC -> this.italic = true;
+                case UNDERLINE -> this.underline = true;
+                case STRIKETHROUGH -> this.strikethrough = true;
+                case OBFUSCATED -> this.obfuscated = true;
+            }
+        }
+        return this;
+    }
+
+    public UITextComponent setBold(boolean bold) {
         this.bold = bold;
         return this;
     }
 
-    public UIComponent setItalic(boolean italic) {
+    public UITextComponent setItalic(boolean italic) {
         this.italic = italic;
         return this;
     }
 
-    public UIComponent setUnderline(boolean underline) {
+    public UITextComponent setUnderline(boolean underline) {
         this.underline = underline;
         return this;
     }
 
-    public UIComponent setStrikethrough(boolean strikethrough) {
+    public UITextComponent setStrikethrough(boolean strikethrough) {
         this.strikethrough = strikethrough;
         return this;
     }
 
-    public UIComponent setObfuscated(boolean obfuscated) {
+    public UITextComponent setObfuscated(boolean obfuscated) {
         this.obfuscated = obfuscated;
         return this;
     }
 
     // --- Style Accessors (with fallback logic if needed) ---
 
-    public Integer getColor() { return color; }
+    public Integer getColor() {
+        return color;
+    }
     
     /**
      * Returns true if bold is explicitly set to true.
@@ -206,17 +243,17 @@ public class UIComponent {
         return Boolean.TRUE.equals(obfuscated);
     }
 
-    public static int getTextWidth(UIComponent text) {
+    public static int getTextWidth(UITextComponent text) {
         if (text == null || text.getFont() == null) return 0;
-        return (int) Math.ceil(text.getFont().getWidth(text));
+        return (int) Math.ceil(text.getFont().getWidth(text)); // Assumed method signature in UIFont needs update if it used UIComponent
     }
 
     public static int getFontHeight() {
         return 9;
     }
 
-    public static int getWordWrapHeight(UIComponent text, int maxWidth) {
+    public static int getWordWrapHeight(UITextComponent text, int maxWidth) {
         if (text == null || text.getFont() == null) return 0;
-        return (int) Math.ceil(text.getFont().getWordWrapHeight(text, maxWidth));
+        return (int) Math.ceil(text.getFont().getWordWrapHeight(text, maxWidth)); // Assumed method signature in UIFont
     }
 }

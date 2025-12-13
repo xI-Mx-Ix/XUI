@@ -8,7 +8,7 @@ import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 /**
  * Represents a Blockquote in Markdown (>).
@@ -26,11 +26,11 @@ public class MarkdownQuote extends UIPanel {
      * @param text         The text inside the quote.
      * @param contentWidth The available width.
      */
-    public MarkdownQuote(UIComponent text, float contentWidth) {
+    public MarkdownQuote(UITextComponent text, float contentWidth) {
         float padding = 4;
         float barWidth = 2;
         float quoteX = 10;
-        int fontHeight = UIComponent.getFontHeight();
+        int fontHeight = UITextComponent.getFontHeight();
 
         // Create the text widget first to measure it.
         // We style it Gray and Italic to represent a quote.

@@ -4,12 +4,12 @@
  */
 package net.xmx.xui.core.gl;
 
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 
 /**
  * Abstract interface for UI rendering operations.
  * This abstraction allows the core library to remain independent of specific game engine classes.
- * Updated to support the internal UIComponent system for rich text and multi-line rendering
+ * Updated to support the internal UITextComponent system for rich text and multi-line rendering
  * (supporting both Vanilla and Custom fonts).
  *
  * @author xI-Mx-Ix
@@ -83,7 +83,7 @@ public interface UIRenderInterface {
      * @param color  The ARGB color value (may be overridden by Component styles).
      * @param shadow Whether to render a drop shadow behind the text.
      */
-    void drawText(UIComponent text, float x, float y, int color, boolean shadow);
+    void drawText(UITextComponent text, float x, float y, int color, boolean shadow);
 
     /**
      * Draws text that automatically wraps to the next line if it exceeds the specified width.
@@ -95,7 +95,7 @@ public interface UIRenderInterface {
      * @param color  The ARGB color value.
      * @param shadow Whether to render a drop shadow.
      */
-    void drawWrappedText(UIComponent text, float x, float y, float width, int color, boolean shadow);
+    void drawWrappedText(UITextComponent text, float x, float y, float width, int color, boolean shadow);
 
     /**
      * Enables a scissor test to clip rendering to a specific screen region.

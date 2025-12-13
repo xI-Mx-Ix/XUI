@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.components;
 
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
@@ -23,14 +23,14 @@ import net.xmx.xui.core.style.UIState;
  */
 public class UIButton extends UIWidget {
 
-    private UIComponent label;
+    private UITextComponent label;
 
     /**
      * Constructs a button with default styles and an empty label.
-     * Content should be set using {@link #setLabel(UIComponent)} or {@link #setLabel(String)}.
+     * Content should be set using {@link #setLabel(UITextComponent)} or {@link #setLabel(String)}.
      */
     public UIButton() {
-        this.label = UIComponent.empty();
+        this.label = UITextComponent.empty();
         setupModernStyles();
     }
 
@@ -88,9 +88,9 @@ public class UIButton extends UIWidget {
         }
 
         // 6. Draw Text (Centered)
-        // Uses UIComponent.getTextWidth() for Component width calculation
-        int strWidth = UIComponent.getTextWidth(label);
-        int strHeight = UIComponent.getFontHeight();
+        // Uses UITextComponent.getTextWidth() for Component width calculation
+        int strWidth = UITextComponent.getTextWidth(label);
+        int strHeight = UITextComponent.getFontHeight();
 
         float textX = x + (width - strWidth) / 2.0f;
         float textY = y + (height - strHeight) / 2.0f + 1;
@@ -104,7 +104,7 @@ public class UIButton extends UIWidget {
      * @param label The new label component.
      * @return This button instance.
      */
-    public UIButton setLabel(UIComponent label) {
+    public UIButton setLabel(UITextComponent label) {
         this.label = label;
         return this;
     }
@@ -116,7 +116,7 @@ public class UIButton extends UIWidget {
      * @return This button instance.
      */
     public UIButton setLabel(String label) {
-        this.label = UIComponent.literal(label);
+        this.label = UITextComponent.literal(label);
         return this;
     }
 }

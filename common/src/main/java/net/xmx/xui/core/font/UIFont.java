@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.font;
 
-import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.core.text.UITextComponent;
 import net.xmx.xui.impl.UIRenderImpl;
 
 /**
@@ -54,7 +54,7 @@ public abstract class UIFont {
      * @param component The root component to measure.
      * @return The total width.
      */
-    public abstract float getWidth(UIComponent component);
+    public abstract float getWidth(UITextComponent component);
 
     /**
      * Calculates the height required to render the text with a maximum width constraint.
@@ -63,7 +63,7 @@ public abstract class UIFont {
      * @param maxWidth  The width limit in pixels.
      * @return The total vertical height in pixels.
      */
-    public abstract float getWordWrapHeight(UIComponent component, float maxWidth);
+    public abstract float getWordWrapHeight(UITextComponent component, float maxWidth);
 
     /**
      * Renders a single line of text.
@@ -75,7 +75,7 @@ public abstract class UIFont {
      * @param color     The text color.
      * @param shadow    Whether to draw a drop shadow.
      */
-    public abstract void draw(UIRenderImpl context, UIComponent component, float x, float y, int color, boolean shadow);
+    public abstract void draw(UIRenderImpl context, UITextComponent component, float x, float y, int color, boolean shadow);
 
     /**
      * Renders text wrapped within a specific width.
@@ -88,5 +88,5 @@ public abstract class UIFont {
      * @param color     The text color.
      * @param shadow    Whether to draw a drop shadow.
      */
-    public abstract void drawWrapped(UIRenderImpl context, UIComponent component, float x, float y, float maxWidth, int color, boolean shadow);
+    public abstract void drawWrapped(UIRenderImpl context, UITextComponent component, float x, float y, float maxWidth, int color, boolean shadow);
 }
