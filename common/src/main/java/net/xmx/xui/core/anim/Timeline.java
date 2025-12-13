@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.anim;
 
-import net.xmx.xui.core.style.UIProperty;
+import net.xmx.xui.core.style.StyleKey;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,9 +25,9 @@ import java.util.List;
 public class Timeline<T> {
 
     /**
-     * The property that this timeline modifies (e.g., Properties.ROTATION_X).
+     * The property that this timeline modifies (e.g., ThemeProperties.ROTATION_X).
      */
-    private final UIProperty<T> property;
+    private final StyleKey<T> property;
 
     /**
      * The sorted list of keyframes.
@@ -39,7 +39,7 @@ public class Timeline<T> {
      *
      * @param property The property to animate.
      */
-    public Timeline(UIProperty<T> property) {
+    public Timeline(StyleKey<T> property) {
         this.property = property;
     }
 
@@ -51,7 +51,7 @@ public class Timeline<T> {
      * @param value  The target value.
      * @param easing The easing curve to reach this value.
      */
-    public void addKeyframe(float time, T value, UIEasing easing) {
+    public void addKeyframe(float time, T value, Easing easing) {
         keyframes.add(new Keyframe<>(time, value, easing));
         Collections.sort(keyframes);
     }
@@ -59,9 +59,9 @@ public class Timeline<T> {
     /**
      * Gets the property associated with this timeline.
      *
-     * @return The UIProperty key.
+     * @return The StyleKey key.
      */
-    public UIProperty<T> getProperty() {
+    public StyleKey<T> getProperty() {
         return property;
     }
 

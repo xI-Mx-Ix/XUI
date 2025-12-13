@@ -8,14 +8,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UITooltip;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,19 +47,19 @@ public class XUITooltipExampleScreen extends Screen {
 
     private void buildUI() {
         UIPanel root = uiContext.getRoot();
-        root.style().set(Properties.BACKGROUND_COLOR, 0xFF181818);
+        root.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF181818);
 
         // 2. Create a container for buttons
         UIPanel contentPanel = new UIPanel();
-        contentPanel.setX(Constraints.center())
-                .setY(Constraints.center())
-                .setWidth(Constraints.pixel(400))
-                .setHeight(Constraints.pixel(300));
+        contentPanel.setX(Layout.center())
+                .setY(Layout.center())
+                .setWidth(Layout.pixel(400))
+                .setHeight(Layout.pixel(300));
         contentPanel.style()
-                .set(Properties.BACKGROUND_COLOR, 0xFF252525)
-                .set(Properties.BORDER_RADIUS, 10.0f)
-                .set(Properties.BORDER_COLOR, 0xFF444444)
-                .set(Properties.BORDER_THICKNESS, 1.0f);
+                .set(ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
+                .set(ThemeProperties.BORDER_RADIUS, 10.0f)
+                .set(ThemeProperties.BORDER_COLOR, 0xFF444444)
+                .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 
         root.add(contentPanel);
 
@@ -67,9 +67,9 @@ public class XUITooltipExampleScreen extends Screen {
         UIText title = new UIText();
         title.setText("Tooltip Showcase");
         title.setCentered(true)
-                .setX(Constraints.center())
-                .setY(Constraints.pixel(20))
-                .setWidth(Constraints.relative(1.0f));
+                .setX(Layout.center())
+                .setY(Layout.pixel(20))
+                .setWidth(Layout.relative(1.0f));
         contentPanel.add(title);
 
         // List to hold tooltips so we can add them to root *after* buttons
@@ -79,10 +79,10 @@ public class XUITooltipExampleScreen extends Screen {
         // --- Example 1: Simple Tooltip ---
         UIButton btnSimple = new UIButton();
         btnSimple.setLabel("Simple Tooltip");
-        btnSimple.setX(Constraints.center())
-                .setY(Constraints.pixel(60))
-                .setWidth(Constraints.pixel(200))
-                .setHeight(Constraints.pixel(30));
+        btnSimple.setX(Layout.center())
+                .setY(Layout.pixel(60))
+                .setWidth(Layout.pixel(200))
+                .setHeight(Layout.pixel(30));
 
         UITooltip tipSimple = new UITooltip();
         tipSimple.setTarget(btnSimple);
@@ -93,10 +93,10 @@ public class XUITooltipExampleScreen extends Screen {
         // --- Example 2: Fast Tooltip (No Delay) ---
         UIButton btnInstant = new UIButton();
         btnInstant.setLabel("Instant Fade");
-        btnInstant.setX(Constraints.center())
-                .setY(Constraints.pixel(110))
-                .setWidth(Constraints.pixel(200))
-                .setHeight(Constraints.pixel(30));
+        btnInstant.setX(Layout.center())
+                .setY(Layout.pixel(110))
+                .setWidth(Layout.pixel(200))
+                .setHeight(Layout.pixel(30));
 
         UITooltip tipInstant = new UITooltip();
         tipInstant.setTarget(btnInstant)
@@ -106,8 +106,8 @@ public class XUITooltipExampleScreen extends Screen {
 
         // Custom styling for this tooltip
         tipInstant.style()
-                .set(Properties.BACKGROUND_COLOR, 0xFF003300) // Green tint
-                .set(Properties.BORDER_COLOR, 0xFF00FF00);
+                .set(ThemeProperties.BACKGROUND_COLOR, 0xFF003300) // Green tint
+                .set(ThemeProperties.BORDER_COLOR, 0xFF00FF00);
 
         tooltips.add(tipInstant);
         contentPanel.add(btnInstant);
@@ -115,29 +115,29 @@ public class XUITooltipExampleScreen extends Screen {
         // --- Example 3: Rich Text / Multi-line ---
         UIButton btnRich = new UIButton();
         btnRich.setLabel("Rich Content");
-        btnRich.setX(Constraints.center())
-                .setY(Constraints.pixel(160))
-                .setWidth(Constraints.pixel(200))
-                .setHeight(Constraints.pixel(30));
+        btnRich.setX(Layout.center())
+                .setY(Layout.pixel(160))
+                .setWidth(Layout.pixel(200))
+                .setHeight(Layout.pixel(30));
 
-        // Use UITextComponent list instead of Minecraft Component list
-        List<UITextComponent> richLines = new ArrayList<>();
+        // Use TextComponent list instead of Minecraft Component list
+        List<TextComponent> richLines = new ArrayList<>();
 
         // Header: Gold + Bold
-        richLines.add(UITextComponent.literal("Header Info").setColor(0xFFFFAA00).setBold(true));
+        richLines.add(TextComponent.literal("Header Info").setColor(0xFFFFAA00).setBold(true));
 
         // Rarity: Light Purple
-        richLines.add(UITextComponent.literal("Rarity: Legendary").setColor(0xFFFF55FF));
+        richLines.add(TextComponent.literal("Rarity: Legendary").setColor(0xFFFF55FF));
 
         // Spacer
-        richLines.add(UITextComponent.empty());
+        richLines.add(TextComponent.empty());
 
         // Stats Header: Gray
-        richLines.add(UITextComponent.literal("Stats:").setColor(0xFFAAAAAA));
+        richLines.add(TextComponent.literal("Stats:").setColor(0xFFAAAAAA));
 
         // Stats Values: Red and Blue
-        richLines.add(UITextComponent.literal(" +50 Strength").setColor(0xFFFF5555));
-        richLines.add(UITextComponent.literal(" +10 Speed").setColor(0xFF5555FF));
+        richLines.add(TextComponent.literal(" +50 Strength").setColor(0xFFFF5555));
+        richLines.add(TextComponent.literal(" +10 Speed").setColor(0xFF5555FF));
 
         UITooltip tipRich = new UITooltip();
         tipRich.setTarget(btnRich)
@@ -150,10 +150,10 @@ public class XUITooltipExampleScreen extends Screen {
         // --- Example 4: Corner Test (Smart Positioning) ---
         UIButton btnCorner = new UIButton();
         btnCorner.setLabel("Corner Test");
-        btnCorner.setX(Constraints.anchorEnd(10))
-                .setY(Constraints.anchorEnd(10)) // Bottom right of panel
-                .setWidth(Constraints.pixel(100))
-                .setHeight(Constraints.pixel(30));
+        btnCorner.setX(Layout.anchorEnd(10))
+                .setY(Layout.anchorEnd(10)) // Bottom right of panel
+                .setWidth(Layout.pixel(100))
+                .setHeight(Layout.pixel(30));
 
         // Positioned inside the panel
         contentPanel.add(btnCorner);

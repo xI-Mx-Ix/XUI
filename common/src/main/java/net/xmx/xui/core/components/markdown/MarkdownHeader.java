@@ -4,12 +4,12 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 
 /**
  * Represents a Header element in Markdown (#, ##, ###).
@@ -29,14 +29,14 @@ public class MarkdownHeader extends UIPanel {
      * @param contentWidth The available width for wrapping.
      * @param font         The font to use for the header.
      */
-    public MarkdownHeader(UITextComponent text, int color, float contentWidth, UIFont font) {
+    public MarkdownHeader(TextComponent text, int color, float contentWidth, Font font) {
         // Transparent background
-        this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
-        this.setWidth(Constraints.pixel(contentWidth));
+        this.style().set(ThemeProperties.BACKGROUND_COLOR, 0x00000000);
+        this.setWidth(Layout.pixel(contentWidth));
 
         // Use color and style to distinguish headers.
         // We create a copy to apply styles without mutating the original component.
-        UITextComponent styled = text.copy().setBold(true).setColor(color);
+        TextComponent styled = text.copy().setBold(true).setColor(color);
         
         // Apply the header font
         MarkdownUtils.applyFontRecursive(styled, font);
@@ -45,7 +45,7 @@ public class MarkdownHeader extends UIPanel {
         
         // Add extra padding above headers (logic from original code: currentLayoutY += 5)
         float topPadding = 5;
-        widget.setY(Constraints.pixel(topPadding));
+        widget.setY(Layout.pixel(topPadding));
 
         this.add(widget);
 
@@ -53,7 +53,7 @@ public class MarkdownHeader extends UIPanel {
         // already adds height at the top of the widget.
         // Logic: topPadding + widgetHeight + 2 (bottom margin)
         this.renderHeight = topPadding + widget.getHeight() + 2;
-        this.setHeight(Constraints.pixel(renderHeight));
+        this.setHeight(Layout.pixel(renderHeight));
     }
 
     /**

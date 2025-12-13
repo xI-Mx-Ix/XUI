@@ -9,14 +9,14 @@ package net.xmx.xui.core.gl.vertex;
  *
  * @author xI-Mx-Ix
  */
-public record UIVertexAttribute(int index, int count) {
+public record VertexAttribute(int index, int count) {
     /**
      * Creates a new vertex attribute definition.
      *
      * @param index The shader attribute location (layout location = X).
      * @param count The number of components (e.g., 3 for vec3, 4 for vec4).
      */
-    public UIVertexAttribute {
+    public VertexAttribute {
         if (count < 1 || count > 4) {
             throw new IllegalArgumentException("Attribute count must be between 1 and 4");
         }

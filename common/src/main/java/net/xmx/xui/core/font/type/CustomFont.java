@@ -4,23 +4,23 @@
  */
 package net.xmx.xui.core.font.type;
 
+import net.xmx.xui.core.font.FontAtlas;
 import net.xmx.xui.core.font.layout.TextLayoutEngine;
 import net.xmx.xui.core.font.layout.TextLine;
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.font.UIFontAtlas;
+import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.font.data.MSDFData;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
-import net.xmx.xui.core.gl.vertex.UIMeshBuffer;
-import net.xmx.xui.core.text.UIFormatting;
-import net.xmx.xui.core.text.UITextComponent;
-import net.xmx.xui.impl.UIRenderImpl;
+import net.xmx.xui.core.gl.vertex.MeshBuffer;
+import net.xmx.xui.core.text.TextComponent;
+import net.xmx.xui.core.text.TextFormatting;
+import net.xmx.xui.impl.RenderImpl;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /**
- * Implementation of the {@link UIFont} interface utilizing MSDF (Multi-channel Signed Distance Field) rendering.
+ * Implementation of the {@link Font} interface utilizing MSDF (Multi-channel Signed Distance Field) rendering.
  * <p>
  * This class orchestrates the rendering of high-quality scalable text.
  * It utilizes a two-pass rendering strategy:
@@ -32,11 +32,11 @@ import java.util.Random;
  *
  * @author xI-Mx-Ix
  */
-public class UICustomFont extends UIFont {
+public class CustomFont extends Font {
 
-    private UIFontAtlas regular;
-    private UIFontAtlas bold;
-    private UIFontAtlas italic;
+    private FontAtlas regular;
+    private FontAtlas bold;
+    private FontAtlas italic;
 
     /**
      * The logical visual size of the font in pixels.
@@ -51,7 +51,7 @@ public class UICustomFont extends UIFont {
      */
     private final List<Decoration> pendingDecorations = new ArrayList<>();
 
-    public UICustomFont() {
+    public CustomFont() {
         super(Type.CUSTOM);
         this.layoutEngine = new TextLayoutEngine(this, FONT_SIZE);
     }
@@ -63,8 +63,8 @@ public class UICustomFont extends UIFont {
      * @param path      The relative path to the font asset (e.g., "font/MyFont-Regular").
      * @return This instance for chaining.
      */
-    public UICustomFont setRegular(String namespace, String path) {
-        this.regular = new UIFontAtlas(namespace, path);
+    public CustomFont setRegular(String namespace, String path) {
+        this.regular = new FontAtlas(namespace, path);
         return this;
     }
 
@@ -75,8 +75,8 @@ public class UICustomFont extends UIFont {
      * @param path      The relative path to the font asset (e.g., "font/MyFont-Bold").
      * @return This instance for chaining.
      */
-    public UICustomFont setBold(String namespace, String path) {
-        this.bold = new UIFontAtlas(namespace, path);
+    public CustomFont setBold(String namespace, String path) {
+        this.bold = new FontAtlas(namespace, path);
         return this;
     }
 
@@ -87,8 +87,8 @@ public class UICustomFont extends UIFont {
      * @param path      The relative path to the font asset (e.g., "font/MyFont-Italic").
      * @return This instance for chaining.
      */
-    public UICustomFont setItalic(String namespace, String path) {
-        this.italic = new UIFontAtlas(namespace, path);
+    public CustomFont setItalic(String namespace, String path) {
+        this.italic = new FontAtlas(namespace, path);
         return this;
     }
 
@@ -100,12 +100,12 @@ public class UICustomFont extends UIFont {
     }
 
     @Override
-    public float getWidth(UITextComponent component) {
+    public float getWidth(TextComponent component) {
         return layoutEngine.computeWidth(component);
     }
 
     @Override
-    public float getWordWrapHeight(UITextComponent component, float maxWidth) {
+    public float getWordWrapHeight(TextComponent component, float maxWidth) {
         List<TextLine> layout = layoutEngine.computeWrappedLayout(component, maxWidth);
         return layout.size() * getLineHeight();
     }
@@ -113,14 +113,14 @@ public class UICustomFont extends UIFont {
     // --- Rendering Orchestration ---
 
     @Override
-    public void draw(UIRenderImpl context, UITextComponent component, float x, float y, int color, boolean shadow) {
+    public void draw(RenderImpl context, TextComponent component, float x, float y, int color, boolean shadow) {
         renderTextBatch(context, x, y, () -> {
             drawComponentRecursive(context, component, x, y, x, color);
         });
     }
 
     @Override
-    public void drawWrapped(UIRenderImpl context, UITextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
+    public void drawWrapped(RenderImpl context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
         List<TextLine> lines = layoutEngine.computeWrappedLayout(component, maxWidth);
 
         renderTextBatch(context, x, y, () -> {
@@ -147,7 +147,7 @@ public class UICustomFont extends UIFont {
      * Wraps the rendering operations in the necessary OpenGL state management.
      * Handles the Two-Pass strategy: Text First, then Decorations.
      */
-    private void renderTextBatch(UIRenderImpl context, float x, float y, Runnable renderAction) {
+    private void renderTextBatch(RenderImpl context, float x, float y, Runnable renderAction) {
         if (regular == null) return;
 
         UIRenderer renderer = UIRenderer.getInstance();
@@ -187,9 +187,9 @@ public class UICustomFont extends UIFont {
         }
     }
 
-    private float drawComponentRecursive(UIRenderImpl context, UITextComponent comp, float currentX, float currentY, float startX, int defaultColor) {
+    private float drawComponentRecursive(RenderImpl context, TextComponent comp, float currentX, float currentY, float startX, int defaultColor) {
         float newX = drawSingleString(context, comp, currentX, currentY, startX, defaultColor);
-        for (UITextComponent sibling : comp.getSiblings()) {
+        for (TextComponent sibling : comp.getSiblings()) {
             newX = drawComponentRecursive(context, sibling, newX, currentY, startX, defaultColor);
         }
         return newX;
@@ -207,16 +207,16 @@ public class UICustomFont extends UIFont {
      * @param defaultColor The fallback color if the component has none.
      * @return The X coordinate after rendering the text.
      */
-    private float drawSingleString(UIRenderImpl context, UITextComponent comp, float x, float y, float startX, int defaultColor) {
+    private float drawSingleString(RenderImpl context, TextComponent comp, float x, float y, float startX, int defaultColor) {
         String text = comp.getText();
         if (text == null || text.isEmpty()) return x;
 
         // Resolve the initial font based on component state
-        UIFontAtlas initialFont = resolveFont(comp);
+        FontAtlas initialFont = resolveFont(comp);
         if (initialFont == null) return x;
 
         // Track the currently active font atlas (may change mid-string via §l or §o)
-        UIFontAtlas currentFont = initialFont;
+        FontAtlas currentFont = initialFont;
 
         // --- 1. Setup Base State ---
         int color = (comp.getColor() != null) ? comp.getColor() : defaultColor;
@@ -236,7 +236,7 @@ public class UICustomFont extends UIFont {
         // --- 2. Prepare Rendering ---
         // Bind the initial texture
         UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
-        UIMeshBuffer mesh = UIRenderer.getInstance().getText().getMesh();
+        MeshBuffer mesh = UIRenderer.getInstance().getText().getMesh();
 
         float cursorX = x;
 
@@ -259,12 +259,12 @@ public class UICustomFont extends UIFont {
             // Handle Formatting Codes (§)
             if (c == '§' && i + 1 < chars.length) {
                 char code = Character.toLowerCase(chars[i + 1]);
-                UIFormatting fmt = UIFormatting.getByCode(code);
+                TextFormatting fmt = TextFormatting.getByCode(code);
 
                 if (fmt != null) {
                     boolean fontChanged = false;
 
-                    if (fmt == UIFormatting.RESET) {
+                    if (fmt == TextFormatting.RESET) {
                         // Reset all states to component defaults
                         int resetColor = (comp.getColor() != null) ? comp.getColor() : defaultColor;
                         a = ((resetColor >> 24) & 0xFF) / 255.0f;
@@ -311,7 +311,7 @@ public class UICustomFont extends UIFont {
 
                     // Switch texture if font style changed
                     if (fontChanged) {
-                        UIFontAtlas targetFont;
+                        FontAtlas targetFont;
                         if (isBold && this.bold != null) targetFont = this.bold;
                         else if (isItalic && this.italic != null) targetFont = this.italic;
                         else targetFont = (this.regular != null) ? this.regular : initialFont;
@@ -424,7 +424,7 @@ public class UICustomFont extends UIFont {
      * @param b       Blue color component (0-1).
      * @param a       Alpha color component (0-1).
      */
-    private void renderGlyph(UIMeshBuffer mesh, MSDFData.Glyph glyph, float cursorX, float cursorY, UIFontAtlas font, float r, float g, float b, float a) {
+    private void renderGlyph(MeshBuffer mesh, MSDFData.Glyph glyph, float cursorX, float cursorY, FontAtlas font, float r, float g, float b, float a) {
         if (glyph.planeBounds != null && glyph.atlasBounds != null) {
             // 1. Calculate Screen Positions (Vertex Coordinates)
             // Plane bounds are normalized (EM space), so we multiply by FONT_SIZE.
@@ -470,7 +470,7 @@ public class UICustomFont extends UIFont {
      * @param comp The component to query.
      * @return The loaded font instance (regular, bold, or italic).
      */
-    public UIFontAtlas resolveFont(UITextComponent comp) {
+    public FontAtlas resolveFont(TextComponent comp) {
         if (comp.isBold()) return bold != null ? bold : regular;
         if (comp.isItalic()) return italic != null ? italic : regular;
         return regular;

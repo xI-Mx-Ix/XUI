@@ -7,45 +7,45 @@ package net.xmx.xui.impl;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.xmx.xui.core.gl.UIRenderInterface;
-import net.xmx.xui.core.gl.UITransformStack;
+import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.gl.TransformStack;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.text.TextComponent;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 /**
- * Concrete implementation of the {@link UIRenderInterface}.
+ * Concrete implementation of the {@link RenderInterface}.
  * <p>
  * This class acts as the bridge between the high-level UI component system
- * and the low-level rendering logic. It utilizes {@link UITransformStack} to
+ * and the low-level rendering logic. It utilizes {@link TransformStack} to
  * manage matrix transformations independently from the game engine, ensuring
  * custom shaders receive the correct ModelView matrix.
  * </p>
  *
  * @author xI-Mx-Ix
  */
-public class UIRenderImpl implements UIRenderInterface {
+public class RenderImpl implements RenderInterface {
 
-    private static UIRenderImpl instance;
+    private static RenderImpl instance;
 
     private GuiGraphics guiGraphics;
     private double currentScale = 1.0;
     private float globalOffsetX = 0.0f;
     private float globalOffsetY = 0.0f;
 
-    private final UITransformStack transformStack = new UITransformStack();
+    private final TransformStack transformStack = new TransformStack();
 
-    private UIRenderImpl() {
+    private RenderImpl() {
     }
 
     /**
      * Retrieves the singleton instance.
      * @return The renderer implementation.
      */
-    public static UIRenderImpl getInstance() {
+    public static RenderImpl getInstance() {
         if (instance == null) {
-            instance = new UIRenderImpl();
+            instance = new RenderImpl();
         }
         return instance;
     }
@@ -125,7 +125,7 @@ public class UIRenderImpl implements UIRenderInterface {
     // --- Text Rendering (Delegation to Font Abstraction) ---
 
     @Override
-    public void drawText(UITextComponent text, float x, float y, int color, boolean shadow) {
+    public void drawText(TextComponent text, float x, float y, int color, boolean shadow) {
         if (guiGraphics == null || text == null || text.getFont() == null) return;
 
         float ax = alignX(x);
@@ -135,7 +135,7 @@ public class UIRenderImpl implements UIRenderInterface {
     }
 
     @Override
-    public void drawWrappedText(UITextComponent text, float x, float y, float width, int color, boolean shadow) {
+    public void drawWrappedText(TextComponent text, float x, float y, float width, int color, boolean shadow) {
         if (guiGraphics == null || text == null || text.getFont() == null) return;
 
         float ax = alignX(x);

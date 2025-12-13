@@ -16,16 +16,16 @@ public class UIRenderer {
 
     private static UIRenderer instance;
 
-    private final GLState stateManager;
-    private final UIScissorManager scissorManager;
-    private final UIGeometryRenderer geometryRenderer;
-    private final UITextRenderer textRenderer;
+    private final GlState stateManager;
+    private final ScissorManager scissorManager;
+    private final GeometryRenderer geometryRenderer;
+    private final TextRenderer textRenderer;
 
     private UIRenderer() {
-        this.stateManager = new GLState();
-        this.scissorManager = new UIScissorManager();
-        this.geometryRenderer = new UIGeometryRenderer();
-        this.textRenderer = new UITextRenderer();
+        this.stateManager = new GlState();
+        this.scissorManager = new ScissorManager();
+        this.geometryRenderer = new GeometryRenderer();
+        this.textRenderer = new TextRenderer();
     }
 
     public static UIRenderer getInstance() {
@@ -41,21 +41,21 @@ public class UIRenderer {
      * Retrieves the state manager responsible for capturing and restoring OpenGL state.
      * This allows external renderers (like Fonts) to isolate their draw calls from the game engine.
      *
-     * @return The GLState instance.
+     * @return The GlState instance.
      */
-    public GLState getStateManager() {
+    public GlState getStateManager() {
         return stateManager;
     }
 
-    public UIScissorManager getScissor() {
+    public ScissorManager getScissor() {
         return scissorManager;
     }
 
-    public UITextRenderer getText() {
+    public TextRenderer getText() {
         return textRenderer;
     }
 
-    public UIGeometryRenderer getGeometry() {
+    public GeometryRenderer getGeometry() {
         return geometryRenderer;
     }
 

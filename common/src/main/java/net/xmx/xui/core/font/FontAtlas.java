@@ -39,7 +39,7 @@ import java.util.HashMap;
  *
  * @author xI-Mx-Ix
  */
-public class UIFontAtlas {
+public class FontAtlas {
 
     /**
      * The parsed metadata containing metrics and glyph bounds.
@@ -65,7 +65,7 @@ public class UIFontAtlas {
      * @param path The relative path and name of the font file (e.g., "jetbrains-mono/JetBrainsMono-Regular").
      * @throws RuntimeException If the JSON or PNG files cannot be found or parsed.
      */
-    public UIFontAtlas(String namespace, String path) {
+    public FontAtlas(String namespace, String path) {
         String basePath = "/assets/" + namespace + "/fonts/" + path;
 
         // -------------------------------------------------------------------------

@@ -4,9 +4,9 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.style.ThemeProperties;
 
 /**
  * Represents a Horizontal Separator in Markdown (---).
@@ -24,8 +24,8 @@ public class MarkdownSeparator extends UIPanel {
      * @param contentWidth The width of the separator.
      */
     public MarkdownSeparator(float contentWidth) {
-        this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
-        this.setWidth(Constraints.pixel(contentWidth));
+        this.style().set(ThemeProperties.BACKGROUND_COLOR, 0x00000000);
+        this.setWidth(Layout.pixel(contentWidth));
         
         // Layout calculation logic from original:
         // currentLayoutY += 5 (top margin)
@@ -37,18 +37,18 @@ public class MarkdownSeparator extends UIPanel {
         float bottomMargin = 10;
 
         UIPanel line = new UIPanel();
-        line.setX(Constraints.pixel(0))
-                .setY(Constraints.pixel(topMargin))
-                .setWidth(Constraints.pixel(contentWidth))
-                .setHeight(Constraints.pixel(lineThickness));
+        line.setX(Layout.pixel(0))
+                .setY(Layout.pixel(topMargin))
+                .setWidth(Layout.pixel(contentWidth))
+                .setHeight(Layout.pixel(lineThickness));
 
-        line.style().set(Properties.BACKGROUND_COLOR, 0xFF404040);
+        line.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF404040);
 
         this.add(line);
         
         // Set total height for the container
         this.renderHeight = topMargin + lineThickness + bottomMargin;
-        this.setHeight(Constraints.pixel(renderHeight)); 
+        this.setHeight(Layout.pixel(renderHeight));
     }
 
     /**

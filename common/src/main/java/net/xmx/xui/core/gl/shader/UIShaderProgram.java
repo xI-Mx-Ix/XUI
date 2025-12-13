@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  *
  * @author xI-Mx-Ix
  */
-public abstract class UIShader {
+public abstract class UIShaderProgram {
 
     private final int programId;
     private final int vertexShaderId;
@@ -38,7 +38,7 @@ public abstract class UIShader {
      * @param namespace The resource namespace (e.g., "xui").
      * @param path      The relative path to the shader name (e.g., "core/ui_core").
      */
-    public UIShader(String namespace, String path) {
+    public UIShaderProgram(String namespace, String path) {
         String basePath = "/assets/" + namespace + "/shaders/" + path;
         String vertSource = loadResource(basePath + ".vsh");
         String fragSource = loadResource(basePath + ".fsh");
@@ -152,7 +152,7 @@ public abstract class UIShader {
      * Reads a file resource from the classpath.
      */
     private static String loadResource(String fullPath) {
-        try (InputStream is = UIShader.class.getResourceAsStream(fullPath)) {
+        try (InputStream is = UIShaderProgram.class.getResourceAsStream(fullPath)) {
             if (is == null) {
                 throw new RuntimeException("Shader file not found: " + fullPath);
             }

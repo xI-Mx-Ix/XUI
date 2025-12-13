@@ -12,7 +12,7 @@ import org.lwjgl.opengl.GL30;
 import java.nio.FloatBuffer;
 
 /**
- * A generic dynamic mesh buffer that adapts to any {@link UIVertexFormat}.
+ * A generic dynamic mesh buffer that adapts to any {@link VertexFormat}.
  * <p>
  * This class replaces the specialized geometry and text buffers.
  * Renderers interact with the raw {@link #put(float)} method to push data.
@@ -20,11 +20,11 @@ import java.nio.FloatBuffer;
  *
  * @author xI-Mx-Ix
  */
-public class UIMeshBuffer {
+public class MeshBuffer {
 
     private static final int MAX_VERTICES = 16384;
 
-    private final UIVertexFormat format;
+    private final VertexFormat format;
     private final int vaoId;
     private final int vboId;
     private final FloatBuffer buffer;
@@ -34,9 +34,9 @@ public class UIMeshBuffer {
     /**
      * Creates a new mesh buffer with the specified vertex format.
      *
-     * @param format The format definition (e.g., {@link UIVertexFormat#POS_COLOR}).
+     * @param format The format definition (e.g., {@link VertexFormat#POS_COLOR}).
      */
-    public UIMeshBuffer(UIVertexFormat format) {
+    public MeshBuffer(VertexFormat format) {
         this.format = format;
         
         // Calculate total buffer size
@@ -66,7 +66,7 @@ public class UIMeshBuffer {
      * @param f The float value.
      * @return This buffer for chaining.
      */
-    public UIMeshBuffer put(float f) {
+    public MeshBuffer put(float f) {
         // Safety check: prevent buffer overflow
         if (buffer.position() < buffer.capacity()) {
             buffer.put(f);
@@ -86,7 +86,7 @@ public class UIMeshBuffer {
     /**
      * Helper to add a position (x, y, z).
      */
-    public UIMeshBuffer pos(float x, float y, float z) {
+    public MeshBuffer pos(float x, float y, float z) {
         buffer.put(x).put(y).put(z);
         return this;
     }
@@ -94,7 +94,7 @@ public class UIMeshBuffer {
     /**
      * Helper to add a color (r, g, b, a).
      */
-    public UIMeshBuffer color(float r, float g, float b, float a) {
+    public MeshBuffer color(float r, float g, float b, float a) {
         buffer.put(r).put(g).put(b).put(a);
         return this;
     }
@@ -102,7 +102,7 @@ public class UIMeshBuffer {
     /**
      * Helper to add texture coordinates (u, v).
      */
-    public UIMeshBuffer uv(float u, float v) {
+    public MeshBuffer uv(float u, float v) {
         buffer.put(u).put(v);
         return this;
     }

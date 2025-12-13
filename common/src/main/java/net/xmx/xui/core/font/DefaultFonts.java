@@ -5,8 +5,8 @@
 package net.xmx.xui.core.font;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.xmx.xui.core.font.type.UICustomFont;
-import net.xmx.xui.core.font.type.UIVanillaFont;
+import net.xmx.xui.core.font.type.CustomFont;
+import net.xmx.xui.core.font.type.VanillaFont;
 import net.xmx.xui.init.XuiMainClass;
 
 /**
@@ -15,11 +15,11 @@ import net.xmx.xui.init.XuiMainClass;
  *
  * @author xI-Mx-Ix
  */
-public final class UIDefaultFonts {
+public final class DefaultFonts {
 
-    private static UICustomFont jetBrainsMono;
-    private static UICustomFont roboto;
-    private static UIVanillaFont vanilla;
+    private static CustomFont jetBrainsMono;
+    private static CustomFont roboto;
+    private static VanillaFont vanilla;
     private static boolean initialized = false;
 
     /**
@@ -31,24 +31,24 @@ public final class UIDefaultFonts {
 
         // Safety check: Ensure we are on the Render Thread with an active context
         if (!RenderSystem.isOnRenderThread()) {
-            RenderSystem.recordRenderCall(UIDefaultFonts::ensureInitialized);
+            RenderSystem.recordRenderCall(DefaultFonts::ensureInitialized);
             return;
         }
 
         try {
             // Initialize Vanilla Wrapper
-            vanilla = new UIVanillaFont();
+            vanilla = new VanillaFont();
 
             // Initialize JetBrains Mono (MSDF)
             // The paths include the subdirectory "jetbrains-mono/".
-            jetBrainsMono = new UICustomFont();
+            jetBrainsMono = new CustomFont();
             jetBrainsMono.setRegular(XuiMainClass.MODID, "jetbrains-mono/JetBrainsMono-Regular")
                     .setBold(XuiMainClass.MODID, "jetbrains-mono/JetBrainsMono-Bold")
                     .setItalic(XuiMainClass.MODID, "jetbrains-mono/JetBrainsMono-Italic");
 
             // Initialize Roboto (MSDF)
             // The paths include the subdirectory "roboto/".
-            roboto = new UICustomFont();
+            roboto = new CustomFont();
             roboto.setRegular(XuiMainClass.MODID, "roboto/Roboto-Regular")
                     .setBold(XuiMainClass.MODID, "roboto/Roboto-Bold")
                     .setItalic(XuiMainClass.MODID, "roboto/Roboto-Italic");
@@ -58,7 +58,7 @@ public final class UIDefaultFonts {
             XuiMainClass.LOGGER.error("Failed to load standard fonts!");
             e.printStackTrace();
             // Fallback to avoid null pointers later
-            if (vanilla == null) vanilla = new UIVanillaFont();
+            if (vanilla == null) vanilla = new VanillaFont();
         }
     }
 
@@ -67,7 +67,7 @@ public final class UIDefaultFonts {
      *
      * @return The JetBrains Mono Custom Font.
      */
-    public static UICustomFont getJetBrainsMono() {
+    public static CustomFont getJetBrainsMono() {
         ensureInitialized();
         if (jetBrainsMono == null) {
             // Fallback if loading failed, to prevent crash
@@ -81,7 +81,7 @@ public final class UIDefaultFonts {
      *
      * @return The Roboto Custom Font.
      */
-    public static UICustomFont getRoboto() {
+    public static CustomFont getRoboto() {
         ensureInitialized();
         if (roboto == null) {
             // Fallback if loading failed, to prevent crash
@@ -95,10 +95,10 @@ public final class UIDefaultFonts {
      *
      * @return The Vanilla Minecraft Font.
      */
-    public static UIVanillaFont getVanilla() {
+    public static VanillaFont getVanilla() {
         ensureInitialized();
         return vanilla;
     }
 
-    private UIDefaultFonts() {}
+    private DefaultFonts() {}
 }

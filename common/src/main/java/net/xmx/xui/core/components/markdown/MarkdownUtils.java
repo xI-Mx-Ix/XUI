@@ -4,10 +4,10 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIWrappedText;
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.text.TextComponent;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,14 +44,14 @@ public class MarkdownUtils {
      * @param root The root text component to modify.
      * @param font The font to apply.
      */
-    public static void applyFontRecursive(UITextComponent root, UIFont font) {
+    public static void applyFontRecursive(TextComponent root, Font font) {
         if (root == null || font == null) return;
 
         // Apply to the current node
         root.setFont(font);
 
         // Recursively apply to all siblings
-        for (UITextComponent sibling : root.getSiblings()) {
+        for (TextComponent sibling : root.getSiblings()) {
             applyFontRecursive(sibling, font);
         }
     }
@@ -65,16 +65,16 @@ public class MarkdownUtils {
      * @param contentWidth The total available width.
      * @return A configured UIWrappedText widget with layout calculated.
      */
-    public static UIWrappedText createWrappingText(UITextComponent content, float widthOffset, float contentWidth) {
+    public static UIWrappedText createWrappingText(TextComponent content, float widthOffset, float contentWidth) {
         UIWrappedText widget = new UIWrappedText();
         // Add empty line for padding logic
-        widget.addText(UITextComponent.empty());
+        widget.addText(TextComponent.empty());
         // Add actual content with wrapping enabled
         widget.addText(content, true);
 
-        widget.setX(Constraints.pixel(widthOffset));
-        widget.setY(Constraints.pixel(0));
-        widget.setWidth(Constraints.pixel(contentWidth - widthOffset));
+        widget.setX(Layout.pixel(widthOffset));
+        widget.setY(Layout.pixel(0));
+        widget.setWidth(Layout.pixel(contentWidth - widthOffset));
 
         widget.layout();
         return widget;
@@ -92,7 +92,7 @@ public class MarkdownUtils {
      * @param text The raw text.
      * @return A component with formatting codes applied.
      */
-    public static UITextComponent parseInline(String text) {
+    public static TextComponent parseInline(String text) {
         // Escape existing section signs to prevent injection
         String safe = text.replace("§", "");
 
@@ -108,7 +108,7 @@ public class MarkdownUtils {
         // Replace Code `...` (Yellow/Gray)
         safe = safe.replaceAll("`(.*?)`", "§7$1§r");
 
-        return UITextComponent.literal(safe);
+        return TextComponent.literal(safe);
     }
 
     /**
@@ -117,8 +117,8 @@ public class MarkdownUtils {
      * @param code The raw code string.
      * @return A Component with colors applied to keywords, strings, etc.
      */
-    public static UITextComponent highlightCode(String code) {
-        UITextComponent result = UITextComponent.empty();
+    public static TextComponent highlightCode(String code) {
+        TextComponent result = TextComponent.empty();
         Matcher matcher = CODE_TOKEN_PATTERN.matcher(code);
         int lastEnd = 0;
 
@@ -126,7 +126,7 @@ public class MarkdownUtils {
             // Append un-matched segment (plain text / symbols) as gray
             String plain = code.substring(lastEnd, matcher.start());
             if (!plain.isEmpty()) {
-                result.append(UITextComponent.literal(plain).setColor(0xFFAAAAAA)); // Gray
+                result.append(TextComponent.literal(plain).setColor(0xFFAAAAAA)); // Gray
             }
 
             String token = matcher.group();
@@ -142,13 +142,13 @@ public class MarkdownUtils {
                 color = 0xFFFFAA00; // Gold (Keywords)
             }
 
-            result.append(UITextComponent.literal(token).setColor(color));
+            result.append(TextComponent.literal(token).setColor(color));
             lastEnd = matcher.end();
         }
 
         String tail = code.substring(lastEnd);
         if (!tail.isEmpty()) {
-            result.append(UITextComponent.literal(tail).setColor(0xFFAAAAAA)); // Gray
+            result.append(TextComponent.literal(tail).setColor(0xFFAAAAAA)); // Gray
         }
 
         return result;

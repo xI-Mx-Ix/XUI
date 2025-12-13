@@ -6,8 +6,8 @@ package net.xmx.xui.core.gl.renderer;
 
 import net.xmx.xui.core.font.data.MSDFData;
 import net.xmx.xui.core.gl.shader.impl.UIMSDFShader;
-import net.xmx.xui.core.gl.vertex.UIMeshBuffer;
-import net.xmx.xui.core.gl.vertex.UIVertexFormat;
+import net.xmx.xui.core.gl.vertex.MeshBuffer;
+import net.xmx.xui.core.gl.vertex.VertexFormat;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -18,19 +18,19 @@ import org.lwjgl.opengl.GL13;
  *
  * @author xI-Mx-Ix
  */
-public class UITextRenderer {
+public class TextRenderer {
 
     private final UIMSDFShader shader;
-    private final UIMeshBuffer mesh;
+    private final MeshBuffer mesh;
     private final Matrix4f projectionMatrix = new Matrix4f();
 
     /**
      * Constructs a new text renderer with an MSDF shader and a standard mesh buffer.
      */
-    public UITextRenderer() {
+    public TextRenderer() {
         this.shader = new UIMSDFShader();
         // Uses the generic Position + Color + UV vertex format
-        this.mesh = new UIMeshBuffer(UIVertexFormat.POS_COLOR_UV);
+        this.mesh = new MeshBuffer(VertexFormat.POS_COLOR_UV);
     }
 
     /**
@@ -38,7 +38,7 @@ public class UITextRenderer {
      *
      * @return The active mesh buffer.
      */
-    public UIMeshBuffer getMesh() {
+    public MeshBuffer getMesh() {
         return mesh;
     }
 

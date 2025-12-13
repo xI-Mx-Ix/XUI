@@ -8,13 +8,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIScrollPanel;
 import net.xmx.xui.core.components.markdown.UIMarkdown;
-import net.xmx.xui.core.font.UIDefaultFonts;
-import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.font.DefaultFonts;
+import net.xmx.xui.core.style.ThemeProperties;
 
 /**
  * Example screen demonstrating the expanded UIMarkdown widget features using {@link UIContext}.
@@ -82,32 +82,32 @@ public class XUIMarkdownExampleScreen extends Screen {
 
     private void buildUI() {
         UIPanel root = uiContext.getRoot();
-        root.style().set(Properties.BACKGROUND_COLOR, 0xFF121212);
+        root.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF121212);
 
         // Container Panel
         UIPanel container = new UIPanel();
-        container.setX(Constraints.center())
-                .setY(Constraints.center())
-                .setWidth(Constraints.pixel(500))
-                .setHeight(Constraints.pixel(400));
+        container.setX(Layout.center())
+                .setY(Layout.center())
+                .setWidth(Layout.pixel(500))
+                .setHeight(Layout.pixel(400));
 
         container.style()
-                .set(Properties.BACKGROUND_COLOR, 0xFF1E1E1E)
-                .set(Properties.BORDER_RADIUS, 8.0f)
-                .set(Properties.BORDER_COLOR, 0xFF404040)
-                .set(Properties.BORDER_THICKNESS, 1.0f);
+                .set(ThemeProperties.BACKGROUND_COLOR, 0xFF1E1E1E)
+                .set(ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(ThemeProperties.BORDER_COLOR, 0xFF404040)
+                .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 
         // Scroll Panel
         UIScrollPanel scrollPanel = new UIScrollPanel();
-        scrollPanel.setX(Constraints.pixel(20))
-                .setY(Constraints.pixel(20))
-                .setWidth(Constraints.pixel(460))
-                .setHeight(Constraints.pixel(360));
+        scrollPanel.setX(Layout.pixel(20))
+                .setY(Layout.pixel(20))
+                .setWidth(Layout.pixel(460))
+                .setHeight(Layout.pixel(360));
 
         UIMarkdown markdown = new UIMarkdown();
         markdown.setContentWidth(440);
         markdown.setMarkdown(SAMPLE_MARKDOWN);
-        markdown.setFont(UIDefaultFonts.getVanilla());
+        markdown.setFont(DefaultFonts.getVanilla());
 
         // Add to hierarchy
         scrollPanel.add(markdown);

@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.gl.shader.impl;
 
-import net.xmx.xui.core.gl.shader.UIShader;
+import net.xmx.xui.core.gl.shader.UIShaderProgram;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20;
@@ -17,7 +17,7 @@ import java.nio.FloatBuffer;
  *
  * @author xI-Mx-Ix
  */
-public class UIMSDFShader extends UIShader {
+public class UIMSDFShader extends UIShaderProgram {
 
     private int locProjMat;
     private int locModelViewMat;

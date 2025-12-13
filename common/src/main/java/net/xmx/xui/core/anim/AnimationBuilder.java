@@ -5,7 +5,7 @@
 package net.xmx.xui.core.anim;
 
 import net.xmx.xui.core.UIWidget;
-import net.xmx.xui.core.style.UIProperty;
+import net.xmx.xui.core.style.StyleKey;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,14 +21,14 @@ import java.util.Map;
  *
  * @author xI-Mx-Ix
  */
-public class UIAnimationBuilder {
+public class AnimationBuilder {
 
     private final UIWidget widget;
     
     /**
      * Maps a property (e.g., Scale X) to its specific timeline of keyframes.
      */
-    private final Map<UIProperty<?>, Timeline<?>> timelines = new HashMap<>();
+    private final Map<StyleKey<?>, Timeline<?>> timelines = new HashMap<>();
     
     /**
      * List of scheduled callbacks to trigger at specific times.
@@ -43,7 +43,7 @@ public class UIAnimationBuilder {
      *
      * @param widget The widget to animate.
      */
-    public UIAnimationBuilder(UIWidget widget) {
+    public AnimationBuilder(UIWidget widget) {
         this.widget = widget;
     }
 
@@ -51,13 +51,13 @@ public class UIAnimationBuilder {
      * Defines a specific keyframe for a property.
      *
      * @param time     The time in seconds from the start of the animation.
-     * @param property The property to animate (e.g., Properties.ROTATION_Z).
+     * @param property The property to animate (e.g., ThemeProperties.ROTATION_Z).
      * @param value    The target value at this time.
      * @param easing   The easing curve used to approach this value from the previous keyframe.
      * @param <T>      The value type.
      * @return This builder instance.
      */
-    public <T> UIAnimationBuilder keyframe(float time, UIProperty<T> property, T value, UIEasing easing) {
+    public <T> AnimationBuilder keyframe(float time, StyleKey<T> property, T value, Easing easing) {
         // Retrieve or create the timeline for this property
         @SuppressWarnings("unchecked")
         Timeline<T> timeline = (Timeline<T>) timelines.computeIfAbsent(property, Timeline::new);
@@ -72,15 +72,15 @@ public class UIAnimationBuilder {
      * Use this if you want the animation to start from a specific value, rather than
      * the widget's current value.
      */
-    public <T> UIAnimationBuilder setStart(UIProperty<T> property, T value) {
-        return keyframe(0.0f, property, value, UIEasing.LINEAR);
+    public <T> AnimationBuilder setStart(StyleKey<T> property, T value) {
+        return keyframe(0.0f, property, value, Easing.LINEAR);
     }
 
     /**
      * Convenience: Adds a keyframe with Linear easing.
      */
-    public <T> UIAnimationBuilder keyframe(float time, UIProperty<T> property, T value) {
-        return keyframe(time, property, value, UIEasing.LINEAR);
+    public <T> AnimationBuilder keyframe(float time, StyleKey<T> property, T value) {
+        return keyframe(time, property, value, Easing.LINEAR);
     }
 
     /**
@@ -90,7 +90,7 @@ public class UIAnimationBuilder {
      * @param action The code to execute.
      * @return This builder instance.
      */
-    public UIAnimationBuilder atTime(float time, Runnable action) {
+    public AnimationBuilder atTime(float time, Runnable action) {
         callbacks.add(new AnimationCallback(time, action));
         return this;
     }
@@ -101,7 +101,7 @@ public class UIAnimationBuilder {
      * @param loop True to loop.
      * @return This builder instance.
      */
-    public UIAnimationBuilder loop(boolean loop) {
+    public AnimationBuilder loop(boolean loop) {
         this.loop = loop;
         return this;
     }
@@ -113,7 +113,7 @@ public class UIAnimationBuilder {
      * @param action The code to execute.
      * @return This builder instance.
      */
-    public UIAnimationBuilder onComplete(Runnable action) {
+    public AnimationBuilder onComplete(Runnable action) {
         this.onComplete = action;
         return this;
     }
@@ -123,7 +123,7 @@ public class UIAnimationBuilder {
      */
     public void start() {
         // Create the runtime instance
-        UIAnimationInstance instance = new UIAnimationInstance(
+        AnimationInstance instance = new AnimationInstance(
                 widget, timelines, callbacks, loop, onComplete
         );
         

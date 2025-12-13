@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  *
  * @author xI-Mx-Ix
  */
-public enum UIFormatting {
+public enum TextFormatting {
 
     BLACK('0', 0x000000),
     DARK_BLUE('1', 0x0000AA),
@@ -42,7 +42,7 @@ public enum UIFormatting {
     RESET('r', false);
 
     public static final char PREFIX_CHAR = '§';
-    private static final Map<Character, UIFormatting> BY_CHAR = new HashMap<>();
+    private static final Map<Character, TextFormatting> BY_CHAR = new HashMap<>();
     private static final Pattern STRIP_PATTERN = Pattern.compile("(?i)" + PREFIX_CHAR + "[0-9A-FK-OR]");
 
     private final char code;
@@ -51,22 +51,22 @@ public enum UIFormatting {
     private final String controlString;
 
     static {
-        for (UIFormatting formatting : values()) {
+        for (TextFormatting formatting : values()) {
             BY_CHAR.put(formatting.code, formatting);
         }
     }
 
     // Constructor for Colors
-    UIFormatting(char code, int color) {
+    TextFormatting(char code, int color) {
         this(code, false, color);
     }
 
     // Constructor for Styles
-    UIFormatting(char code, boolean isStyle) {
+    TextFormatting(char code, boolean isStyle) {
         this(code, isStyle, null);
     }
 
-    UIFormatting(char code, boolean isStyle, Integer color) {
+    TextFormatting(char code, boolean isStyle, Integer color) {
         this.code = code;
         this.isStyle = isStyle;
         this.color = color;
@@ -111,9 +111,9 @@ public enum UIFormatting {
      * Gets a formatting instance by its character code.
      *
      * @param code The character (e.g., 'a', 'l', '0').
-     * @return The UIFormatting or null if invalid.
+     * @return The TextFormatting or null if invalid.
      */
-    public static UIFormatting getByCode(char code) {
+    public static TextFormatting getByCode(char code) {
         return BY_CHAR.get(Character.toLowerCase(code));
     }
 

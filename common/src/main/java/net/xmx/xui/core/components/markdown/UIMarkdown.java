@@ -4,11 +4,11 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.font.UIDefaultFonts;
-import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.font.DefaultFonts;
+import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.style.ThemeProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +27,9 @@ public class UIMarkdown extends UIPanel {
 
     // --- Font Configurations ---
     // Default to Vanilla to ensure compatibility if nothing is set
-    private UIFont regularFont = UIDefaultFonts.getVanilla();
-    private UIFont headerFont = UIDefaultFonts.getVanilla();
-    private UIFont codeFont = UIDefaultFonts.getVanilla();
+    private Font regularFont = DefaultFonts.getVanilla();
+    private Font headerFont = DefaultFonts.getVanilla();
+    private Font codeFont = DefaultFonts.getVanilla();
 
     /**
      * Constructs a Markdown viewer with default settings.
@@ -37,8 +37,8 @@ public class UIMarkdown extends UIPanel {
      */
     public UIMarkdown() {
         // Transparent background by default
-        this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
-        this.setWidth(Constraints.pixel(contentWidth));
+        this.style().set(ThemeProperties.BACKGROUND_COLOR, 0x00000000);
+        this.setWidth(Layout.pixel(contentWidth));
     }
 
     /**
@@ -48,7 +48,7 @@ public class UIMarkdown extends UIPanel {
      * @param font The font to use for everything.
      * @return This widget for chaining.
      */
-    public UIMarkdown setFont(UIFont font) {
+    public UIMarkdown setFont(Font font) {
         this.regularFont = font;
         this.headerFont = font;
         this.codeFont = font;
@@ -64,7 +64,7 @@ public class UIMarkdown extends UIPanel {
      * @param font The font family.
      * @return This widget for chaining.
      */
-    public UIMarkdown setRegularFont(UIFont font) {
+    public UIMarkdown setRegularFont(Font font) {
         this.regularFont = font;
         if (!rawMarkdown.isEmpty()) rebuild();
         return this;
@@ -76,7 +76,7 @@ public class UIMarkdown extends UIPanel {
      * @param font The font family.
      * @return This widget for chaining.
      */
-    public UIMarkdown setHeaderFont(UIFont font) {
+    public UIMarkdown setHeaderFont(Font font) {
         this.headerFont = font;
         if (!rawMarkdown.isEmpty()) rebuild();
         return this;
@@ -88,7 +88,7 @@ public class UIMarkdown extends UIPanel {
      * @param font The font family.
      * @return This widget for chaining.
      */
-    public UIMarkdown setCodeFont(UIFont font) {
+    public UIMarkdown setCodeFont(Font font) {
         this.codeFont = font;
         if (!rawMarkdown.isEmpty()) rebuild();
         return this;
@@ -103,7 +103,7 @@ public class UIMarkdown extends UIPanel {
      */
     public UIMarkdown setContentWidth(float width) {
         this.contentWidth = width;
-        this.setWidth(Constraints.pixel(width));
+        this.setWidth(Layout.pixel(width));
         if (!rawMarkdown.isEmpty()) {
             rebuild(); // Rebuild layout if content exists
         }
@@ -197,7 +197,7 @@ public class UIMarkdown extends UIPanel {
         if (tableBuffer != null) flushTable(tableBuffer);
         if (codeBlockBuffer != null) addCodeBlock(codeBlockBuffer);
 
-        this.setHeight(Constraints.pixel(currentLayoutY));
+        this.setHeight(Layout.pixel(currentLayoutY));
     }
 
     // --- Component Generators ---
@@ -205,7 +205,7 @@ public class UIMarkdown extends UIPanel {
     private void flushTable(List<String> lines) {
         // Pass regular font to table
         MarkdownTable table = new MarkdownTable(lines, contentWidth, regularFont);
-        table.setY(Constraints.pixel(currentLayoutY));
+        table.setY(Layout.pixel(currentLayoutY));
         this.add(table);
 
         currentLayoutY += table.getRenderHeight();
@@ -213,7 +213,7 @@ public class UIMarkdown extends UIPanel {
 
     private void addSeparator() {
         MarkdownSeparator separator = new MarkdownSeparator(contentWidth);
-        separator.setY(Constraints.pixel(currentLayoutY));
+        separator.setY(Layout.pixel(currentLayoutY));
         this.add(separator);
 
         currentLayoutY += separator.getRenderHeight();
@@ -222,7 +222,7 @@ public class UIMarkdown extends UIPanel {
     private void addHeader(String rawText, int color) {
         // Pass header font
         MarkdownHeader header = new MarkdownHeader(MarkdownUtils.parseInline(rawText), color, contentWidth, headerFont);
-        header.setY(Constraints.pixel(currentLayoutY));
+        header.setY(Layout.pixel(currentLayoutY));
         this.add(header);
 
         currentLayoutY += header.getRenderHeight();
@@ -231,7 +231,7 @@ public class UIMarkdown extends UIPanel {
     private void addQuote(String rawText) {
         // Pass regular font
         MarkdownQuote quote = new MarkdownQuote(MarkdownUtils.parseInline(rawText), contentWidth, regularFont);
-        quote.setY(Constraints.pixel(currentLayoutY));
+        quote.setY(Layout.pixel(currentLayoutY));
         this.add(quote);
 
         currentLayoutY += quote.getRenderHeight();
@@ -240,7 +240,7 @@ public class UIMarkdown extends UIPanel {
     private void addListItem(String rawText) {
         // Pass regular font
         MarkdownListItem item = new MarkdownListItem(rawText, contentWidth, regularFont);
-        item.setY(Constraints.pixel(currentLayoutY));
+        item.setY(Layout.pixel(currentLayoutY));
         this.add(item);
 
         currentLayoutY += item.getRenderHeight();
@@ -252,7 +252,7 @@ public class UIMarkdown extends UIPanel {
     private void addTaskListItem(String rawText, boolean checked) {
         // Pass regular font
         MarkdownTaskListItem item = new MarkdownTaskListItem(rawText, checked, contentWidth, regularFont);
-        item.setY(Constraints.pixel(currentLayoutY));
+        item.setY(Layout.pixel(currentLayoutY));
         this.add(item);
 
         currentLayoutY += item.getRenderHeight();
@@ -261,7 +261,7 @@ public class UIMarkdown extends UIPanel {
     private void addCodeBlock(List<String> lines) {
         // Pass code font
         MarkdownCodeBlock block = new MarkdownCodeBlock(lines, contentWidth, codeFont);
-        block.setY(Constraints.pixel(currentLayoutY));
+        block.setY(Layout.pixel(currentLayoutY));
         this.add(block);
 
         currentLayoutY += block.getRenderHeight();
@@ -270,7 +270,7 @@ public class UIMarkdown extends UIPanel {
     private void addFlowParagraph(String line) {
         // Pass regular font
         MarkdownParagraph paragraph = new MarkdownParagraph(line, contentWidth, regularFont);
-        paragraph.setY(Constraints.pixel(currentLayoutY));
+        paragraph.setY(Layout.pixel(currentLayoutY));
         this.add(paragraph);
 
         currentLayoutY += paragraph.getRenderHeight();

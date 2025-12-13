@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.effect;
 
-import net.xmx.xui.core.gl.UIRenderInterface;
+import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
 
 /**
@@ -32,7 +32,7 @@ public class UIScissorsEffect implements UIEffect {
      * @param widget   The widget being rendered.
      */
     @Override
-    public void apply(UIRenderInterface renderer, UIWidget widget) {
+    public void apply(RenderInterface renderer, UIWidget widget) {
         // Use floats to preserve precision (e.g. 10.5 for centering)
         float targetX = widget.getX();
         float targetY = widget.getY();
@@ -76,7 +76,7 @@ public class UIScissorsEffect implements UIEffect {
      * @param widget   The widget being rendered.
      */
     @Override
-    public void revert(UIRenderInterface renderer, UIWidget widget) {
+    public void revert(RenderInterface renderer, UIWidget widget) {
         // Disabling the scissor restores the previous state from the stack in the renderer
         renderer.disableScissor();
     }

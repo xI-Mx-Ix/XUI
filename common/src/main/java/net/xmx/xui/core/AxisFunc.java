@@ -10,7 +10,7 @@ package net.xmx.xui.core;
  * @author xI-Mx-Ix
  */
 @FunctionalInterface
-public interface UIConstraint {
+public interface AxisFunc {
 
     /**
      * Calculates the pixel value based on the parent and self context.

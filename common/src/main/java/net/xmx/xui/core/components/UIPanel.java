@@ -4,10 +4,10 @@
  */
 package net.xmx.xui.core.components;
 
-import net.xmx.xui.core.gl.UIRenderInterface;
+import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.style.UIState;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.style.InteractionState;
 
 /**
  * A generic container component (Panel).
@@ -24,18 +24,18 @@ public class UIPanel extends UIWidget {
     public UIPanel() {
         // Set default styles for a panel
         this.style()
-                .set(Properties.BACKGROUND_COLOR, 0xAA000000) // Default transparent black
-                .set(Properties.BORDER_COLOR, 0xFFFFFFFF)     // Default white border
-                .set(Properties.BORDER_THICKNESS, 0f)         // No border by default
-                .set(Properties.BORDER_RADIUS, 0f);
+                .set(ThemeProperties.BACKGROUND_COLOR, 0xAA000000) // Default transparent black
+                .set(ThemeProperties.BORDER_COLOR, 0xFFFFFFFF)     // Default white border
+                .set(ThemeProperties.BORDER_THICKNESS, 0f)         // No border by default
+                .set(ThemeProperties.BORDER_RADIUS, 0f);
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
-        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
-        int borderColor = getColor(Properties.BORDER_COLOR, state, deltaTime);
-        float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
-        float thickness = getFloat(Properties.BORDER_THICKNESS, state, deltaTime);
+    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+        int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
+        int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
+        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+        float thickness = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
 
         // 1. Draw the Border (if thickness > 0)
         if (thickness > 0 && (borderColor >>> 24) > 0) {

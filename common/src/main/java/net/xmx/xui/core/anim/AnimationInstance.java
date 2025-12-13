@@ -5,15 +5,15 @@
 package net.xmx.xui.core.anim;
 
 import net.xmx.xui.core.UIWidget;
-import net.xmx.xui.core.style.UIProperty;
-import net.xmx.xui.core.style.UIState;
+import net.xmx.xui.core.style.InteractionState;
+import net.xmx.xui.core.style.StyleKey;
 
 import java.util.List;
 import java.util.Map;
 
 /**
  * Represents an active, running animation sequence on a specific widget.
- * Created by {@link UIAnimationBuilder} and updated every frame by the Widget's {@link AnimationManager}.
+ * Created by {@link AnimationBuilder} and updated every frame by the Widget's {@link AnimationManager}.
  * <p>
  * It handles the progression of time, updates property values from multiple {@link Timeline}s,
  * triggers time-based callbacks, and manages looping/completion logic.
@@ -21,11 +21,11 @@ import java.util.Map;
  *
  * @author xI-Mx-Ix
  */
-public class UIAnimationInstance {
+public class AnimationInstance {
 
     private final UIWidget widget;
-    private final Map<UIProperty<?>, Timeline<?>> timelines;
-    private final List<UIAnimationBuilder.AnimationCallback> callbacks;
+    private final Map<StyleKey<?>, Timeline<?>> timelines;
+    private final List<AnimationBuilder.AnimationCallback> callbacks;
     private final boolean loop;
     private final Runnable onComplete;
 
@@ -41,10 +41,10 @@ public class UIAnimationInstance {
      * @param loop       Whether to loop the animation.
      * @param onComplete Callback for completion.
      */
-    public UIAnimationInstance(UIWidget widget, 
-                               Map<UIProperty<?>, Timeline<?>> timelines, 
-                               List<UIAnimationBuilder.AnimationCallback> callbacks,
-                               boolean loop, Runnable onComplete) {
+    public AnimationInstance(UIWidget widget,
+                             Map<StyleKey<?>, Timeline<?>> timelines,
+                             List<AnimationBuilder.AnimationCallback> callbacks,
+                             boolean loop, Runnable onComplete) {
         this.widget = widget;
         this.timelines = timelines;
         this.callbacks = callbacks;
@@ -76,8 +76,8 @@ public class UIAnimationInstance {
 
         // 1. Process Timelines
         // Iterate over each property being animated and update the widget's style
-        for (Map.Entry<UIProperty<?>, Timeline<?>> entry : timelines.entrySet()) {
-            UIProperty property = entry.getKey();
+        for (Map.Entry<StyleKey<?>, Timeline<?>> entry : timelines.entrySet()) {
+            StyleKey property = entry.getKey();
             Timeline timeline = entry.getValue();
             
             // Get the interpolated value for the current time
@@ -85,12 +85,12 @@ public class UIAnimationInstance {
             
             // Apply value to the widget's DEFAULT state style.
             // Using raw set with casting because we know the type matches from builder construction.
-            ((UIProperty<Object>)property).getName(); // No-op, just ensuring type safety check logic if needed
-            widget.style().set(UIState.DEFAULT, (UIProperty<Object>) property, value);
+            ((StyleKey<Object>)property).getName(); // No-op, just ensuring type safety check logic if needed
+            widget.style().set(InteractionState.DEFAULT, (StyleKey<Object>) property, value);
         }
 
         // 2. Process Time-based Callbacks
-        for (UIAnimationBuilder.AnimationCallback cb : callbacks) {
+        for (AnimationBuilder.AnimationCallback cb : callbacks) {
             // Check if we crossed the callback's time threshold in this specific frame
             // Logic: (previousTime < threshold) AND (currentTime >= threshold)
             float prevTime = elapsedTime - dt;
@@ -108,10 +108,10 @@ public class UIAnimationInstance {
             } else {
                 // Animation Finished
                 // Ensure final state is set exactly to the end values
-                for (Map.Entry<UIProperty<?>, Timeline<?>> entry : timelines.entrySet()) {
+                for (Map.Entry<StyleKey<?>, Timeline<?>> entry : timelines.entrySet()) {
                     Timeline timeline = entry.getValue();
                     Object finalValue = timeline.getValueAt(maxDuration);
-                    widget.style().set(UIState.DEFAULT, (UIProperty<Object>) entry.getKey(), finalValue);
+                    widget.style().set(InteractionState.DEFAULT, (StyleKey<Object>) entry.getKey(), finalValue);
                 }
                 
                 if (onComplete != null) {

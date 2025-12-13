@@ -5,13 +5,13 @@
 package net.xmx.xui.core.components;
 
 import net.minecraft.client.Minecraft;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.style.InteractionState;
+import net.xmx.xui.core.style.StyleKey;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.effect.UIScissorsEffect;
-import net.xmx.xui.core.gl.UIRenderInterface;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.style.UIProperty;
-import net.xmx.xui.core.style.UIState;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -33,17 +33,17 @@ public class UIEditBox extends UIWidget {
     /**
      * Property for the color of the text cursor.
      */
-    public static final UIProperty<Integer> CURSOR_COLOR = new UIProperty<>("cursor_color", 0xFFE0E0E0);
+    public static final StyleKey<Integer> CURSOR_COLOR = new StyleKey<>("cursor_color", 0xFFE0E0E0);
 
     /**
      * Property for the background color of the text selection.
      */
-    public static final UIProperty<Integer> SELECTION_COLOR = new UIProperty<>("selection_color", 0x800000FF);
+    public static final StyleKey<Integer> SELECTION_COLOR = new StyleKey<>("selection_color", 0x800000FF);
 
     /**
      * Property for the color of the hint text (placeholder).
      */
-    public static final UIProperty<Integer> HINT_COLOR = new UIProperty<>("hint_color", 0xFF888888);
+    public static final StyleKey<Integer> HINT_COLOR = new StyleKey<>("hint_color", 0xFF888888);
 
     private String hintText = "";
     private String text = "";
@@ -74,16 +74,16 @@ public class UIEditBox extends UIWidget {
      */
     private void setupStyles() {
         this.style()
-                .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, 0xFF101010)
-                .set(UIState.DEFAULT, Properties.BORDER_COLOR, 0xFF606060)
-                .set(UIState.DEFAULT, Properties.BORDER_THICKNESS, 1.0f)
-                .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 3.0f)
-                .set(UIState.DEFAULT, Properties.TEXT_COLOR, 0xFFFFFFFF)
-                .set(UIState.DEFAULT, HINT_COLOR, 0xFF888888) // Default gray for hint
-                .set(UIState.DEFAULT, CURSOR_COLOR, 0xFFFFFFFF)
-                .set(UIState.DEFAULT, SELECTION_COLOR, 0x800000AA)
-                .set(UIState.HOVER, Properties.BORDER_COLOR, 0xFFAAAAAA)
-                .set(UIState.ACTIVE, Properties.BORDER_COLOR, 0xFFFFFFFF);
+                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF101010)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF606060)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 3.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFFFFFFF)
+                .set(InteractionState.DEFAULT, HINT_COLOR, 0xFF888888) // Default gray for hint
+                .set(InteractionState.DEFAULT, CURSOR_COLOR, 0xFFFFFFFF)
+                .set(InteractionState.DEFAULT, SELECTION_COLOR, 0x800000AA)
+                .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, 0xFFAAAAAA)
+                .set(InteractionState.ACTIVE, ThemeProperties.BORDER_COLOR, 0xFFFFFFFF);
     }
 
     /**
@@ -141,17 +141,17 @@ public class UIEditBox extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
+    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         // Retrieve style properties and animated colors
-        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
-        int borderColor = getColor(Properties.BORDER_COLOR, state, deltaTime);
-        int textColor = getColor(Properties.TEXT_COLOR, state, deltaTime);
+        int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
+        int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
+        int textColor = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);
         int hintColor = getColor(HINT_COLOR, state, deltaTime); // Retrieve hint color
         int cursorColor = getColor(CURSOR_COLOR, state, deltaTime);
         int selectionColor = getColor(SELECTION_COLOR, state, deltaTime);
 
-        float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
-        float borderThick = getFloat(Properties.BORDER_THICKNESS, state, deltaTime);
+        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+        float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
 
         // Render the background and border of the edit box
         renderer.drawRect(x, y, width, height, bgColor, radius);
@@ -159,7 +159,7 @@ public class UIEditBox extends UIWidget {
             renderer.drawOutline(x, y, width, height, borderColor, radius, borderThick);
         }
 
-        int fontHeight = UITextComponent.getFontHeight();
+        int fontHeight = TextComponent.getFontHeight();
         float contentX = x + padding;
 
         // Recalculate scroll offsets based on text content and dimensions
@@ -187,20 +187,20 @@ public class UIEditBox extends UIWidget {
             if (isMultiline) {
                 String[] lines = hintText.split("\n", -1);
                 for (int i = 0; i < lines.length; i++) {
-                    renderer.drawText(UITextComponent.literal(lines[i]), drawX, drawY + (i * fontHeight), hintColor, true);
+                    renderer.drawText(TextComponent.literal(lines[i]), drawX, drawY + (i * fontHeight), hintColor, true);
                 }
             } else {
-                renderer.drawText(UITextComponent.literal(hintText), drawX, drawY, hintColor, true);
+                renderer.drawText(TextComponent.literal(hintText), drawX, drawY, hintColor, true);
             }
         } else {
             // Otherwise, render the actual text content
             if (isMultiline) {
                 String[] lines = text.split("\n", -1);
                 for (int i = 0; i < lines.length; i++) {
-                    renderer.drawText(UITextComponent.literal(lines[i]), drawX, drawY + (i * fontHeight), textColor, true);
+                    renderer.drawText(TextComponent.literal(lines[i]), drawX, drawY + (i * fontHeight), textColor, true);
                 }
             } else {
-                renderer.drawText(UITextComponent.literal(text), drawX, drawY, textColor, true);
+                renderer.drawText(TextComponent.literal(text), drawX, drawY, textColor, true);
             }
         }
 
@@ -210,7 +210,7 @@ public class UIEditBox extends UIWidget {
         }
     }
 
-    private void renderCursor(UIRenderInterface renderer, float baseX, float baseY, int fontHeight, int color) {
+    private void renderCursor(RenderInterface renderer, float baseX, float baseY, int fontHeight, int color) {
         // Smooth blink
         double time = System.currentTimeMillis() / 250.0;
         float alphaFactor = (float) (0.5 + 0.5 * Math.sin(time));
@@ -241,11 +241,11 @@ public class UIEditBox extends UIWidget {
             }
 
             String subLine = lines[lineIndex].substring(0, colIndex);
-            cx = UITextComponent.getTextWidth(UITextComponent.literal(subLine));
+            cx = TextComponent.getTextWidth(TextComponent.literal(subLine));
             cy = lineIndex * fontHeight;
         } else {
             String sub = text.substring(0, cursorPosition);
-            cx = UITextComponent.getTextWidth(UITextComponent.literal(sub));
+            cx = TextComponent.getTextWidth(TextComponent.literal(sub));
             cy = 0;
         }
 
@@ -254,10 +254,10 @@ public class UIEditBox extends UIWidget {
         renderer.drawRect(cursorX, cursorY - 1, 1, fontHeight + 2, blinkingColor, 0);
     }
 
-    private void renderSelection(UIRenderInterface renderer, float baseX, float baseY, int color) {
+    private void renderSelection(RenderInterface renderer, float baseX, float baseY, int color) {
         int start = Math.min(cursorPosition, selectionEnd);
         int end = Math.max(cursorPosition, selectionEnd);
-        int fontHeight = UITextComponent.getFontHeight();
+        int fontHeight = TextComponent.getFontHeight();
 
         if (isMultiline) {
             int pos = 0;
@@ -273,8 +273,8 @@ public class UIEditBox extends UIWidget {
                     int e = Math.min(end, lineEnd) - lineStart;
 
                     if (s < e || (s == e && lineStart >= start && lineEnd <= end)) {
-                        int x1 = UITextComponent.getTextWidth(UITextComponent.literal(lines[i].substring(0, s)));
-                        int x2 = UITextComponent.getTextWidth(UITextComponent.literal(lines[i].substring(0, e)));
+                        int x1 = TextComponent.getTextWidth(TextComponent.literal(lines[i].substring(0, s)));
+                        int x2 = TextComponent.getTextWidth(TextComponent.literal(lines[i].substring(0, e)));
                         if (end > lineEnd) x2 += 4;
                         renderer.drawRect(baseX + x1, baseY + (i * fontHeight), x2 - x1, fontHeight, color, 0);
                     }
@@ -282,8 +282,8 @@ public class UIEditBox extends UIWidget {
                 pos += lineLen + 1;
             }
         } else {
-            int x1 = UITextComponent.getTextWidth(UITextComponent.literal(text.substring(0, start)));
-            int x2 = UITextComponent.getTextWidth(UITextComponent.literal(text.substring(0, end)));
+            int x1 = TextComponent.getTextWidth(TextComponent.literal(text.substring(0, start)));
+            int x2 = TextComponent.getTextWidth(TextComponent.literal(text.substring(0, end)));
             renderer.drawRect(baseX + x1, baseY, x2 - x1, fontHeight, color, 0);
         }
     }
@@ -550,14 +550,14 @@ public class UIEditBox extends UIWidget {
         return line.length();
     }
 
-    private void updateScrolling(UIRenderInterface renderer) {
+    private void updateScrolling(RenderInterface renderer) {
         float visibleWidth = width - (padding * 2);
         float visibleHeight = height - (padding * 2);
 
         if (isMultiline) {
             String[] lines = text.split("\n", -1);
             int totalLines = lines.length;
-            int totalHeight = totalLines * UITextComponent.getFontHeight();
+            int totalHeight = totalLines * TextComponent.getFontHeight();
             maxScrollY = Math.max(0, totalHeight - visibleHeight);
 
             // Identify current line and position within that line
@@ -579,12 +579,12 @@ public class UIEditBox extends UIWidget {
             }
 
             // --- Vertical Scroll Update (Y) ---
-            float cursorY = currentLineIndex * UITextComponent.getFontHeight();
+            float cursorY = currentLineIndex * TextComponent.getFontHeight();
 
             if (cursorY < scrollY) {
                 scrollY = cursorY;
-            } else if (cursorY + UITextComponent.getFontHeight() > scrollY + visibleHeight) {
-                scrollY = cursorY + UITextComponent.getFontHeight() - visibleHeight;
+            } else if (cursorY + TextComponent.getFontHeight() > scrollY + visibleHeight) {
+                scrollY = cursorY + TextComponent.getFontHeight() - visibleHeight;
             }
             scrollY = Math.max(0, Math.min(scrollY, maxScrollY));
 
@@ -593,7 +593,7 @@ public class UIEditBox extends UIWidget {
             int localCursorIndex = Math.max(0, Math.min(currentLineText.length(), cursorPosition - lineStartPos));
             String subLine = currentLineText.substring(0, localCursorIndex);
 
-            int cursorX = UITextComponent.getTextWidth(UITextComponent.literal(subLine));
+            int cursorX = TextComponent.getTextWidth(TextComponent.literal(subLine));
 
             if (cursorX < scrollX) {
                 scrollX = cursorX;
@@ -602,14 +602,14 @@ public class UIEditBox extends UIWidget {
             }
 
             // Calculate max X scroll for the current line to prevent empty space
-            int lineWidth = UITextComponent.getTextWidth(UITextComponent.literal(currentLineText));
+            int lineWidth = TextComponent.getTextWidth(TextComponent.literal(currentLineText));
             maxScrollX = Math.max(0, lineWidth - visibleWidth + 8);
             scrollX = Math.max(0, Math.min(scrollX, maxScrollX));
 
         } else {
             // Single-line logic: Only X scrolling is relevant
             String sub = text.substring(0, cursorPosition);
-            int cursorX = UITextComponent.getTextWidth(UITextComponent.literal(sub));
+            int cursorX = TextComponent.getTextWidth(TextComponent.literal(sub));
 
             if (cursorX < scrollX) {
                 scrollX = cursorX;
@@ -617,7 +617,7 @@ public class UIEditBox extends UIWidget {
                 scrollX = cursorX - visibleWidth + 4;
             }
 
-            int textWidth = UITextComponent.getTextWidth(UITextComponent.literal(text));
+            int textWidth = TextComponent.getTextWidth(TextComponent.literal(text));
             maxScrollX = Math.max(0, textWidth - visibleWidth + 8);
             scrollX = Math.max(0, Math.min(scrollX, maxScrollX));
 

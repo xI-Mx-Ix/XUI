@@ -8,15 +8,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
-import net.xmx.xui.core.font.UIDefaultFonts;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.font.DefaultFonts;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 
 /**
  * Example screen demonstrating the advanced text rendering capabilities of XUI.
@@ -57,125 +57,125 @@ public class XUITextExampleScreen extends Screen {
      */
     private void buildUI() {
         UIPanel root = uiContext.getRoot();
-        root.style().set(Properties.BACKGROUND_COLOR, 0xFF101010);
+        root.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF101010);
 
         // Main Container Panel
         UIPanel paperPanel = new UIPanel();
-        paperPanel.setX(Constraints.center())
-                .setY(Constraints.center())
-                .setWidth(Constraints.pixel(420))
-                .setHeight(Constraints.pixel(380));
+        paperPanel.setX(Layout.center())
+                .setY(Layout.center())
+                .setWidth(Layout.pixel(420))
+                .setHeight(Layout.pixel(380));
 
         paperPanel.style()
-                .set(Properties.BACKGROUND_COLOR, 0xFF1E1E1E)
-                .set(Properties.BORDER_RADIUS, 8.0f)
-                .set(Properties.BORDER_COLOR, 0xFF333333)
-                .set(Properties.BORDER_THICKNESS, 1.0f);
+                .set(ThemeProperties.BACKGROUND_COLOR, 0xFF1E1E1E)
+                .set(ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(ThemeProperties.BORDER_COLOR, 0xFF333333)
+                .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 
         // --- WIDGET 1: Header (Roboto Bold) ---
         UIText header = new UIText();
-        header.setText(UITextComponent.literal("Typography Showcase")
+        header.setText(TextComponent.literal("Typography Showcase")
                 .setColor(0xFF4FC3F7) // Light Blue
                 .setBold(true)
-                .setFont(UIDefaultFonts.getRoboto()));
+                .setFont(DefaultFonts.getRoboto()));
 
         header.setCentered(true)
-                .setX(Constraints.center())
-                .setY(Constraints.pixel(15));
+                .setX(Layout.center())
+                .setY(Layout.pixel(15));
 
         // --- WIDGET 2: Font Family Comparison ---
         UIWrappedText fontCompare = new UIWrappedText();
 
         // Title
-        fontCompare.setText(UITextComponent.literal("1. Font Families")
+        fontCompare.setText(TextComponent.literal("1. Font Families")
                 .setColor(0xFFAAAAAA)
                 .setUnderline(true)
-                .setFont(UIDefaultFonts.getRoboto()));
+                .setFont(DefaultFonts.getRoboto()));
 
         // Vanilla Line
-        fontCompare.addText(UITextComponent.literal("Vanilla: The quick brown fox jumps.")
+        fontCompare.addText(TextComponent.literal("Vanilla: The quick brown fox jumps.")
                 .setColor(0xFFFFFFFF)
-                .setFont(UIDefaultFonts.getVanilla()), false);
+                .setFont(DefaultFonts.getVanilla()), false);
 
         // Roboto Line
-        fontCompare.addText(UITextComponent.literal("Roboto: The quick brown fox jumps.")
+        fontCompare.addText(TextComponent.literal("Roboto: The quick brown fox jumps.")
                 .setColor(0xFFDDDDDD)
-                .setFont(UIDefaultFonts.getRoboto()), false);
+                .setFont(DefaultFonts.getRoboto()), false);
 
         // JetBrains Mono Line
-        fontCompare.addText(UITextComponent.literal("JB Mono: The quick brown fox jumps.")
+        fontCompare.addText(TextComponent.literal("JB Mono: The quick brown fox jumps.")
                 .setColor(0xFFB9FBC0) // Light Green
-                .setFont(UIDefaultFonts.getJetBrainsMono()), false);
+                .setFont(DefaultFonts.getJetBrainsMono()), false);
 
-        fontCompare.setX(Constraints.pixel(20))
-                .setY(Constraints.sibling(header, 25, true))
-                .setWidth(Constraints.pixel(380));
+        fontCompare.setX(Layout.pixel(20))
+                .setY(Layout.sibling(header, 25, true))
+                .setWidth(Layout.pixel(380));
 
         // --- WIDGET 3: Rich Styles & Obfuscation ---
         UIWrappedText styleShowcase = new UIWrappedText();
 
-        styleShowcase.setText(UITextComponent.literal("2. Rich Styles & Magic")
+        styleShowcase.setText(TextComponent.literal("2. Rich Styles & Magic")
                 .setColor(0xFFAAAAAA)
                 .setUnderline(true)
-                .setFont(UIDefaultFonts.getRoboto()));
+                .setFont(DefaultFonts.getRoboto()));
 
         // Mixed styles in one line using Roboto
-        UITextComponent mixedLine = UITextComponent.literal("We support ")
-                .setFont(UIDefaultFonts.getRoboto())
-                .append(UITextComponent.literal("Bold, ").setBold(true).setColor(0xFFE57373))
-                .append(UITextComponent.literal("Italic, ").setItalic(true).setColor(0xFFFFF176))
-                .append(UITextComponent.literal("Underline ").setUnderline(true).setColor(0xFF64B5F6))
-                .append(UITextComponent.literal("& ").setColor(0xFF888888))
-                .append(UITextComponent.literal("Strikethrough").setStrikethrough(true).setColor(0xFFA1887F));
+        TextComponent mixedLine = TextComponent.literal("We support ")
+                .setFont(DefaultFonts.getRoboto())
+                .append(TextComponent.literal("Bold, ").setBold(true).setColor(0xFFE57373))
+                .append(TextComponent.literal("Italic, ").setItalic(true).setColor(0xFFFFF176))
+                .append(TextComponent.literal("Underline ").setUnderline(true).setColor(0xFF64B5F6))
+                .append(TextComponent.literal("& ").setColor(0xFF888888))
+                .append(TextComponent.literal("Strikethrough").setStrikethrough(true).setColor(0xFFA1887F));
 
         styleShowcase.addText(mixedLine, false);
 
         // Obfuscation test (Matrix effect)
-        UITextComponent magicLine = UITextComponent.literal("Secret Data: ")
-                .setFont(UIDefaultFonts.getJetBrainsMono())
+        TextComponent magicLine = TextComponent.literal("Secret Data: ")
+                .setFont(DefaultFonts.getJetBrainsMono())
                 .setColor(0xFF888888)
-                .append(UITextComponent.literal("kjd8s7d8s7d").setObfuscated(true).setColor(0xFFFF5555));
+                .append(TextComponent.literal("kjd8s7d8s7d").setObfuscated(true).setColor(0xFFFF5555));
 
         styleShowcase.addText(magicLine, false);
 
-        styleShowcase.setX(Constraints.pixel(20))
-                .setY(Constraints.sibling(fontCompare, 20, true))
-                .setWidth(Constraints.pixel(380));
+        styleShowcase.setX(Layout.pixel(20))
+                .setY(Layout.sibling(fontCompare, 20, true))
+                .setWidth(Layout.pixel(380));
 
         // --- WIDGET 4: Word Wrapping Paragraph ---
         UIWrappedText paragraph = new UIWrappedText();
 
-        paragraph.setText(UITextComponent.literal("3. Word Wrapping (Roboto)")
+        paragraph.setText(TextComponent.literal("3. Word Wrapping (Roboto)")
                 .setColor(0xFFAAAAAA)
                 .setUnderline(true)
-                .setFont(UIDefaultFonts.getRoboto()));
+                .setFont(DefaultFonts.getRoboto()));
 
         String lore = "XUI uses MSDF rendering to ensure text remains crisp at any scale. " +
                 "This paragraph demonstrates automatic line wrapping within the container bounds. " +
                 "It handles spaces, punctuation, and mixed font styles seamlessly.";
 
-        UITextComponent bodyText = UITextComponent.literal(lore)
+        TextComponent bodyText = TextComponent.literal(lore)
                 .setColor(0xFFE0E0E0)
-                .setFont(UIDefaultFonts.getRoboto());
+                .setFont(DefaultFonts.getRoboto());
 
         // Append a highlighed Mono section at the end
-        bodyText.append(UITextComponent.literal(" [System Status: OK]")
-                .setFont(UIDefaultFonts.getJetBrainsMono())
+        bodyText.append(TextComponent.literal(" [System Status: OK]")
+                .setFont(DefaultFonts.getJetBrainsMono())
                 .setColor(0xFF00E676));
 
         paragraph.addText(bodyText, true); // true = enable wrapping
 
-        paragraph.setX(Constraints.pixel(20))
-                .setY(Constraints.sibling(styleShowcase, 20, true))
-                .setWidth(Constraints.pixel(380));
+        paragraph.setX(Layout.pixel(20))
+                .setY(Layout.sibling(styleShowcase, 20, true))
+                .setWidth(Layout.pixel(380));
 
         // --- Close Button ---
         UIButton closeBtn = new UIButton();
-        closeBtn.setLabel(UITextComponent.literal("Close").setFont(UIDefaultFonts.getRoboto()));
-        closeBtn.setX(Constraints.center())
-                .setY(Constraints.anchorEnd(20))
-                .setWidth(Constraints.pixel(100))
-                .setHeight(Constraints.pixel(20));
+        closeBtn.setLabel(TextComponent.literal("Close").setFont(DefaultFonts.getRoboto()));
+        closeBtn.setX(Layout.center())
+                .setY(Layout.anchorEnd(20))
+                .setWidth(Layout.pixel(100))
+                .setHeight(Layout.pixel(20));
         closeBtn.setOnClick(w -> this.onClose());
 
         // Add to hierarchy

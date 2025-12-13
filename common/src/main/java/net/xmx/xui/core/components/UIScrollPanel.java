@@ -4,13 +4,13 @@
  */
 package net.xmx.xui.core.components;
 
-import net.xmx.xui.core.gl.UIRenderInterface;
+import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.effect.UIEffect;
 import net.xmx.xui.core.effect.UIScissorsEffect;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.style.UIProperty;
-import net.xmx.xui.core.style.UIState;
+import net.xmx.xui.core.style.InteractionState;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.style.StyleKey;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,22 +31,22 @@ import java.util.Map;
  */
 public class UIScrollPanel extends UIWidget {
 
-    // --- Scrollbar Styling Properties ---
+    // --- Scrollbar Styling ThemeProperties ---
 
     /** The width of the scrollbar in pixels. */
-    public static final UIProperty<Float> SCROLLBAR_WIDTH = new UIProperty<>("scrollbar_width", 8.0f);
+    public static final StyleKey<Float> SCROLLBAR_WIDTH = new StyleKey<>("scrollbar_width", 8.0f);
 
     /** The padding between the scrollbar and the right edge of the panel. */
-    public static final UIProperty<Float> SCROLLBAR_PADDING = new UIProperty<>("scrollbar_padding", 2.0f);
+    public static final StyleKey<Float> SCROLLBAR_PADDING = new StyleKey<>("scrollbar_padding", 2.0f);
 
     /** The border radius (roundness) of the scrollbar thumb and track. */
-    public static final UIProperty<Float> SCROLLBAR_RADIUS = new UIProperty<>("scrollbar_radius", 4.0f);
+    public static final StyleKey<Float> SCROLLBAR_RADIUS = new StyleKey<>("scrollbar_radius", 4.0f);
 
     /** The color of the draggable scrollbar thumb. */
-    public static final UIProperty<Integer> SCROLLBAR_COLOR = new UIProperty<>("scrollbar_color", 0x80FFFFFF);
+    public static final StyleKey<Integer> SCROLLBAR_COLOR = new StyleKey<>("scrollbar_color", 0x80FFFFFF);
 
     /** The color of the static scrollbar background track. */
-    public static final UIProperty<Integer> SCROLLBAR_TRACK_COLOR = new UIProperty<>("scrollbar_track_color", 0x20FFFFFF);
+    public static final StyleKey<Integer> SCROLLBAR_TRACK_COLOR = new StyleKey<>("scrollbar_track_color", 0x20FFFFFF);
 
     // --- State Variables ---
 
@@ -94,7 +94,7 @@ public class UIScrollPanel extends UIWidget {
      */
     private void setupDefaultStyles() {
         this.style()
-                .set(Properties.BACKGROUND_COLOR, 0x00000000) // Transparent background
+                .set(ThemeProperties.BACKGROUND_COLOR, 0x00000000) // Transparent background
                 .set(SCROLLBAR_WIDTH, 8.0f)
                 .set(SCROLLBAR_PADDING, 2.0f)
                 .set(SCROLLBAR_RADIUS, 4.0f)
@@ -400,8 +400,8 @@ public class UIScrollPanel extends UIWidget {
     private boolean isPointOnScrollbar(double mouseX, double mouseY) {
         if (!isScrollable()) return false;
 
-        float scrollbarWidth = style().getValue(UIState.DEFAULT, SCROLLBAR_WIDTH);
-        float scrollbarPadding = style().getValue(UIState.DEFAULT, SCROLLBAR_PADDING);
+        float scrollbarWidth = style().getValue(InteractionState.DEFAULT, SCROLLBAR_WIDTH);
+        float scrollbarPadding = style().getValue(InteractionState.DEFAULT, SCROLLBAR_PADDING);
 
         float scrollbarX = this.getX() + this.getWidth() - scrollbarWidth - scrollbarPadding;
 
@@ -417,7 +417,7 @@ public class UIScrollPanel extends UIWidget {
      * Returns the height of the scrollbar track (the full available space).
      */
     private float getScrollbarTrackHeight() {
-        float scrollbarPadding = style().getValue(UIState.DEFAULT, SCROLLBAR_PADDING);
+        float scrollbarPadding = style().getValue(InteractionState.DEFAULT, SCROLLBAR_PADDING);
         return this.getHeight() - (scrollbarPadding * 2);
     }
 
@@ -437,7 +437,7 @@ public class UIScrollPanel extends UIWidget {
     private float getScrollbarThumbPosition() {
         if (!isScrollable()) return 0;
 
-        float scrollbarPadding = style().getValue(UIState.DEFAULT, SCROLLBAR_PADDING);
+        float scrollbarPadding = style().getValue(InteractionState.DEFAULT, SCROLLBAR_PADDING);
         float trackHeight = getScrollbarTrackHeight();
         float thumbHeight = getScrollbarThumbHeight();
         float maxScrollbarTravel = trackHeight - thumbHeight;
@@ -447,7 +447,7 @@ public class UIScrollPanel extends UIWidget {
     }
 
     @Override
-    public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
+    public void render(RenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
         if (!isVisible) return;
 
         updateHoverState(mouseX, mouseY);
@@ -458,11 +458,11 @@ public class UIScrollPanel extends UIWidget {
         }
 
         // Determine current style state for the panel background
-        UIState state = UIState.DEFAULT;
+        InteractionState state = InteractionState.DEFAULT;
         if (isFocused) {
-            state = UIState.ACTIVE;
+            state = InteractionState.ACTIVE;
         } else if (isHovered) {
-            state = UIState.HOVER;
+            state = InteractionState.HOVER;
         }
 
         // Apply visual effects manually (e.g., Scissors)
@@ -499,7 +499,7 @@ public class UIScrollPanel extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
+    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         // Update hover logic
         updateScrollbarHoverState(mouseX, mouseY);
 
@@ -522,9 +522,9 @@ public class UIScrollPanel extends UIWidget {
         }
 
         // Draw Panel Background
-        int bgColor = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
+        int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
         if ((bgColor >>> 24) > 0) {
-            float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
+            float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
             renderer.drawRect(this.getX(), this.getY(), this.getWidth(), this.getHeight(), bgColor, radius);
         }
 
@@ -537,7 +537,7 @@ public class UIScrollPanel extends UIWidget {
     /**
      * Renders the scrollbar visuals.
      */
-    private void drawScrollbar(UIRenderInterface renderer, UIState state) {
+    private void drawScrollbar(RenderInterface renderer, InteractionState state) {
         float scrollbarWidth = style().getValue(state, SCROLLBAR_WIDTH);
         float scrollbarPadding = style().getValue(state, SCROLLBAR_PADDING);
         float scrollbarRadius = style().getValue(state, SCROLLBAR_RADIUS);

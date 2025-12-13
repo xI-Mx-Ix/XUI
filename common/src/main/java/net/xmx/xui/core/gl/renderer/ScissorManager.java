@@ -16,7 +16,7 @@ import java.util.Deque;
  *
  * @author xI-Mx-Ix
  */
-public class UIScissorManager {
+public class ScissorManager {
 
     private final Deque<int[]> scissorStack = new ArrayDeque<>();
 

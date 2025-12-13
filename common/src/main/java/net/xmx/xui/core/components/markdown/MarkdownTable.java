@@ -4,12 +4,12 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,9 +33,9 @@ public class MarkdownTable extends UIPanel {
      * @param contentWidth The maximum available width.
      * @param font         The font to use for table content.
      */
-    public MarkdownTable(List<String> lines, float contentWidth, UIFont font) {
-        this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
-        this.setWidth(Constraints.pixel(contentWidth));
+    public MarkdownTable(List<String> lines, float contentWidth, Font font) {
+        this.style().set(ThemeProperties.BACKGROUND_COLOR, 0x00000000);
+        this.setWidth(Layout.pixel(contentWidth));
 
         if (lines.size() < 2) {
             this.renderHeight = 0;
@@ -69,12 +69,12 @@ public class MarkdownTable extends UIPanel {
 
             for (int c = 0; c < columns && c < row.size(); c++) {
                 String text = row.get(c);
-                UITextComponent comp = MarkdownUtils.parseInline(text);
+                TextComponent comp = MarkdownUtils.parseInline(text);
                 
                 // IMPORTANT: Apply the font before measuring, as width depends on the font!
                 MarkdownUtils.applyFontRecursive(comp, font);
                 
-                int textWidth = UITextComponent.getTextWidth(comp);
+                int textWidth = TextComponent.getTextWidth(comp);
                 if (textWidth + cellPadding > colWidths[c]) {
                     colWidths[c] = textWidth + cellPadding;
                 }
@@ -104,11 +104,11 @@ public class MarkdownTable extends UIPanel {
             if (isSeparatorRow(row)) {
                 // Add a small divider line instead
                 UIPanel separator = new UIPanel();
-                separator.setX(Constraints.pixel(0))
-                        .setY(Constraints.pixel(currentY))
-                        .setWidth(Constraints.pixel(totalReqWidth))
-                        .setHeight(Constraints.pixel(1));
-                separator.style().set(Properties.BACKGROUND_COLOR, 0xFF606060);
+                separator.setX(Layout.pixel(0))
+                        .setY(Layout.pixel(currentY))
+                        .setWidth(Layout.pixel(totalReqWidth))
+                        .setHeight(Layout.pixel(1));
+                separator.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF606060);
                 this.add(separator);
                 currentY += 4;
                 continue;
@@ -119,19 +119,19 @@ public class MarkdownTable extends UIPanel {
 
             // Background for this row
             UIPanel rowBg = new UIPanel();
-            rowBg.setX(Constraints.pixel(0))
-                    .setY(Constraints.pixel(currentY))
-                    .setWidth(Constraints.pixel(totalReqWidth))
-                    .setHeight(Constraints.pixel(rowHeight));
+            rowBg.setX(Layout.pixel(0))
+                    .setY(Layout.pixel(currentY))
+                    .setWidth(Layout.pixel(totalReqWidth))
+                    .setHeight(Layout.pixel(rowHeight));
             
             // Header is darker, alternating rows are slightly different
             int bgColor = isHeader ? 0xFF303030 : (r % 2 == 0 ? 0x00000000 : 0xFF181818);
-            rowBg.style().set(Properties.BACKGROUND_COLOR, bgColor);
+            rowBg.style().set(ThemeProperties.BACKGROUND_COLOR, bgColor);
             this.add(rowBg);
 
             for (int c = 0; c < columns && c < row.size(); c++) {
                 String cellText = row.get(c);
-                UITextComponent content = MarkdownUtils.parseInline(cellText);
+                TextComponent content = MarkdownUtils.parseInline(cellText);
                 MarkdownUtils.applyFontRecursive(content, font);
                 
                 if (isHeader) {
@@ -142,8 +142,8 @@ public class MarkdownTable extends UIPanel {
                 UIText cellWidget = new UIText();
                 cellWidget.setText(content);
                 // Center text vertically in row
-                cellWidget.setX(Constraints.pixel(currentX + 5)); // +5 padding
-                cellWidget.setY(Constraints.pixel(currentY + 4)); 
+                cellWidget.setX(Layout.pixel(currentX + 5)); // +5 padding
+                cellWidget.setY(Layout.pixel(currentY + 4));
                 
                 this.add(cellWidget);
                 currentX += colWidths[c];
@@ -153,7 +153,7 @@ public class MarkdownTable extends UIPanel {
         }
 
         this.renderHeight = currentY + 10;
-        this.setHeight(Constraints.pixel(renderHeight));
+        this.setHeight(Layout.pixel(renderHeight));
     }
 
     private boolean isSeparatorRow(List<String> row) {

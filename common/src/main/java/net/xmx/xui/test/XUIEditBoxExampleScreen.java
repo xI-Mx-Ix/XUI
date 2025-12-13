@@ -8,14 +8,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIEditBox;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 
 /**
  * Example screen demonstrating the {@link UIEditBox} component within a {@link UIContext}.
@@ -59,60 +59,60 @@ public class XUIEditBoxExampleScreen extends Screen {
      */
     private void buildUI() {
         UIPanel root = uiContext.getRoot();
-        root.style().set(Properties.BACKGROUND_COLOR, 0xFF121212); // Dark background
+        root.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF121212); // Dark background
 
         // Main Center Panel
         UIPanel container = new UIPanel();
-        container.setX(Constraints.center())
-                .setY(Constraints.center())
-                .setWidth(Constraints.pixel(400))
-                .setHeight(Constraints.pixel(320));
+        container.setX(Layout.center())
+                .setY(Layout.center())
+                .setWidth(Layout.pixel(400))
+                .setHeight(Layout.pixel(320));
 
         container.style()
-                .set(Properties.BACKGROUND_COLOR, 0xFF252525)
-                .set(Properties.BORDER_RADIUS, 8.0f)
-                .set(Properties.BORDER_COLOR, 0xFF404040)
-                .set(Properties.BORDER_THICKNESS, 1.0f);
+                .set(ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
+                .set(ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(ThemeProperties.BORDER_COLOR, 0xFF404040)
+                .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 
         // --- Header ---
         UIText title = new UIText();
-        title.setText(UITextComponent.literal("Registration Form").setBold(true));
+        title.setText(TextComponent.literal("Registration Form").setBold(true));
         title.setCentered(true)
-                .setX(Constraints.center())
-                .setY(Constraints.pixel(15));
+                .setX(Layout.center())
+                .setY(Layout.pixel(15));
 
         // --- Field 1: Username (Single Line) ---
         UIText lblUser = new UIText();
         lblUser.setText("Username:");
-        lblUser.setX(Constraints.pixel(30)).setY(Constraints.pixel(50));
-        lblUser.style().set(Properties.TEXT_COLOR, 0xFFAAAAAA);
+        lblUser.setX(Layout.pixel(30)).setY(Layout.pixel(50));
+        lblUser.style().set(ThemeProperties.TEXT_COLOR, 0xFFAAAAAA);
 
         UIEditBox userBox = new UIEditBox();
         userBox.setMultiline(false);
         userBox.setMaxLength(16);
         userBox.setHint("Enter your username");
 
-        userBox.setX(Constraints.pixel(30))
-                .setY(Constraints.sibling(lblUser, 5, true))
-                .setWidth(Constraints.pixel(340))
-                .setHeight(Constraints.pixel(22));
+        userBox.setX(Layout.pixel(30))
+                .setY(Layout.sibling(lblUser, 5, true))
+                .setWidth(Layout.pixel(340))
+                .setHeight(Layout.pixel(22));
         userBox.setText("PlayerOne");
 
         // --- Field 2: Biography (Multi Line) ---
         UIText lblBio = new UIText();
         lblBio.setText("Biography (Multi-line):");
-        lblBio.setX(Constraints.pixel(30)).setY(Constraints.sibling(userBox, 15, true));
-        lblBio.style().set(Properties.TEXT_COLOR, 0xFFAAAAAA);
+        lblBio.setX(Layout.pixel(30)).setY(Layout.sibling(userBox, 15, true));
+        lblBio.style().set(ThemeProperties.TEXT_COLOR, 0xFFAAAAAA);
 
         UIEditBox bioBox = new UIEditBox();
         bioBox.setMultiline(true);
         bioBox.setMaxLength(512);
         bioBox.setHint("Enter your biography");
 
-        bioBox.setX(Constraints.pixel(30))
-                .setY(Constraints.sibling(lblBio, 5, true))
-                .setWidth(Constraints.pixel(340))
-                .setHeight(Constraints.pixel(120));
+        bioBox.setX(Layout.pixel(30))
+                .setY(Layout.sibling(lblBio, 5, true))
+                .setWidth(Layout.pixel(340))
+                .setHeight(Layout.pixel(120));
 
         bioBox.setText("I am a Minecraft player.\n" +
                 "I enjoy building redstone contraptions and exploring new biomes.\n" +
@@ -122,10 +122,10 @@ public class XUIEditBoxExampleScreen extends Screen {
         // --- Submit Button ---
         UIButton submitBtn = new UIButton();
         submitBtn.setLabel("Print to Console");
-        submitBtn.setX(Constraints.center())
-                .setY(Constraints.anchorEnd(20))
-                .setWidth(Constraints.pixel(150))
-                .setHeight(Constraints.pixel(30));
+        submitBtn.setX(Layout.center())
+                .setY(Layout.anchorEnd(20))
+                .setWidth(Layout.pixel(150))
+                .setHeight(Layout.pixel(30));
 
         submitBtn.setOnClick(widget -> {
             System.out.println("--- Form Data ---");

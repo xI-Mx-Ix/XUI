@@ -8,14 +8,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIDropdown;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 
 import java.util.Arrays;
 
@@ -47,24 +47,24 @@ public class XUIDropdownExampleScreen extends Screen {
 
     private void buildUI() {
         UIPanel root = uiContext.getRoot();
-        root.style().set(Properties.BACKGROUND_COLOR, 0xFF121212);
+        root.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF121212);
 
         // 2. Bottom Container (Acts as the "Background" or "Obstructed" layer)
         // We place this before the top panel in the add list so it renders first.
         UIPanel bottomPanel = new UIPanel();
-        bottomPanel.setX(Constraints.center())
-                .setY(Constraints.pixel(100))
-                .setWidth(Constraints.pixel(300))
-                .setHeight(Constraints.pixel(200));
-        bottomPanel.style().set(Properties.BACKGROUND_COLOR, 0xFF2A2A2A); // Dark Grey
+        bottomPanel.setX(Layout.center())
+                .setY(Layout.pixel(100))
+                .setWidth(Layout.pixel(300))
+                .setHeight(Layout.pixel(200));
+        bottomPanel.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF2A2A2A); // Dark Grey
 
         // A Button inside the bottom panel that should be covered by the dropdown overlay
         UIButton obstructionButton = new UIButton();
         obstructionButton.setLabel("I am behind the dropdown!");
-        obstructionButton.setX(Constraints.center())
-                .setY(Constraints.pixel(20))
-                .setWidth(Constraints.pixel(200))
-                .setHeight(Constraints.pixel(20));
+        obstructionButton.setX(Layout.center())
+                .setY(Layout.pixel(20))
+                .setWidth(Layout.pixel(200))
+                .setHeight(Layout.pixel(20));
 
         // If this prints, the overlap logic failed.
         obstructionButton.setOnClick(w -> System.out.println("FAIL: You clicked the background button!"));
@@ -73,29 +73,29 @@ public class XUIDropdownExampleScreen extends Screen {
 
         // 3. Top Container (Holds the Dropdown)
         UIPanel topPanel = new UIPanel();
-        topPanel.setX(Constraints.center())
-                .setY(Constraints.pixel(50)) // 50px from top
-                .setWidth(Constraints.pixel(300))
-                .setHeight(Constraints.pixel(60)); // Short height, so dropdown hangs out
-        topPanel.style().set(Properties.BACKGROUND_COLOR, 0xFF353535); // Slightly lighter
+        topPanel.setX(Layout.center())
+                .setY(Layout.pixel(50)) // 50px from top
+                .setWidth(Layout.pixel(300))
+                .setHeight(Layout.pixel(60)); // Short height, so dropdown hangs out
+        topPanel.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF353535); // Slightly lighter
 
         // Label
         UIText label = new UIText();
         label.setText("Select Mode:");
-        label.setX(Constraints.pixel(10)).setY(Constraints.center());
+        label.setX(Layout.pixel(10)).setY(Layout.center());
 
         UIDropdown dropdown = new UIDropdown();
         dropdown.setOptions(Arrays.asList(
-                UITextComponent.literal("Survival Mode"),
-                UITextComponent.literal("Creative Mode"),
-                UITextComponent.literal("Spectator Mode"),
-                UITextComponent.literal("Adventure Mode")
+                TextComponent.literal("Survival Mode"),
+                TextComponent.literal("Creative Mode"),
+                TextComponent.literal("Spectator Mode"),
+                TextComponent.literal("Adventure Mode")
         ));
 
-        dropdown.setX(Constraints.anchorEnd(10)) // Align right
-                .setY(Constraints.center())
-                .setWidth(Constraints.pixel(150))
-                .setHeight(Constraints.pixel(20));
+        dropdown.setX(Layout.anchorEnd(10)) // Align right
+                .setY(Layout.center())
+                .setWidth(Layout.pixel(150))
+                .setHeight(Layout.pixel(20));
 
         dropdown.setOnSelected(idx -> System.out.println("Selected Index: " + idx));
 

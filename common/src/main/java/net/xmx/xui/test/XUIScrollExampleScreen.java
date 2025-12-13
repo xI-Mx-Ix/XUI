@@ -8,14 +8,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIScrollPanel;
 import net.xmx.xui.core.components.UIText;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.style.UIState;
+import net.xmx.xui.core.style.InteractionState;
+import net.xmx.xui.core.style.ThemeProperties;
 
 /**
  * Example screen demonstrating the UIScrollPanel component via {@link UIContext}.
@@ -58,53 +58,53 @@ public class XUIScrollExampleScreen extends Screen {
 
     private void buildUI() {
         UIPanel root = uiContext.getRoot();
-        root.style().set(Properties.BACKGROUND_COLOR, COLOR_BACKGROUND);
+        root.style().set(ThemeProperties.BACKGROUND_COLOR, COLOR_BACKGROUND);
 
         // --- Main Content Panel (Centered) ---
         UIPanel mainPanel = new UIPanel();
-        mainPanel.setX(Constraints.center())
-                .setY(Constraints.center())
-                .setWidth(Constraints.pixel(600))
-                .setHeight(Constraints.pixel(500));
+        mainPanel.setX(Layout.center())
+                .setY(Layout.center())
+                .setWidth(Layout.pixel(600))
+                .setHeight(Layout.pixel(500));
 
         // Style the main container with rounded corners and a border
         mainPanel.style()
-                .set(Properties.BACKGROUND_COLOR, COLOR_PANEL)
-                .set(Properties.BORDER_RADIUS, 16.0f)
-                .set(Properties.BORDER_THICKNESS, 1.0f)
-                .set(Properties.BORDER_COLOR, COLOR_BORDER);
+                .set(ThemeProperties.BACKGROUND_COLOR, COLOR_PANEL)
+                .set(ThemeProperties.BORDER_RADIUS, 16.0f)
+                .set(ThemeProperties.BORDER_THICKNESS, 1.0f)
+                .set(ThemeProperties.BORDER_COLOR, COLOR_BORDER);
 
         // --- Title ---
         UIText title = new UIText();
         title.setText("Scrollable Item List");
         title.setCentered(true)
-                .setX(Constraints.center())
-                .setY(Constraints.pixel(30))
-                .setWidth(Constraints.relative(1.0f));
-        title.style().set(Properties.TEXT_COLOR, COLOR_TEXT_PRIMARY);
+                .setX(Layout.center())
+                .setY(Layout.pixel(30))
+                .setWidth(Layout.relative(1.0f));
+        title.style().set(ThemeProperties.TEXT_COLOR, COLOR_TEXT_PRIMARY);
 
         // --- Subtitle ---
         UIText subtitle = new UIText();
         subtitle.setText("Try scrolling with mouse wheel or drag the scrollbar");
         subtitle.setCentered(true)
-                .setX(Constraints.center())
-                .setY(Constraints.pixel(55))
-                .setWidth(Constraints.relative(1.0f));
-        subtitle.style().set(Properties.TEXT_COLOR, COLOR_TEXT_SECONDARY);
+                .setX(Layout.center())
+                .setY(Layout.pixel(55))
+                .setWidth(Layout.relative(1.0f));
+        subtitle.style().set(ThemeProperties.TEXT_COLOR, COLOR_TEXT_SECONDARY);
 
         // --- Scroll Panel Configuration ---
         UIScrollPanel scrollPanel = new UIScrollPanel();
-        scrollPanel.setX(Constraints.pixel(30))
-                .setY(Constraints.pixel(90))
-                .setWidth(Constraints.pixel(540))
-                .setHeight(Constraints.pixel(330));
+        scrollPanel.setX(Layout.pixel(30))
+                .setY(Layout.pixel(90))
+                .setWidth(Layout.pixel(540))
+                .setHeight(Layout.pixel(330));
 
         // Configure scrollbar aesthetics
         scrollPanel.style()
-                .set(Properties.BACKGROUND_COLOR, 0x40000000)
-                .set(Properties.BORDER_RADIUS, 8.0f)
-                .set(Properties.BORDER_THICKNESS, 1.0f)
-                .set(Properties.BORDER_COLOR, 0x20FFFFFF)
+                .set(ThemeProperties.BACKGROUND_COLOR, 0x40000000)
+                .set(ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(ThemeProperties.BORDER_THICKNESS, 1.0f)
+                .set(ThemeProperties.BORDER_COLOR, 0x20FFFFFF)
                 .set(UIScrollPanel.SCROLLBAR_WIDTH, 4.0f)
                 .set(UIScrollPanel.SCROLLBAR_PADDING, 4.0f)
                 .set(UIScrollPanel.SCROLLBAR_RADIUS, 2.0f)
@@ -118,10 +118,10 @@ public class XUIScrollExampleScreen extends Screen {
         for (int i = 1; i <= 25; i++) {
             UIButton itemButton = new UIButton();
             itemButton.setLabel("Item #" + i);
-            itemButton.setX(Constraints.pixel(10))
-                    .setY(Constraints.pixel(currentY))
-                    .setWidth(Constraints.pixel(500))
-                    .setHeight(Constraints.pixel(45));
+            itemButton.setX(Layout.pixel(10))
+                    .setY(Layout.pixel(currentY))
+                    .setWidth(Layout.pixel(500))
+                    .setHeight(Layout.pixel(45));
 
             // Define colors for alternating pattern
             int bgColor = (i % 2 == 0) ? 0x80303030 : 0x80404040;
@@ -130,15 +130,15 @@ public class XUIScrollExampleScreen extends Screen {
             // Apply style with subtle active state
             itemButton.style()
                     .setTransitionSpeed(20.0f)
-                    .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, bgColor)
-                    .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 6.0f)
-                    .set(UIState.DEFAULT, Properties.SCALE, 1.0f)
-                    .set(UIState.HOVER, Properties.BACKGROUND_COLOR, hoverColor)
-                    .set(UIState.HOVER, Properties.SCALE, 1.02f)
-                    .set(UIState.HOVER, Properties.BORDER_THICKNESS, 1.0f)
-                    .set(UIState.HOVER, Properties.BORDER_COLOR, COLOR_ACCENT)
-                    .set(UIState.ACTIVE, Properties.BACKGROUND_COLOR, hoverColor) // Maintains gray color on click
-                    .set(UIState.ACTIVE, Properties.SCALE, 0.98f);                // Provides feedback via scaling
+                    .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, bgColor)
+                    .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 6.0f)
+                    .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
+                    .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, hoverColor)
+                    .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.02f)
+                    .set(InteractionState.HOVER, ThemeProperties.BORDER_THICKNESS, 1.0f)
+                    .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, COLOR_ACCENT)
+                    .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, hoverColor) // Maintains gray color on click
+                    .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.98f);                // Provides feedback via scaling
 
             final int itemNumber = i;
             itemButton.setOnClick(w -> System.out.println("Clicked Item #" + itemNumber));
@@ -155,59 +155,59 @@ public class XUIScrollExampleScreen extends Screen {
         // Scroll to Top Button
         UIButton btnTop = new UIButton();
         btnTop.setLabel("Scroll to Top");
-        btnTop.setX(Constraints.pixel(50))
-                .setY(Constraints.pixel(buttonY))
-                .setWidth(Constraints.pixel(buttonWidth))
-                .setHeight(Constraints.pixel(buttonHeight));
+        btnTop.setX(Layout.pixel(50))
+                .setY(Layout.pixel(buttonY))
+                .setWidth(Layout.pixel(buttonWidth))
+                .setHeight(Layout.pixel(buttonHeight));
 
         btnTop.style()
                 .setTransitionSpeed(20.0f)
-                .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, COLOR_ACCENT)
-                .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 8.0f)
-                .set(UIState.DEFAULT, Properties.SCALE, 1.0f)
-                .set(UIState.HOVER, Properties.BACKGROUND_COLOR, COLOR_ACCENT_HOVER)
-                .set(UIState.HOVER, Properties.SCALE, 1.05f)
-                .set(UIState.ACTIVE, Properties.BACKGROUND_COLOR, COLOR_ACCENT_ACTIVE)
-                .set(UIState.ACTIVE, Properties.SCALE, 0.95f);
+                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, COLOR_ACCENT)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
+                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, COLOR_ACCENT_HOVER)
+                .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.05f)
+                .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, COLOR_ACCENT_ACTIVE)
+                .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.95f);
 
         btnTop.setOnClick(w -> scrollPanel.setScrollOffset(0));
 
         // Scroll to Bottom Button
         UIButton btnBottom = new UIButton();
         btnBottom.setLabel("Scroll to Bottom");
-        btnBottom.setX(Constraints.center())
-                .setY(Constraints.pixel(buttonY))
-                .setWidth(Constraints.pixel(buttonWidth))
-                .setHeight(Constraints.pixel(buttonHeight));
+        btnBottom.setX(Layout.center())
+                .setY(Layout.pixel(buttonY))
+                .setWidth(Layout.pixel(buttonWidth))
+                .setHeight(Layout.pixel(buttonHeight));
 
         btnBottom.style()
                 .setTransitionSpeed(20.0f)
-                .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, COLOR_ACCENT)
-                .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 8.0f)
-                .set(UIState.DEFAULT, Properties.SCALE, 1.0f)
-                .set(UIState.HOVER, Properties.BACKGROUND_COLOR, COLOR_ACCENT_HOVER)
-                .set(UIState.HOVER, Properties.SCALE, 1.05f)
-                .set(UIState.ACTIVE, Properties.BACKGROUND_COLOR, COLOR_ACCENT_ACTIVE)
-                .set(UIState.ACTIVE, Properties.SCALE, 0.95f);
+                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, COLOR_ACCENT)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
+                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, COLOR_ACCENT_HOVER)
+                .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.05f)
+                .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, COLOR_ACCENT_ACTIVE)
+                .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.95f);
 
         btnBottom.setOnClick(w -> scrollPanel.setScrollOffset(9999));
 
         // Exit Button
         UIButton btnClose = new UIButton();
         btnClose.setLabel("Close");
-        btnClose.setX(Constraints.anchorEnd(50))
-                .setY(Constraints.pixel(buttonY))
-                .setWidth(Constraints.pixel(buttonWidth))
-                .setHeight(Constraints.pixel(buttonHeight));
+        btnClose.setX(Layout.anchorEnd(50))
+                .setY(Layout.pixel(buttonY))
+                .setWidth(Layout.pixel(buttonWidth))
+                .setHeight(Layout.pixel(buttonHeight));
 
         btnClose.style()
                 .setTransitionSpeed(20.0f)
-                .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, COLOR_DANGER)
-                .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 8.0f)
-                .set(UIState.DEFAULT, Properties.SCALE, 1.0f)
-                .set(UIState.HOVER, Properties.BACKGROUND_COLOR, COLOR_DANGER_HOVER)
-                .set(UIState.HOVER, Properties.SCALE, 1.05f)
-                .set(UIState.ACTIVE, Properties.SCALE, 0.95f);
+                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, COLOR_DANGER)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
+                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, COLOR_DANGER_HOVER)
+                .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.05f)
+                .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.95f);
 
         btnClose.setOnClick(w -> this.onClose());
 

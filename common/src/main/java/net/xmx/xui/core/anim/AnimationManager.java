@@ -4,7 +4,8 @@
  */
 package net.xmx.xui.core.anim;
 
-import net.xmx.xui.core.style.UIProperty;
+import net.xmx.xui.core.style.StyleKey;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -19,17 +20,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class AnimationManager {
 
-    private final Map<UIProperty<?>, Object> currentValues = new HashMap<>();
+    private final Map<StyleKey<?>, Object> currentValues = new HashMap<>();
 
     // Thread-safe list to hold active complex animations (New)
-    private final List<UIAnimationInstance> activeAnimations = new CopyOnWriteArrayList<>();
+    private final List<AnimationInstance> activeAnimations = new CopyOnWriteArrayList<>();
 
     /**
      * Registers a new animation instance to be updated by this manager.
      *
      * @param animation The animation to start.
      */
-    public void startAnimation(UIAnimationInstance animation) {
+    public void startAnimation(AnimationInstance animation) {
         activeAnimations.add(animation);
     }
 
@@ -39,9 +40,9 @@ public class AnimationManager {
      * @param dt Delta time in seconds.
      */
     public void update(float dt) {
-        Iterator<UIAnimationInstance> it = activeAnimations.iterator();
+        Iterator<AnimationInstance> it = activeAnimations.iterator();
         while (it.hasNext()) {
-            UIAnimationInstance anim = it.next();
+            AnimationInstance anim = it.next();
             boolean finished = anim.update(dt);
             if (finished) {
                 activeAnimations.remove(anim);
@@ -58,7 +59,7 @@ public class AnimationManager {
      * @param dt     Delta time in seconds.
      * @return The interpolated value for the current frame.
      */
-    public float getAnimatedFloat(UIProperty<Float> prop, float target, float speed, float dt) {
+    public float getAnimatedFloat(StyleKey<Float> prop, float target, float speed, float dt) {
         // Sanity Check: Clamp dt to prevent instant jumps if the game lags or partialTicks was passed by mistake.
         // Max 0.1s (10 FPS) per frame calculation.
         float safeDt = Math.min(dt, 0.1f);
@@ -93,7 +94,7 @@ public class AnimationManager {
      * @param dt     Delta time in seconds.
      * @return The interpolated color for the current frame.
      */
-    public int getAnimatedColor(UIProperty<Integer> prop, int target, float speed, float dt) {
+    public int getAnimatedColor(StyleKey<Integer> prop, int target, float speed, float dt) {
         // Sanity Check: Clamp dt
         float safeDt = Math.min(dt, 0.1f);
 

@@ -14,7 +14,7 @@ import org.lwjgl.opengl.GL30;
  *
  * @author xI-Mx-Ix
  */
-public class GLState {
+public class GlState {
 
     private int previousVaoId = -1;
     private int previousVboId = -1;

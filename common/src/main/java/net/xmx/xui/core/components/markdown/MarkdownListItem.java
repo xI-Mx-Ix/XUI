@@ -4,13 +4,13 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 
 /**
  * Represents a List Item in Markdown (- or *).
@@ -29,25 +29,25 @@ public class MarkdownListItem extends UIPanel {
      * @param contentWidth The available width.
      * @param font         The font to use.
      */
-    public MarkdownListItem(String rawText, float contentWidth, UIFont font) {
+    public MarkdownListItem(String rawText, float contentWidth, Font font) {
         // Transparent background
-        this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
-        this.setWidth(Constraints.pixel(contentWidth));
+        this.style().set(ThemeProperties.BACKGROUND_COLOR, 0x00000000);
+        this.setWidth(Layout.pixel(contentWidth));
 
         float bulletWidth = 15;
 
         // Bullet point needs the same font to match size/style
         UIText bullet = new UIText();
-        bullet.setText(UITextComponent.literal("•").setFont(font));
-        bullet.setX(Constraints.pixel(5));
+        bullet.setText(TextComponent.literal("•").setFont(font));
+        bullet.setX(Layout.pixel(5));
 
         float fontHeight = font.getLineHeight();
-        bullet.setY(Constraints.pixel(fontHeight));
+        bullet.setY(Layout.pixel(fontHeight));
         
         this.add(bullet);
 
         // Content
-        UITextComponent parsed = MarkdownUtils.parseInline(rawText);
+        TextComponent parsed = MarkdownUtils.parseInline(rawText);
         MarkdownUtils.applyFontRecursive(parsed, font);
 
         UIWrappedText content = MarkdownUtils.createWrappingText(
@@ -59,7 +59,7 @@ public class MarkdownListItem extends UIPanel {
         this.add(content);
         
         this.renderHeight = content.getHeight();
-        this.setHeight(Constraints.pixel(renderHeight));
+        this.setHeight(Layout.pixel(renderHeight));
     }
 
     /**

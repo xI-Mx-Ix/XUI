@@ -10,9 +10,9 @@ package net.xmx.xui.core;
  *
  * @author xI-Mx-Ix
  */
-public final class Constraints {
+public final class Layout {
 
-    private Constraints() {
+    private Layout() {
         // Prevent instantiation
     }
 
@@ -23,21 +23,21 @@ public final class Constraints {
     /**
      * Aligns the widget to the start (Left/Top) of the parent.
      */
-    public static UIConstraint alignStart() {
+    public static AxisFunc alignStart() {
         return (parentPos, parentSize, selfSize) -> parentPos;
     }
 
     /**
      * Aligns the widget to the end (Right/Bottom) of the parent.
      */
-    public static UIConstraint alignEnd() {
+    public static AxisFunc alignEnd() {
         return (parentPos, parentSize, selfSize) -> parentPos + parentSize - selfSize;
     }
 
     /**
      * Centers the widget within the parent.
      */
-    public static UIConstraint center() {
+    public static AxisFunc center() {
         return centerOffset(0f);
     }
 
@@ -45,7 +45,7 @@ public final class Constraints {
      * Centers the widget but adds a pixel offset.
      * @param offset Pixel shift (positive = right/down, negative = left/up).
      */
-    public static UIConstraint centerOffset(float offset) {
+    public static AxisFunc centerOffset(float offset) {
         return (parentPos, parentSize, selfSize) ->
                 parentPos + (parentSize - selfSize) / 2.0f + offset;
     }
@@ -57,14 +57,14 @@ public final class Constraints {
     /**
      * Sets a fixed pixel size or offset.
      */
-    public static UIConstraint pixel(float value) {
+    public static AxisFunc pixel(float value) {
         return (parentPos, parentSize, selfSize) -> parentPos + value;
     }
 
     /**
      * Adds padding from the start edge (Alias for pixel).
      */
-    public static UIConstraint paddingStart(float padding) {
+    public static AxisFunc paddingStart(float padding) {
         return pixel(padding);
     }
 
@@ -72,14 +72,14 @@ public final class Constraints {
      * Adds padding from the end edge.
      * Places the widget relative to the end of the parent minus the widget size.
      */
-    public static UIConstraint paddingEnd(float padding) {
+    public static AxisFunc paddingEnd(float padding) {
         return (parentPos, parentSize, selfSize) -> parentPos + parentSize - selfSize - padding;
     }
 
     /**
      * LEGACY SUPPORT: Alias for paddingEnd to fix compilation errors in existing screens.
      */
-    public static UIConstraint anchorEnd(float offset) {
+    public static AxisFunc anchorEnd(float offset) {
         return paddingEnd(offset);
     }
 
@@ -90,14 +90,14 @@ public final class Constraints {
     /**
      * Calculates size or position as a percentage of the parent.
      */
-    public static UIConstraint relative(float percent) {
+    public static AxisFunc relative(float percent) {
         return (parentPos, parentSize, selfSize) -> parentPos + (parentSize * percent);
     }
 
     /**
      * Like relative(), but clamps the percentage between 0.0 and 1.0.
      */
-    public static UIConstraint relativeClamped(float percent) {
+    public static AxisFunc relativeClamped(float percent) {
         return (parentPos, parentSize, selfSize) -> {
             float p = Math.max(0.0f, Math.min(1.0f, percent));
             return parentPos + (parentSize * p);
@@ -107,14 +107,14 @@ public final class Constraints {
     /**
      * Fills the remaining space.
      */
-    public static UIConstraint fill() {
+    public static AxisFunc fill() {
         return (parentPos, parentSize, selfSize) -> parentSize;
     }
 
     /**
      * Calculates position based on weighted distribution.
      */
-    public static UIConstraint weighted(float weight, float totalWeight) {
+    public static AxisFunc weighted(float weight, float totalWeight) {
         return (parentPos, parentSize, selfSize) -> {
             if (totalWeight == 0) return parentPos;
             return parentPos + (parentSize * (weight / totalWeight));
@@ -128,7 +128,7 @@ public final class Constraints {
     /**
      * Positions this widget relative to a sibling widget.
      */
-    public static UIConstraint sibling(UIWidget sibling, float offset, boolean vertical) {
+    public static AxisFunc sibling(UIWidget sibling, float offset, boolean vertical) {
         return (parentPos, parentSize, selfSize) -> {
             if (vertical) {
                 return sibling.getY() + sibling.getHeight() + offset;
@@ -141,7 +141,7 @@ public final class Constraints {
     /**
      * Positions relative to a sibling + offset by percentage of parent's size.
      */
-    public static UIConstraint afterPercent(UIWidget sibling, float percent, boolean vertical) {
+    public static AxisFunc afterPercent(UIWidget sibling, float percent, boolean vertical) {
         return (parentPos, parentSize, selfSize) -> {
             float basePos = vertical
                     ? sibling.getY() + sibling.getHeight()
@@ -153,14 +153,14 @@ public final class Constraints {
     /**
      * Aligns the baseline (Y-axis) of this widget to another widget + offset.
      */
-    public static UIConstraint baseline(UIWidget sibling, float offset) {
+    public static AxisFunc baseline(UIWidget sibling, float offset) {
         return (parentPos, parentSize, selfSize) -> sibling.getY() + offset;
     }
 
     /**
      * Clamps the result of another constraint between min and max PIXELS relative to parent start.
      */
-    public static UIConstraint clamp(UIConstraint base, float min, float max) {
+    public static AxisFunc clamp(AxisFunc base, float min, float max) {
         return (parentPos, parentSize, selfSize) -> {
             float calculated = base.calculate(parentPos, parentSize, selfSize);
             float absMin = parentPos + min;
@@ -172,7 +172,7 @@ public final class Constraints {
     /**
      * Mirrors the constraint across the parent axis.
      */
-    public static UIConstraint mirror(UIConstraint base) {
+    public static AxisFunc mirror(AxisFunc base) {
         return (parentPos, parentSize, selfSize) -> {
             float originalPos = base.calculate(parentPos, parentSize, selfSize);
             float distFromStart = originalPos - parentPos;
@@ -183,7 +183,7 @@ public final class Constraints {
     /**
      * Intended to be used with size constraints. Acts like alignStart.
      */
-    public static UIConstraint stretch() {
+    public static AxisFunc stretch() {
         return (parentPos, parentSize, selfSize) -> parentPos;
     }
 }

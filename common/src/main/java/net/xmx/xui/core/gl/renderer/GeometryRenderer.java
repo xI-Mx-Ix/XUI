@@ -5,35 +5,35 @@
 package net.xmx.xui.core.gl.renderer;
 
 import net.xmx.xui.core.gl.shader.impl.UICoreShader;
-import net.xmx.xui.core.gl.vertex.UIMeshBuffer;
-import net.xmx.xui.core.gl.vertex.UIVertexFormat;
+import net.xmx.xui.core.gl.vertex.MeshBuffer;
+import net.xmx.xui.core.gl.vertex.VertexFormat;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
 /**
  * Handles the generation and batching of geometric shapes (rectangles, rounded corners, outlines).
  * <p>
- * This renderer uses the generic {@link UIMeshBuffer} with the {@link UIVertexFormat#POS_COLOR} format.
+ * This renderer uses the generic {@link MeshBuffer} with the {@link VertexFormat#POS_COLOR} format.
  * It translates high-level drawing commands (like {@code drawRect}) into raw vertices
  * suitable for the {@link UICoreShader}.
  * </p>
  *
  * @author xI-Mx-Ix
  */
-public class UIGeometryRenderer {
+public class GeometryRenderer {
 
     private final UICoreShader shader;
-    private final UIMeshBuffer mesh;
+    private final MeshBuffer mesh;
     private final Matrix4f projectionMatrix = new Matrix4f();
 
     /**
      * Constructs a new geometry renderer.
      * Initializes the core shader and a mesh buffer optimized for position and color data.
      */
-    public UIGeometryRenderer() {
+    public GeometryRenderer() {
         this.shader = new UICoreShader();
         // Initialize the generic mesh buffer with Position + Color format
-        this.mesh = new UIMeshBuffer(UIVertexFormat.POS_COLOR);
+        this.mesh = new MeshBuffer(VertexFormat.POS_COLOR);
     }
 
     /**

@@ -4,10 +4,10 @@
  */
 package net.xmx.xui.core.font.layout;
 
-import net.xmx.xui.core.font.UIFontAtlas;
+import net.xmx.xui.core.font.FontAtlas;
 import net.xmx.xui.core.font.data.MSDFData;
-import net.xmx.xui.core.font.type.UICustomFont;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.font.type.CustomFont;
+import net.xmx.xui.core.text.TextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,20 +15,20 @@ import java.util.List;
 /**
  * Handles the calculation of text dimensions and layout.
  * Responsible for measuring strings and computing word-wrapping line breaks
- * based on the metrics provided by {@link UICustomFont}.
+ * based on the metrics provided by {@link CustomFont}.
  *
  * @author xI-Mx-Ix
  */
 public class TextLayoutEngine {
 
-    private final UICustomFont fontSystem;
+    private final CustomFont fontSystem;
     private final float fontSize;
 
     /**
      * @param fontSystem The font system to resolve fonts from (Regular/Bold/Italic).
      * @param fontSize   The logical size of the font (em size).
      */
-    public TextLayoutEngine(UICustomFont fontSystem, float fontSize) {
+    public TextLayoutEngine(CustomFont fontSystem, float fontSize) {
         this.fontSystem = fontSystem;
         this.fontSize = fontSize;
     }
@@ -39,9 +39,9 @@ public class TextLayoutEngine {
      * @param component The root component.
      * @return The total width in pixels.
      */
-    public float computeWidth(UITextComponent component) {
+    public float computeWidth(TextComponent component) {
         float width = getSingleComponentWidth(component);
-        for (UITextComponent sibling : component.getSiblings()) {
+        for (TextComponent sibling : component.getSiblings()) {
             width += computeWidth(sibling);
         }
         return width;
@@ -51,11 +51,11 @@ public class TextLayoutEngine {
      * Measures a single component's text string.
      * Ignores legacy formatting codes (§ + char) to ensure visual width matches logical width.
      */
-    private float getSingleComponentWidth(UITextComponent component) {
+    private float getSingleComponentWidth(TextComponent component) {
         String text = component.getText();
         if (text == null || text.isEmpty()) return 0;
 
-        UIFontAtlas font = fontSystem.resolveFont(component);
+        FontAtlas font = fontSystem.resolveFont(component);
         if (font == null) return 0;
 
         float width = 0;
@@ -85,20 +85,20 @@ public class TextLayoutEngine {
      * @param maxWidth The maximum width in pixels.
      * @return A list of {@link TextLine} objects containing the layout.
      */
-    public List<TextLine> computeWrappedLayout(UITextComponent root, float maxWidth) {
+    public List<TextLine> computeWrappedLayout(TextComponent root, float maxWidth) {
         List<TextLine> lines = new ArrayList<>();
         TextLine currentLine = new TextLine();
         float currentLineWidth = 0;
 
         // Flatten the tree for easier iteration
-        List<UITextComponent> flatList = new ArrayList<>();
+        List<TextComponent> flatList = new ArrayList<>();
         flatten(root, flatList);
 
-        for (UITextComponent comp : flatList) {
+        for (TextComponent comp : flatList) {
             String text = comp.getText();
             if (text == null || text.isEmpty()) continue;
 
-            UIFontAtlas font = fontSystem.resolveFont(comp);
+            FontAtlas font = fontSystem.resolveFont(comp);
             if (font == null) continue;
 
             // Split by boundaries while keeping the structure manageable
@@ -150,8 +150,8 @@ public class TextLayoutEngine {
         return lines;
     }
 
-    private void flatten(UITextComponent comp, List<UITextComponent> list) {
+    private void flatten(TextComponent comp, List<TextComponent> list) {
         list.add(comp);
-        for (UITextComponent s : comp.getSiblings()) flatten(s, list);
+        for (TextComponent s : comp.getSiblings()) flatten(s, list);
     }
 }

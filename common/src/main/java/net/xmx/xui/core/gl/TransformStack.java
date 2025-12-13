@@ -21,7 +21,7 @@ import java.util.Deque;
  *
  * @author xI-Mx-Ix
  */
-public class UITransformStack {
+public class TransformStack {
 
     /**
      * Internal storage for the transformation history.
@@ -31,7 +31,7 @@ public class UITransformStack {
     /**
      * Initializes the stack with a default identity state.
      */
-    public UITransformStack() {
+    public TransformStack() {
         Matrix4f model = new Matrix4f();
         Matrix3f normal = new Matrix3f();
         stack.add(new State(model, normal));

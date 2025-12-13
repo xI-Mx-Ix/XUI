@@ -8,14 +8,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.UIContext;
-import net.xmx.xui.core.anim.UIEasing;
+import net.xmx.xui.core.anim.Easing;
 import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.font.UIDefaultFonts;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.font.DefaultFonts;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 
 /**
  * Example screen demonstrating continuous Looping Animations with Movement and Rotation.
@@ -49,17 +49,17 @@ public class XUIMoveRotateScreen extends Screen {
 
     private void buildUI() {
         UIPanel root = uiContext.getRoot();
-        root.style().set(Properties.BACKGROUND_COLOR, 0xFF121212);
+        root.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF121212);
 
         // Create the Button that will move
         UIButton animatedBtn = new UIButton();
-        animatedBtn.setLabel(UITextComponent.literal("Catch Me!").setFont(UIDefaultFonts.getRoboto()));
+        animatedBtn.setLabel(TextComponent.literal("Catch Me!").setFont(DefaultFonts.getRoboto()));
         
         // Position it in the absolute center of the screen initially
-        animatedBtn.setX(Constraints.center())
-                   .setY(Constraints.center())
-                   .setWidth(Constraints.pixel(120))
-                   .setHeight(Constraints.pixel(40));
+        animatedBtn.setX(Layout.center())
+                   .setY(Layout.center())
+                   .setWidth(Layout.pixel(120))
+                   .setHeight(Layout.pixel(40));
 
         // Interaction logic (Rotated Hitbox test)
         animatedBtn.setOnClick(w -> System.out.println("You clicked the moving target!"));
@@ -74,25 +74,25 @@ public class XUIMoveRotateScreen extends Screen {
 
                 // --- 1. Rotation (Z-Axis / Roll) ---
                 // Start at 0 degrees at 0.0s
-                .setStart(Properties.ROTATION_Z, 0.0f)
+                .setStart(ThemeProperties.ROTATION_Z, 0.0f)
                 // Rotate to 360 degrees at 4.0s using Linear easing (constant speed)
-                .keyframe(4.0f, Properties.ROTATION_Z, 360.0f, UIEasing.LINEAR)
+                .keyframe(4.0f, ThemeProperties.ROTATION_Z, 360.0f, Easing.LINEAR)
 
                 // --- 2. Movement (Translation X) ---
                 // Start at 0 offset (Center)
-                .setStart(Properties.TRANSLATE_X, 0.0f)
+                .setStart(ThemeProperties.TRANSLATE_X, 0.0f)
                 
                 // At 1.0s: Move Right (+100px)
-                .keyframe(1.0f, Properties.TRANSLATE_X, 100.0f, UIEasing.EASE_IN_OUT_QUAD)
+                .keyframe(1.0f, ThemeProperties.TRANSLATE_X, 100.0f, Easing.EASE_IN_OUT_QUAD)
                 
                 // At 2.0s: Move back to Center (0px)
-                .keyframe(2.0f, Properties.TRANSLATE_X, 0.0f, UIEasing.EASE_IN_OUT_QUAD)
+                .keyframe(2.0f, ThemeProperties.TRANSLATE_X, 0.0f, Easing.EASE_IN_OUT_QUAD)
                 
                 // At 3.0s: Move Left (-100px)
-                .keyframe(3.0f, Properties.TRANSLATE_X, -100.0f, UIEasing.EASE_IN_OUT_QUAD)
+                .keyframe(3.0f, ThemeProperties.TRANSLATE_X, -100.0f, Easing.EASE_IN_OUT_QUAD)
                 
                 // At 4.0s: Move back to Center (0px) to complete the loop smoothly
-                .keyframe(4.0f, Properties.TRANSLATE_X, 0.0f, UIEasing.EASE_IN_OUT_QUAD)
+                .keyframe(4.0f, ThemeProperties.TRANSLATE_X, 0.0f, Easing.EASE_IN_OUT_QUAD)
 
                 .start();
 

@@ -18,7 +18,7 @@ package net.xmx.xui.core.anim;
  *
  * @author xI-Mx-Ix
  */
-public record Keyframe<T>(float time, T value, UIEasing easing) implements Comparable<Keyframe<T>> {
+public record Keyframe<T>(float time, T value, Easing easing) implements Comparable<Keyframe<T>> {
 
     /**
      * Compares this keyframe with another based on time.

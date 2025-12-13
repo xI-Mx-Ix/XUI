@@ -5,12 +5,12 @@
 package net.xmx.xui.core.components;
 
 import net.minecraft.client.Minecraft;
-import net.xmx.xui.core.text.UITextComponent;
-import net.xmx.xui.core.gl.UIRenderInterface;
+import net.xmx.xui.core.style.InteractionState;
+import net.xmx.xui.core.style.StyleKey;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
+import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.style.UIProperty;
-import net.xmx.xui.core.style.UIState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,9 +29,9 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     /**
      *  Color of the chevron/arrow indicator on the right side.
      */
-    public static final UIProperty<Integer> ARROW_COLOR = new UIProperty<>("dropdown_arrow_color", 0xFFAAAAAA);
+    public static final StyleKey<Integer> ARROW_COLOR = new StyleKey<>("dropdown_arrow_color", 0xFFAAAAAA);
 
-    private final List<UITextComponent> options = new ArrayList<>();
+    private final List<TextComponent> options = new ArrayList<>();
 
     private int selectedIndex = -1;
     private boolean isOpen = false;
@@ -47,7 +47,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
     /**
      * Constructs an empty dropdown.
-     * Add options using {@link #addOption(UITextComponent)} or {@link #setOptions(List)}.
+     * Add options using {@link #addOption(TextComponent)} or {@link #setOptions(List)}.
      */
     public UIDropdown() {
         setupDefaultStyles();
@@ -59,7 +59,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      * @param option The option component to add.
      * @return This dropdown instance.
      */
-    public UIDropdown addOption(UITextComponent option) {
+    public UIDropdown addOption(TextComponent option) {
         this.options.add(option);
         if (this.selectedIndex == -1) {
             this.selectedIndex = 0;
@@ -73,7 +73,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      * @param options The list of options.
      * @return This dropdown instance.
      */
-    public UIDropdown setOptions(List<UITextComponent> options) {
+    public UIDropdown setOptions(List<TextComponent> options) {
         this.options.clear();
         this.options.addAll(options);
         if (!this.options.isEmpty()) {
@@ -87,39 +87,39 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     private void setupDefaultStyles() {
         this.style()
                 .setTransitionSpeed(15.0f)
-                .set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, 0xFF202020)
-                .set(UIState.DEFAULT, Properties.BORDER_COLOR, 0xFFFFFFFF)
-                .set(UIState.DEFAULT, Properties.BORDER_RADIUS, 4.0f)
-                .set(UIState.DEFAULT, Properties.BORDER_THICKNESS, 1.0f)
-                .set(UIState.DEFAULT, Properties.TEXT_COLOR, 0xFFE0E0E0)
-                .set(UIState.DEFAULT, ARROW_COLOR, 0xFFAAAAAA)
+                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF202020)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFFFFFFFF)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 4.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)
+                .set(InteractionState.DEFAULT, ARROW_COLOR, 0xFFAAAAAA)
 
                 // This color is drawn over the option to make it "lighter".
                 // 0x40 is alpha (approx 25% opacity). White overlay = lighter background.
-                .set(UIState.DEFAULT, Properties.HOVER_COLOR, 0x40FFFFFF)
+                .set(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR, 0x40FFFFFF)
 
-                .set(UIState.HOVER, Properties.BACKGROUND_COLOR, 0xFF303030)
-                .set(UIState.HOVER, ARROW_COLOR, 0xFFFFFFFF)
+                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xFF303030)
+                .set(InteractionState.HOVER, ARROW_COLOR, 0xFFFFFFFF)
 
-                .set(UIState.ACTIVE, Properties.BACKGROUND_COLOR, 0xFF101010);
+                .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, 0xFF101010);
     }
 
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
+    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         updateOverlayGeometry();
 
         // Calculate the background color for the header based on the current interaction state (e.g. Hover)
-        int headerBgColor = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
+        int headerBgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
 
         // Calculate the background color for the list overlay.
         // This always uses the DEFAULT state to ensure the list remains dark even when the header is hovered.
-        int listBgColor = getColor(Properties.BACKGROUND_COLOR, UIState.DEFAULT, deltaTime);
+        int listBgColor = getColor(ThemeProperties.BACKGROUND_COLOR, InteractionState.DEFAULT, deltaTime);
 
-        int borderColor = getColor(Properties.BORDER_COLOR, state, deltaTime);
-        int textColor = getColor(Properties.TEXT_COLOR, state, deltaTime);
+        int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
+        int textColor = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);
         int arrowColor = getColor(ARROW_COLOR, state, deltaTime);
-        float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);
-        float borderThick = getFloat(Properties.BORDER_THICKNESS, state, deltaTime);
+        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+        float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
 
         float rTL = radius, rTR = radius, rBR = radius, rBL = radius;
 
@@ -142,7 +142,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         }
 
         if (selectedIndex >= 0 && selectedIndex < options.size()) {
-            float textY = y + (height - UITextComponent.getFontHeight()) / 2.0f;
+            float textY = y + (height - TextComponent.getFontHeight()) / 2.0f;
             renderer.drawText(options.get(selectedIndex), x + 5, textY, textColor, false);
         }
 
@@ -179,12 +179,12 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      * @param mouseX       Absolute mouse X.
      * @param mouseY       Absolute mouse Y.
      * @param partialTicks Animation time delta.
-     * @param bgColor      The background color for the list (usually UIState.DEFAULT).
+     * @param bgColor      The background color for the list (usually InteractionState.DEFAULT).
      * @param borderColor  The border color.
      * @param textColor    The text color.
      * @param radius       The border radius to apply to the outer corners.
      */
-    private void renderDropdownOverlay(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks,
+    private void renderDropdownOverlay(RenderInterface renderer, int mouseX, int mouseY, float partialTicks,
                                        int bgColor, int borderColor, int textColor, float radius) {
 
         float rTL = radius, rTR = radius, rBR = radius, rBL = radius;
@@ -204,7 +204,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         renderer.drawOutline(x, overlayY, width, overlayHeight, borderColor, 1.0f, rTL, rTR, rBR, rBL);
 
         // Retrieve the base hover overlay color (usually semi-transparent white)
-        int baseHoverColor = style().getValue(UIState.DEFAULT, Properties.HOVER_COLOR);
+        int baseHoverColor = style().getValue(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR);
 
         for (int i = 0; i < options.size(); i++) {
             float optY = overlayY + (i * optionHeight);
@@ -217,8 +217,8 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 renderer.drawRect(x, optY, width, optionHeight, baseHoverColor, 0);
             }
 
-            UITextComponent text = options.get(i);
-            float textY = optY + (optionHeight - UITextComponent.getFontHeight()) / 2.0f;
+            TextComponent text = options.get(i);
+            float textY = optY + (optionHeight - TextComponent.getFontHeight()) / 2.0f;
             renderer.drawText(text, x + 5, textY, textColor, false);
         }
     }
@@ -230,7 +230,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         }
     }
 
-    private void drawArrow(UIRenderInterface renderer, float ax, float ay, int color, boolean pointUp) {
+    private void drawArrow(RenderInterface renderer, float ax, float ay, int color, boolean pointUp) {
         if (pointUp) {
             for (int i = 0; i < 5; i++) {
                 renderer.drawRect(ax - i, ay + 4 - i, (i * 2) + 1, 1, color, 0);

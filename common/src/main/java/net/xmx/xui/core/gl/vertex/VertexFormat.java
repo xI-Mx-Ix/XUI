@@ -15,30 +15,30 @@ import java.util.List;
  *
  * @author xI-Mx-Ix
  */
-public class UIVertexFormat {
+public class VertexFormat {
 
     // --- Standard Formats ---
 
     /**
      * Format: Position (3) + Color (4)
      */
-    public static final UIVertexFormat POS_COLOR = new UIVertexFormat(
-            new UIVertexAttribute(0, 3),
-            new UIVertexAttribute(1, 4)
+    public static final VertexFormat POS_COLOR = new VertexFormat(
+            new VertexAttribute(0, 3),
+            new VertexAttribute(1, 4)
     );
 
     /**
      *  Format: Position (3) + Color (4) + UV (2)
      */
-    public static final UIVertexFormat POS_COLOR_UV = new UIVertexFormat(
-            new UIVertexAttribute(0, 3),
-            new UIVertexAttribute(1, 4),
-            new UIVertexAttribute(2, 2)
+    public static final VertexFormat POS_COLOR_UV = new VertexFormat(
+            new VertexAttribute(0, 3),
+            new VertexAttribute(1, 4),
+            new VertexAttribute(2, 2)
     );
 
     // --- Implementation ---
 
-    private final List<UIVertexAttribute> attributes;
+    private final List<VertexAttribute> attributes;
     private final int strideBytes;
     private final int strideFloats;
 
@@ -47,11 +47,11 @@ public class UIVertexFormat {
      *
      * @param attributes The attributes in order.
      */
-    public UIVertexFormat(UIVertexAttribute... attributes) {
+    public VertexFormat(VertexAttribute... attributes) {
         this.attributes = List.of(attributes);
 
         int totalFloats = 0;
-        for (UIVertexAttribute attr : this.attributes) {
+        for (VertexAttribute attr : this.attributes) {
             totalFloats += attr.count();
         }
         this.strideFloats = totalFloats;
@@ -64,7 +64,7 @@ public class UIVertexFormat {
      */
     public void enableAttributes() {
         long offset = 0;
-        for (UIVertexAttribute attr : attributes) {
+        for (VertexAttribute attr : attributes) {
             GL20.glVertexAttribPointer(
                     attr.index(),
                     attr.count(),

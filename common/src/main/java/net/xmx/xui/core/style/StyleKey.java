@@ -11,11 +11,11 @@ package net.xmx.xui.core.style;
  *
  * @author xI-Mx-Ix
  */
-public class UIProperty<T> {
+public class StyleKey<T> {
     private final String name;
     private final T defaultValue;
 
-    public UIProperty(String name, T defaultValue) {
+    public StyleKey(String name, T defaultValue) {
         this.name = name;
         this.defaultValue = defaultValue;
     }

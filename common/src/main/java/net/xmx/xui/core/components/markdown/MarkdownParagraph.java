@@ -4,12 +4,12 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.xmx.xui.core.Constraints;
+import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.util.URLUtil;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
@@ -28,7 +28,7 @@ public class MarkdownParagraph extends UIPanel {
     private float currentLayoutY = 0;
     private final float contentWidth;
     private final float renderHeight;
-    private final UIFont font;
+    private final Font font;
 
     /**
      * Constructs a paragraph component.
@@ -37,11 +37,11 @@ public class MarkdownParagraph extends UIPanel {
      * @param contentWidth The available width.
      * @param font         The font to use for text rendering.
      */
-    public MarkdownParagraph(String rawText, float contentWidth, UIFont font) {
+    public MarkdownParagraph(String rawText, float contentWidth, Font font) {
         this.contentWidth = contentWidth;
         this.font = font;
-        this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
-        this.setWidth(Constraints.pixel(contentWidth));
+        this.style().set(ThemeProperties.BACKGROUND_COLOR, 0x00000000);
+        this.setWidth(Layout.pixel(contentWidth));
 
         buildFlow(rawText);
 
@@ -49,7 +49,7 @@ public class MarkdownParagraph extends UIPanel {
         // Use the font's line height to determine the final height correctly
         float lineHeight = font.getLineHeight();
         this.renderHeight = currentLayoutY + lineHeight;
-        this.setHeight(Constraints.pixel(renderHeight));
+        this.setHeight(Layout.pixel(renderHeight));
     }
 
     /**
@@ -103,7 +103,7 @@ public class MarkdownParagraph extends UIPanel {
             if (word.isEmpty()) continue;
 
             // Parse styles (bold/italic/code) using MarkdownUtils
-            UITextComponent wordComp = MarkdownUtils.parseInline(word);
+            TextComponent wordComp = MarkdownUtils.parseInline(word);
             
             // IMPORTANT: Apply the font to the parsed component tree
             MarkdownUtils.applyFontRecursive(wordComp, this.font);
@@ -114,7 +114,7 @@ public class MarkdownParagraph extends UIPanel {
             }
 
             // Calculate width using the component's font (which we just set)
-            int wordWidth = UITextComponent.getTextWidth(wordComp);
+            int wordWidth = TextComponent.getTextWidth(wordComp);
 
             // Check if we need to wrap
             if (currentX + wordWidth > contentWidth) {
@@ -133,15 +133,15 @@ public class MarkdownParagraph extends UIPanel {
     /**
      * Creates and adds a small text widget for a specific segment (word or link).
      */
-    private void addSegmentWidget(UITextComponent content, float x, float y, int w, float h, boolean isLink, String url) {
+    private void addSegmentWidget(TextComponent content, float x, float y, int w, float h, boolean isLink, String url) {
         UIText widget = new UIText();
         widget.setText(content);
 
-        widget.setX(Constraints.pixel(x));
-        widget.setY(Constraints.pixel(y));
-        widget.setWidth(Constraints.pixel(w));
+        widget.setX(Layout.pixel(x));
+        widget.setY(Layout.pixel(y));
+        widget.setWidth(Layout.pixel(w));
         // We set height slightly larger to ensure hitboxes work nicely
-        widget.setHeight(Constraints.pixel(h));
+        widget.setHeight(Layout.pixel(h));
 
         if (isLink && url != null) {
             // Hover: Change cursor to Hand

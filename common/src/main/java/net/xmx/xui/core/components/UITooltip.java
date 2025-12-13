@@ -4,13 +4,13 @@
  */
 package net.xmx.xui.core.components;
 
-import net.xmx.xui.core.text.UITextComponent;
-import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.gl.UIRenderInterface;
+import net.xmx.xui.core.Layout;
+import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.style.InteractionState;
+import net.xmx.xui.core.style.StyleKey;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.core.UIWidget;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.style.UIProperty;
-import net.xmx.xui.core.style.UIState;
 import net.minecraft.client.Minecraft;
 
 import java.util.List;
@@ -24,32 +24,32 @@ import java.util.List;
  * - Fully styled via UIProperties (timing, offsets, padding).
  *
  * Usage: Create the tooltip, set the target via {@link #setTarget(UIWidget)},
- * set content via {@link #setContent(UITextComponent)}, then add the tooltip
+ * set content via {@link #setContent(TextComponent)}, then add the tooltip
  * to the root container (not the target itself) to ensure proper Z-layering.
  *
  * @author xI-Mx-Ix
  */
 public class UITooltip extends UIPanel {
 
-    // --- Tooltip Specific Properties ---
+    // --- Tooltip Specific ThemeProperties ---
 
     /** Time in seconds the mouse must hover before the tooltip appears. */
-    public static final UIProperty<Float> SHOW_DELAY = new UIProperty<>("tooltip_show_delay", 0.5f);
+    public static final StyleKey<Float> SHOW_DELAY = new StyleKey<>("tooltip_show_delay", 0.5f);
 
     /** Duration of the fade-in animation in seconds. */
-    public static final UIProperty<Float> FADE_IN_TIME = new UIProperty<>("tooltip_fade_in_time", 0.2f);
+    public static final StyleKey<Float> FADE_IN_TIME = new StyleKey<>("tooltip_fade_in_time", 0.2f);
 
     /** Duration of the fade-out animation in seconds. */
-    public static final UIProperty<Float> FADE_OUT_TIME = new UIProperty<>("tooltip_fade_out_time", 0.2f);
+    public static final StyleKey<Float> FADE_OUT_TIME = new StyleKey<>("tooltip_fade_out_time", 0.2f);
 
     /** Horizontal offset from the mouse cursor in pixels. */
-    public static final UIProperty<Float> OFFSET_X = new UIProperty<>("tooltip_offset_x", 12.0f);
+    public static final StyleKey<Float> OFFSET_X = new StyleKey<>("tooltip_offset_x", 12.0f);
 
     /** Vertical offset from the mouse cursor in pixels. */
-    public static final UIProperty<Float> OFFSET_Y = new UIProperty<>("tooltip_offset_y", -12.0f);
+    public static final StyleKey<Float> OFFSET_Y = new StyleKey<>("tooltip_offset_y", -12.0f);
 
     /** Padding around the text content inside the tooltip frame. */
-    public static final UIProperty<Float> PADDING = new UIProperty<>("tooltip_padding", 5.0f);
+    public static final StyleKey<Float> PADDING = new StyleKey<>("tooltip_padding", 5.0f);
 
     private UIWidget target;
     private final UIWrappedText contentText;
@@ -69,7 +69,7 @@ public class UITooltip extends UIPanel {
 
     /**
      * Constructs an empty tooltip.
-     * You must call {@link #setTarget(UIWidget)} and {@link #setContent(UITextComponent)}
+     * You must call {@link #setTarget(UIWidget)} and {@link #setContent(TextComponent)}
      * before it will function.
      */
     public UITooltip() {
@@ -77,10 +77,10 @@ public class UITooltip extends UIPanel {
 
         // Default Tooltip Styling
         this.style()
-                .set(Properties.BACKGROUND_COLOR, 0xF0101010) // Dark semi-transparent
-                .set(Properties.BORDER_COLOR, 0x505000FF)     // Purple-ish border
-                .set(Properties.BORDER_THICKNESS, 1.0f)
-                .set(Properties.BORDER_RADIUS, 4.0f)
+                .set(ThemeProperties.BACKGROUND_COLOR, 0xF0101010) // Dark semi-transparent
+                .set(ThemeProperties.BORDER_COLOR, 0x505000FF)     // Purple-ish border
+                .set(ThemeProperties.BORDER_THICKNESS, 1.0f)
+                .set(ThemeProperties.BORDER_RADIUS, 4.0f)
                 // Default specific properties
                 .set(SHOW_DELAY, 0.5f)
                 .set(FADE_IN_TIME, 0.2f)
@@ -114,7 +114,7 @@ public class UITooltip extends UIPanel {
      * @param text The component text.
      * @return This tooltip instance.
      */
-    public UITooltip setContent(UITextComponent text) {
+    public UITooltip setContent(TextComponent text) {
         this.contentText.setText(text);
         return this;
     }
@@ -136,9 +136,9 @@ public class UITooltip extends UIPanel {
      * @param lines List of components.
      * @return This tooltip instance.
      */
-    public UITooltip setLines(List<UITextComponent> lines) {
-        this.contentText.setText(UITextComponent.empty()); // Clear initial
-        for (UITextComponent line : lines) {
+    public UITooltip setLines(List<TextComponent> lines) {
+        this.contentText.setText(TextComponent.empty()); // Clear initial
+        for (TextComponent line : lines) {
             this.contentText.addText(line, false);
         }
         return this;
@@ -149,7 +149,7 @@ public class UITooltip extends UIPanel {
      * @param seconds Time in seconds.
      */
     public UITooltip setDelay(float seconds) {
-        this.style().set(UIState.DEFAULT, SHOW_DELAY, seconds);
+        this.style().set(InteractionState.DEFAULT, SHOW_DELAY, seconds);
         return this;
     }
 
@@ -159,8 +159,8 @@ public class UITooltip extends UIPanel {
      * @param fadeOut Fade out duration in seconds.
      */
     public UITooltip setFadeTimes(float fadeIn, float fadeOut) {
-        this.style().set(UIState.DEFAULT, FADE_IN_TIME, fadeIn);
-        this.style().set(UIState.DEFAULT, FADE_OUT_TIME, fadeOut);
+        this.style().set(InteractionState.DEFAULT, FADE_IN_TIME, fadeIn);
+        this.style().set(InteractionState.DEFAULT, FADE_OUT_TIME, fadeOut);
         return this;
     }
 
@@ -168,19 +168,19 @@ public class UITooltip extends UIPanel {
      * Configures the mouse cursor offset via the style system.
      */
     public UITooltip setOffset(float x, float y) {
-        this.style().set(UIState.DEFAULT, OFFSET_X, x);
-        this.style().set(UIState.DEFAULT, OFFSET_Y, y);
+        this.style().set(InteractionState.DEFAULT, OFFSET_X, x);
+        this.style().set(InteractionState.DEFAULT, OFFSET_Y, y);
         return this;
     }
 
     @Override
     public void layout() {
         // Retrieve dynamic padding from style
-        float pad = style().getValue(UIState.DEFAULT, PADDING);
+        float pad = style().getValue(InteractionState.DEFAULT, PADDING);
 
         // Update internal text position
-        this.contentText.setX(Constraints.pixel(pad));
-        this.contentText.setY(Constraints.pixel(pad));
+        this.contentText.setX(Layout.pixel(pad));
+        this.contentText.setY(Layout.pixel(pad));
 
         // 1. Let the text calculate its required size first
         this.contentText.layout();
@@ -189,8 +189,8 @@ public class UITooltip extends UIPanel {
         float requiredWidth = this.contentText.getWidth() + (pad * 2);
         float requiredHeight = this.contentText.getHeight() + (pad * 2);
 
-        this.setWidth(Constraints.pixel(requiredWidth));
-        this.setHeight(Constraints.pixel(requiredHeight));
+        this.setWidth(Layout.pixel(requiredWidth));
+        this.setHeight(Layout.pixel(requiredHeight));
 
         // 3. Update super layout (positions children)
         super.layout();
@@ -201,7 +201,7 @@ public class UITooltip extends UIPanel {
      * This avoids recursion issues by wrapping the call to super.render().
      */
     @Override
-    public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime) {
+    public void render(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime) {
         // If no target is set, do not process logic
         if (target == null) return;
 
@@ -217,19 +217,19 @@ public class UITooltip extends UIPanel {
         calculateSmartPosition(mouseX, mouseY);
 
         // Apply Opacity to Style for rendering
-        float previousOpacity = style().getValue(UIState.DEFAULT, Properties.OPACITY);
-        style().set(UIState.DEFAULT, Properties.OPACITY, currentOpacity);
+        float previousOpacity = style().getValue(InteractionState.DEFAULT, ThemeProperties.OPACITY);
+        style().set(InteractionState.DEFAULT, ThemeProperties.OPACITY, currentOpacity);
 
         // Render Background (UIPanel logic)
         // We must manually apply opacity to colors because UIPanel pulls raw colors
-        int baseBg = style().getValue(UIState.DEFAULT, Properties.BACKGROUND_COLOR);
-        int baseBorder = style().getValue(UIState.DEFAULT, Properties.BORDER_COLOR);
-        int baseText = contentText.style().getValue(UIState.DEFAULT, Properties.TEXT_COLOR);
+        int baseBg = style().getValue(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR);
+        int baseBorder = style().getValue(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR);
+        int baseText = contentText.style().getValue(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR);
 
         // Temporarily inject alpha-modded colors into the style for drawSelf
-        style().set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, applyAlpha(baseBg, currentOpacity));
-        style().set(UIState.DEFAULT, Properties.BORDER_COLOR, applyAlpha(baseBorder, currentOpacity));
-        contentText.style().set(UIState.DEFAULT, Properties.TEXT_COLOR, applyAlpha(baseText, currentOpacity));
+        style().set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, applyAlpha(baseBg, currentOpacity));
+        style().set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, applyAlpha(baseBorder, currentOpacity));
+        contentText.style().set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, applyAlpha(baseText, currentOpacity));
 
         // Render Self (Background via drawSelf) and Children (Text)
         // We push Z translation to ensure tooltip is on top of everything
@@ -242,10 +242,10 @@ public class UITooltip extends UIPanel {
         renderer.translate(0, 0, -500.0f);
 
         // Restore original style values
-        style().set(UIState.DEFAULT, Properties.BACKGROUND_COLOR, baseBg);
-        style().set(UIState.DEFAULT, Properties.BORDER_COLOR, baseBorder);
-        style().set(UIState.DEFAULT, Properties.OPACITY, previousOpacity);
-        contentText.style().set(UIState.DEFAULT, Properties.TEXT_COLOR, baseText);
+        style().set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, baseBg);
+        style().set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, baseBorder);
+        style().set(InteractionState.DEFAULT, ThemeProperties.OPACITY, previousOpacity);
+        contentText.style().set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, baseText);
     }
 
     /**
@@ -253,7 +253,7 @@ public class UITooltip extends UIPanel {
      * Delegates to UIPanel implementation to avoid code duplication and recursion.
      */
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
+    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         super.drawSelf(renderer, mouseX, mouseY, partialTicks, deltaTime, state);
     }
 
@@ -262,9 +262,9 @@ public class UITooltip extends UIPanel {
         boolean targetHovered = target.isVisible() && target.isMouseOver(mouseX, mouseY);
 
         // Retrieve timing from style
-        float delay = style().getValue(UIState.DEFAULT, SHOW_DELAY);
-        float fadeInTime = style().getValue(UIState.DEFAULT, FADE_IN_TIME);
-        float fadeOutTime = style().getValue(UIState.DEFAULT, FADE_OUT_TIME);
+        float delay = style().getValue(InteractionState.DEFAULT, SHOW_DELAY);
+        float fadeInTime = style().getValue(InteractionState.DEFAULT, FADE_IN_TIME);
+        float fadeOutTime = style().getValue(InteractionState.DEFAULT, FADE_OUT_TIME);
 
         switch (state) {
             case HIDDEN:
@@ -346,8 +346,8 @@ public class UITooltip extends UIPanel {
         }
 
         // Retrieve offsets from style
-        float offX = style().getValue(UIState.DEFAULT, OFFSET_X);
-        float offY = style().getValue(UIState.DEFAULT, OFFSET_Y);
+        float offX = style().getValue(InteractionState.DEFAULT, OFFSET_X);
+        float offY = style().getValue(InteractionState.DEFAULT, OFFSET_Y);
 
         // Start with offset position
         float newX = mouseX + offX;
@@ -367,8 +367,8 @@ public class UITooltip extends UIPanel {
         if (newY < 5) newY = 5;
 
         // Update constraints directly for the rendering pass
-        this.xConstraint = Constraints.pixel(newX);
-        this.yConstraint = Constraints.pixel(newY);
+        this.xConstraint = Layout.pixel(newX);
+        this.yConstraint = Layout.pixel(newY);
 
         // Update layout immediately for self and children
         // Do NOT loop over children here; layout() propagates automatically.

@@ -9,7 +9,7 @@ package net.xmx.xui.core.style;
  *
  * @author xI-Mx-Ix
  */
-public enum UIState {
+public enum InteractionState {
     DEFAULT,
     HOVER,
     ACTIVE,

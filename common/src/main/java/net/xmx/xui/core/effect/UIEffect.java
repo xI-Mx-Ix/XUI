@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.effect;
 
-import net.xmx.xui.core.gl.UIRenderInterface;
+import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
 
 /**
@@ -27,7 +27,7 @@ public interface UIEffect {
      * @param renderer The render interface.
      * @param widget   The widget being rendered.
      */
-    void apply(UIRenderInterface renderer, UIWidget widget);
+    void apply(RenderInterface renderer, UIWidget widget);
 
     /**
      * Applied after the widget and its children have finished rendering.
@@ -36,5 +36,5 @@ public interface UIEffect {
      * @param renderer The render interface.
      * @param widget   The widget being rendered.
      */
-    void revert(UIRenderInterface renderer, UIWidget widget);
+    void revert(RenderInterface renderer, UIWidget widget);
 }

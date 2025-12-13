@@ -7,7 +7,7 @@ package net.xmx.xui.core;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.impl.UIRenderImpl;
+import net.xmx.xui.impl.RenderImpl;
 
 /**
  * Manages the rendering context, scaling logic, and input transformation for a UI tree.
@@ -75,8 +75,8 @@ public class UIContext {
         this.root = new UIPanel();
         // The root panel serves as the canvas and starts at the top-left corner.
         // Its width and height are updated dynamically in updateLayout().
-        this.root.setX(Constraints.pixel(0));
-        this.root.setY(Constraints.pixel(0));
+        this.root.setX(Layout.pixel(0));
+        this.root.setY(Layout.pixel(0));
     }
 
     /**
@@ -116,8 +116,8 @@ public class UIContext {
 
         // Apply these new dimensions to the root container.
         // This ensures the root panel always fills the "virtual" screen.
-        root.setWidth(Constraints.pixel(logicalWidth));
-        root.setHeight(Constraints.pixel(logicalHeight));
+        root.setWidth(Layout.pixel(logicalWidth));
+        root.setHeight(Layout.pixel(logicalHeight));
 
         // Trigger a full layout recalculation for the entire widget tree
         // so that children can adjust their positions relative to the new root size.
@@ -130,7 +130,7 @@ public class UIContext {
      * This method orchestrates the rendering process by:
      * <ol>
      *   <li>Calculating the {@code deltaTime} based on wall-clock time for animations.</li>
-     *   <li>Injecting the custom {@code scaleFactor} into the {@link UIRenderImpl}.</li>
+     *   <li>Injecting the custom {@code scaleFactor} into the {@link RenderImpl}.</li>
      *   <li>Transforming the raw Minecraft mouse coordinates into logical coordinates.</li>
      *   <li>Creating a new {@link GuiGraphics} instance with a scaled {@code PoseStack}
      *       to ensure text rendering matches the custom coordinate system.</li>
@@ -151,7 +151,7 @@ public class UIContext {
         // 1. Set the custom scale in the render implementation.
         // This allows the UIRenderer (which handles shaders/VBOs) to project geometry correctly
         // and perform pixel snapping.
-        UIRenderImpl.getInstance().setScale(this.scaleFactor);
+        RenderImpl.getInstance().setScale(this.scaleFactor);
 
         // 2. Transform input coordinates from Minecraft's GUI space to our custom logical space.
         // This is necessary because hit-testing (hover effects) happens during the render pass
@@ -176,11 +176,11 @@ public class UIContext {
 
         // Inject this specific GuiGraphics instance into the renderer implementation.
         // This allows widgets (like Text or EditBox) to draw text using this transformed stack.
-        UIRenderImpl.getInstance().setGuiGraphics(graphics);
+        RenderImpl.getInstance().setGuiGraphics(graphics);
 
         // Render the root widget and all its descendants recursively.
         // We pass BOTH partialTick (for render interpolation) and deltaTime (for state updates).
-        root.render(UIRenderImpl.getInstance(), (int) logicalMouseX, (int) logicalMouseY, partialTick, deltaTime);
+        root.render(RenderImpl.getInstance(), (int) logicalMouseX, (int) logicalMouseY, partialTick, deltaTime);
 
         // Flush the render buffers (endBatch) before popping the pose.
         // This forces any text or geometry buffered by GuiGraphics to be drawn to the screen

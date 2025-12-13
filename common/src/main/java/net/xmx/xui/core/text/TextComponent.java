@@ -4,8 +4,8 @@
  */
 package net.xmx.xui.core.text;
 
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.font.UIDefaultFonts;
+import net.xmx.xui.core.font.DefaultFonts;
+import net.xmx.xui.core.font.Font;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,10 +20,10 @@ import java.util.List;
  *
  * @author xI-Mx-Ix
  */
-public class UITextComponent {
+public class TextComponent {
 
     private String text;
-    private UIFont font;
+    private Font font;
 
     // Styling properties (null means inherit from parent/default)
     private Integer color = null;
@@ -34,15 +34,15 @@ public class UITextComponent {
     private Boolean obfuscated = null;
 
     // Hierarchy
-    private final List<UITextComponent> siblings = new ArrayList<>();
+    private final List<TextComponent> siblings = new ArrayList<>();
 
     /**
      * Constructs a new component with the Vanilla font by default.
      *
      * @param text The text content.
      */
-    public UITextComponent(String text) {
-        this(text, UIDefaultFonts.getVanilla());
+    public TextComponent(String text) {
+        this(text, DefaultFonts.getVanilla());
     }
 
     /**
@@ -51,7 +51,7 @@ public class UITextComponent {
      * @param text The text content.
      * @param font The font family to use.
      */
-    public UITextComponent(String text, UIFont font) {
+    public TextComponent(String text, Font font) {
         this.text = text;
         this.font = font;
     }
@@ -62,8 +62,8 @@ public class UITextComponent {
      * @param text The text.
      * @return The new component.
      */
-    public static UITextComponent literal(String text) {
-        return new UITextComponent(text);
+    public static TextComponent literal(String text) {
+        return new TextComponent(text);
     }
 
     /**
@@ -71,8 +71,8 @@ public class UITextComponent {
      *
      * @return An empty component.
      */
-    public static UITextComponent empty() {
-        return new UITextComponent("");
+    public static TextComponent empty() {
+        return new TextComponent("");
     }
 
     /**
@@ -82,7 +82,7 @@ public class UITextComponent {
      * @param sibling The component to append.
      * @return This component for chaining.
      */
-    public UITextComponent append(UITextComponent sibling) {
+    public TextComponent append(TextComponent sibling) {
         this.siblings.add(sibling);
         return this;
     }
@@ -94,8 +94,8 @@ public class UITextComponent {
      * @param text The text to append.
      * @return This component for chaining.
      */
-    public UITextComponent append(String text) {
-        this.siblings.add(new UITextComponent(text, this.font));
+    public TextComponent append(String text) {
+        this.siblings.add(new TextComponent(text, this.font));
         return this;
     }
 
@@ -105,8 +105,8 @@ public class UITextComponent {
      *
      * @return A copy of this component.
      */
-    public UITextComponent copy() {
-        UITextComponent copy = new UITextComponent(this.text, this.font);
+    public TextComponent copy() {
+        TextComponent copy = new TextComponent(this.text, this.font);
         copy.color = this.color;
         copy.bold = this.bold;
         copy.italic = this.italic;
@@ -122,12 +122,12 @@ public class UITextComponent {
         return text;
     }
 
-    public UITextComponent setText(String text) {
+    public TextComponent setText(String text) {
         this.text = text;
         return this;
     }
 
-    public UIFont getFont() {
+    public Font getFont() {
         return font;
     }
 
@@ -138,32 +138,32 @@ public class UITextComponent {
      * @param font The font family.
      * @return This component.
      */
-    public UITextComponent setFont(UIFont font) {
+    public TextComponent setFont(Font font) {
         this.font = font;
         return this;
     }
 
-    public List<UITextComponent> getSiblings() {
+    public List<TextComponent> getSiblings() {
         return siblings;
     }
 
     // --- Styling Fluent API ---
 
-    public UITextComponent setColor(int color) {
+    public TextComponent setColor(int color) {
         this.color = color;
         return this;
     }
 
     /**
-     * Applies a standard UIFormatting style or color to this component.
+     * Applies a standard TextFormatting style or color to this component.
      *
      * @param format The formatting to apply.
      * @return This component.
      */
-    public UITextComponent applyFormatting(UIFormatting format) {
+    public TextComponent applyFormatting(TextFormatting format) {
         if (format == null) return this;
 
-        if (format == UIFormatting.RESET) {
+        if (format == TextFormatting.RESET) {
             this.color = null;
             this.bold = null;
             this.italic = null;
@@ -189,27 +189,27 @@ public class UITextComponent {
         return this;
     }
 
-    public UITextComponent setBold(boolean bold) {
+    public TextComponent setBold(boolean bold) {
         this.bold = bold;
         return this;
     }
 
-    public UITextComponent setItalic(boolean italic) {
+    public TextComponent setItalic(boolean italic) {
         this.italic = italic;
         return this;
     }
 
-    public UITextComponent setUnderline(boolean underline) {
+    public TextComponent setUnderline(boolean underline) {
         this.underline = underline;
         return this;
     }
 
-    public UITextComponent setStrikethrough(boolean strikethrough) {
+    public TextComponent setStrikethrough(boolean strikethrough) {
         this.strikethrough = strikethrough;
         return this;
     }
 
-    public UITextComponent setObfuscated(boolean obfuscated) {
+    public TextComponent setObfuscated(boolean obfuscated) {
         this.obfuscated = obfuscated;
         return this;
     }
@@ -243,17 +243,17 @@ public class UITextComponent {
         return Boolean.TRUE.equals(obfuscated);
     }
 
-    public static int getTextWidth(UITextComponent text) {
+    public static int getTextWidth(TextComponent text) {
         if (text == null || text.getFont() == null) return 0;
-        return (int) Math.ceil(text.getFont().getWidth(text)); // Assumed method signature in UIFont needs update if it used UIComponent
+        return (int) Math.ceil(text.getFont().getWidth(text)); // Assumed method signature in Font needs update if it used UIComponent
     }
 
     public static int getFontHeight() {
         return 9;
     }
 
-    public static int getWordWrapHeight(UITextComponent text, int maxWidth) {
+    public static int getWordWrapHeight(TextComponent text, int maxWidth) {
         if (text == null || text.getFont() == null) return 0;
-        return (int) Math.ceil(text.getFont().getWordWrapHeight(text, maxWidth)); // Assumed method signature in UIFont
+        return (int) Math.ceil(text.getFont().getWordWrapHeight(text, maxWidth)); // Assumed method signature in Font
     }
 }

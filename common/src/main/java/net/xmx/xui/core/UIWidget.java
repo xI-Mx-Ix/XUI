@@ -5,14 +5,14 @@
 package net.xmx.xui.core;
 
 import net.xmx.xui.core.anim.AnimationManager;
-import net.xmx.xui.core.anim.UIAnimationBuilder;
+import net.xmx.xui.core.anim.AnimationBuilder;
 import net.xmx.xui.core.effect.UIEffect;
 import net.xmx.xui.core.effect.UIScissorsEffect;
-import net.xmx.xui.core.gl.UIRenderInterface;
-import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.style.InteractionState;
+import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.style.StyleSheet;
-import net.xmx.xui.core.style.UIProperty;
-import net.xmx.xui.core.style.UIState;
+import net.xmx.xui.core.style.StyleKey;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
@@ -73,11 +73,11 @@ public abstract class UIWidget {
     // Geometry
     protected float x, y, width, height;
 
-    // Layout Constraints
-    protected UIConstraint xConstraint = Constraints.pixel(0);
-    protected UIConstraint yConstraint = Constraints.pixel(0);
-    protected UIConstraint widthConstraint = Constraints.pixel(100);
-    protected UIConstraint heightConstraint = Constraints.pixel(20);
+    // Layout Layout
+    protected AxisFunc xConstraint = Layout.pixel(0);
+    protected AxisFunc yConstraint = Layout.pixel(0);
+    protected AxisFunc widthConstraint = Layout.pixel(100);
+    protected AxisFunc heightConstraint = Layout.pixel(20);
 
     // Hierarchy
     protected UIWidget parent;
@@ -125,10 +125,10 @@ public abstract class UIWidget {
      * Creates a new animation builder for this widget.
      * Allows fluent configuration of keyframe animations.
      *
-     * @return A new UIAnimationBuilder instance.
+     * @return A new AnimationBuilder instance.
      */
-    public UIAnimationBuilder animate() {
-        return new UIAnimationBuilder(this);
+    public AnimationBuilder animate() {
+        return new AnimationBuilder(this);
     }
 
     /**
@@ -174,7 +174,7 @@ public abstract class UIWidget {
      * @param partialTick  The normalized progress between two game ticks.
      * @param deltaTime    The time elapsed since the last frame in seconds.
      */
-    public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
+    public void render(RenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
         if (!isVisible) return;
 
         // 1. Update Animation State
@@ -183,27 +183,27 @@ public abstract class UIWidget {
 
         // 2. Retrieve 3D Transformation Values from Style
         // We generally use the DEFAULT state as the source for structural transforms.
-        float rotX = styleSheet.getValue(UIState.DEFAULT, Properties.ROTATION_X);
-        float rotY = styleSheet.getValue(UIState.DEFAULT, Properties.ROTATION_Y);
-        float rotZ = styleSheet.getValue(UIState.DEFAULT, Properties.ROTATION_Z);
+        float rotX = styleSheet.getValue(InteractionState.DEFAULT, ThemeProperties.ROTATION_X);
+        float rotY = styleSheet.getValue(InteractionState.DEFAULT, ThemeProperties.ROTATION_Y);
+        float rotZ = styleSheet.getValue(InteractionState.DEFAULT, ThemeProperties.ROTATION_Z);
 
-        float scaleX = styleSheet.getValue(UIState.DEFAULT, Properties.SCALE_X);
-        float scaleY = styleSheet.getValue(UIState.DEFAULT, Properties.SCALE_Y);
-        float scaleZ = styleSheet.getValue(UIState.DEFAULT, Properties.SCALE_Z);
+        float scaleX = styleSheet.getValue(InteractionState.DEFAULT, ThemeProperties.SCALE_X);
+        float scaleY = styleSheet.getValue(InteractionState.DEFAULT, ThemeProperties.SCALE_Y);
+        float scaleZ = styleSheet.getValue(InteractionState.DEFAULT, ThemeProperties.SCALE_Z);
 
-        float transX = styleSheet.getValue(UIState.DEFAULT, Properties.TRANSLATE_X);
-        float transY = styleSheet.getValue(UIState.DEFAULT, Properties.TRANSLATE_Y);
-        float transZ = styleSheet.getValue(UIState.DEFAULT, Properties.TRANSLATE_Z);
+        float transX = styleSheet.getValue(InteractionState.DEFAULT, ThemeProperties.TRANSLATE_X);
+        float transY = styleSheet.getValue(InteractionState.DEFAULT, ThemeProperties.TRANSLATE_Y);
+        float transZ = styleSheet.getValue(InteractionState.DEFAULT, ThemeProperties.TRANSLATE_Z);
 
         // 3. Update Hitbox Logic (Inverse Matrix Calculation)
         // Checks if the mouse is hovering the widget considering its 3D position/rotation.
         updateHoverState(mouseX, mouseY, rotX, rotY, rotZ, scaleX, scaleY, scaleZ, transX, transY, transZ);
 
-        UIState state = UIState.DEFAULT;
+        InteractionState state = InteractionState.DEFAULT;
         if (isFocused) {
-            state = UIState.ACTIVE;
+            state = InteractionState.ACTIVE;
         } else if (isHovered) {
-            state = UIState.HOVER;
+            state = InteractionState.HOVER;
         }
 
         // 4. Apply 3D Transforms to the Renderer
@@ -327,13 +327,13 @@ public abstract class UIWidget {
      * @param deltaTime    The time elapsed since last frame in seconds (for animations).
      * @param state        The current interactive state (Default, Hover, Active).
      */
-    protected abstract void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime, UIState state);
+    protected abstract void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime, InteractionState state);
 
     /**
      * Helper to retrieve an animated color value based on the current state.
      * Uses deltaTime to progress the animation.
      */
-    protected int getColor(UIProperty<Integer> prop, UIState currentState, float dt) {
+    protected int getColor(StyleKey<Integer> prop, InteractionState currentState, float dt) {
         int target = styleSheet.getValue(currentState, prop);
         return animManager.getAnimatedColor(prop, target, styleSheet.getTransitionSpeed(), dt);
     }
@@ -342,7 +342,7 @@ public abstract class UIWidget {
      * Helper to retrieve an animated float value based on the current state.
      * Uses deltaTime to progress the animation.
      */
-    protected float getFloat(UIProperty<Float> prop, UIState currentState, float dt) {
+    protected float getFloat(StyleKey<Float> prop, InteractionState currentState, float dt) {
         float target = styleSheet.getValue(currentState, prop);
         return animManager.getAnimatedFloat(prop, target, styleSheet.getTransitionSpeed(), dt);
     }
@@ -692,22 +692,22 @@ public abstract class UIWidget {
         return this.styleSheet;
     }
 
-    public UIWidget setX(UIConstraint c) {
+    public UIWidget setX(AxisFunc c) {
         this.xConstraint = c;
         return this;
     }
 
-    public UIWidget setY(UIConstraint c) {
+    public UIWidget setY(AxisFunc c) {
         this.yConstraint = c;
         return this;
     }
 
-    public UIWidget setWidth(UIConstraint c) {
+    public UIWidget setWidth(AxisFunc c) {
         this.widthConstraint = c;
         return this;
     }
 
-    public UIWidget setHeight(UIConstraint c) {
+    public UIWidget setHeight(AxisFunc c) {
         this.heightConstraint = c;
         return this;
     }
@@ -760,19 +760,19 @@ public abstract class UIWidget {
         return this;
     }
 
-    public UIConstraint getXConstraint() {
+    public AxisFunc getXConstraint() {
         return this.xConstraint;
     }
 
-    public UIConstraint getYConstraint() {
+    public AxisFunc getYConstraint() {
         return this.yConstraint;
     }
 
-    public UIConstraint getWidthConstraint() {
+    public AxisFunc getWidthConstraint() {
         return this.widthConstraint;
     }
 
-    public UIConstraint getHeightConstraint() {
+    public AxisFunc getHeightConstraint() {
         return this.heightConstraint;
     }
 }

@@ -15,7 +15,7 @@ package net.xmx.xui.core.anim;
  * @author xI-Mx-Ix
  */
 @FunctionalInterface
-public interface UIEasing {
+public interface Easing {
 
     /**
      * Applies the easing function to a linear progress value.
@@ -30,43 +30,43 @@ public interface UIEasing {
      * Linear interpolation (no easing).
      * The animation moves at a constant speed.
      */
-    UIEasing LINEAR = t -> t;
+    Easing LINEAR = t -> t;
 
     /**
      * Easing equation for a quadratic (t^2) ease-in.
      * Accelerates from zero velocity.
      */
-    UIEasing EASE_IN_QUAD = t -> t * t;
+    Easing EASE_IN_QUAD = t -> t * t;
 
     /**
      * Easing equation for a quadratic (t^2) ease-out.
      * Decelerates to zero velocity.
      */
-    UIEasing EASE_OUT_QUAD = t -> t * (2 - t);
+    Easing EASE_OUT_QUAD = t -> t * (2 - t);
 
     /**
      * Easing equation for a quadratic (t^2) ease-in/out.
      * Accelerates until halfway, then decelerates.
      */
-    UIEasing EASE_IN_OUT_QUAD = t -> t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    Easing EASE_IN_OUT_QUAD = t -> t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
     /**
      * Easing equation for a cubic (t^3) ease-in.
      * Starts slower and accelerates faster than Quad.
      */
-    UIEasing EASE_IN_CUBIC = t -> t * t * t;
+    Easing EASE_IN_CUBIC = t -> t * t * t;
 
     /**
      * Easing equation for a cubic (t^3) ease-out.
      * Decelerates faster than Quad.
      */
-    UIEasing EASE_OUT_CUBIC = t -> (--t) * t * t + 1;
+    Easing EASE_OUT_CUBIC = t -> (--t) * t * t + 1;
 
     /**
      * Easing equation for a back ease-in.
      * Pulls back slightly before accelerating (like an arrow in a bow).
      */
-    UIEasing EASE_IN_BACK = t -> {
+    Easing EASE_IN_BACK = t -> {
         float c1 = 1.70158f;
         float c3 = c1 + 1;
         return c3 * t * t * t - c1 * t * t;
@@ -76,7 +76,7 @@ public interface UIEasing {
      * Easing equation for a back ease-out.
      * Overshoots the target slightly before settling.
      */
-    UIEasing EASE_OUT_BACK = t -> {
+    Easing EASE_OUT_BACK = t -> {
         float c1 = 1.70158f;
         float c3 = c1 + 1;
         // Cast to float required as Math.pow returns double
@@ -87,7 +87,7 @@ public interface UIEasing {
      * Easing equation for a bounce ease-out.
      * Bounces at the end of the transition (like a ball dropping).
      */
-    UIEasing EASE_OUT_BOUNCE = t -> {
+    Easing EASE_OUT_BOUNCE = t -> {
         float n1 = 7.5625f;
         float d1 = 2.75f;
         if (t < 1 / d1) {

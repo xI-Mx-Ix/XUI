@@ -4,16 +4,16 @@
  */
 package net.xmx.xui.core.components;
 
-import net.xmx.xui.core.Constraints;
-import net.xmx.xui.core.gl.UIRenderInterface;
+import net.xmx.xui.core.Layout;
+import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
-import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.core.style.UIState;
-import net.xmx.xui.core.text.UITextComponent;
+import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.style.InteractionState;
+import net.xmx.xui.core.text.TextComponent;
 
 /**
  * A standard text component representing a single line of text.
- * It supports adding multiple text segments (horizontal concatenation) via {@link #addText(UITextComponent)},
+ * It supports adding multiple text segments (horizontal concatenation) via {@link #addText(TextComponent)},
  * but does not support automatic line wrapping.
  * The widget automatically resizes its width and height to fit the content.
  *
@@ -21,8 +21,8 @@ import net.xmx.xui.core.text.UITextComponent;
  */
 public class UIText extends UIWidget {
 
-    // We use UITextComponent to accumulate appended text segments into a single logic line.
-    private UITextComponent content;
+    // We use TextComponent to accumulate appended text segments into a single logic line.
+    private TextComponent content;
     private boolean centered = false;
     private boolean shadow = true;
 
@@ -31,8 +31,8 @@ public class UIText extends UIWidget {
      * The default text color is set to white.
      */
     public UIText() {
-        this.content = UITextComponent.empty();
-        this.style().set(Properties.TEXT_COLOR, 0xFFFFFFFF);
+        this.content = TextComponent.empty();
+        this.style().set(ThemeProperties.TEXT_COLOR, 0xFFFFFFFF);
     }
 
     /**
@@ -42,7 +42,7 @@ public class UIText extends UIWidget {
      * @param text The component to append.
      * @return This widget instance for chaining.
      */
-    public UIText addText(UITextComponent text) {
+    public UIText addText(TextComponent text) {
         this.content.append(text);
         return this;
     }
@@ -54,7 +54,7 @@ public class UIText extends UIWidget {
      * @return This widget instance for chaining.
      */
     public UIText setText(String text) {
-        return setText(UITextComponent.literal(text));
+        return setText(TextComponent.literal(text));
     }
 
     /**
@@ -63,7 +63,7 @@ public class UIText extends UIWidget {
      * @param text The component to set.
      * @return This widget instance for chaining.
      */
-    public UIText setText(UITextComponent text) {
+    public UIText setText(TextComponent text) {
         // Since we need a mutable accumulator, we copy the input
         this.content = text.copy();
         return this;
@@ -74,7 +74,7 @@ public class UIText extends UIWidget {
      *
      * @return The text component.
      */
-    public UITextComponent getText() {
+    public TextComponent getText() {
         return this.content;
     }
 
@@ -111,12 +111,12 @@ public class UIText extends UIWidget {
         if (!isVisible) return;
 
         // Calculate required dimensions for the single line
-        int textWidth = UITextComponent.getTextWidth(this.content);
-        int textHeight = UITextComponent.getFontHeight();
+        int textWidth = TextComponent.getTextWidth(this.content);
+        int textHeight = TextComponent.getFontHeight();
 
         // Apply dimensions to constraints
-        this.widthConstraint = Constraints.pixel(textWidth);
-        this.heightConstraint = Constraints.pixel(textHeight);
+        this.widthConstraint = Layout.pixel(textWidth);
+        this.heightConstraint = Layout.pixel(textHeight);
 
         // Perform standard layout calculation
         super.layout();
@@ -132,15 +132,15 @@ public class UIText extends UIWidget {
      * @param state        The current UI state.
      */
     @Override
-    protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
-        int color = getColor(Properties.TEXT_COLOR, state, deltaTime);
+    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+        int color = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);
 
         float drawX = this.x;
         float drawY = this.y;
 
         // Calculate centering offset if enabled
         if (centered) {
-            drawX = this.x + (this.width - UITextComponent.getTextWidth(this.content)) / 2.0f;
+            drawX = this.x + (this.width - TextComponent.getTextWidth(this.content)) / 2.0f;
         }
 
         renderer.drawText(this.content, drawX, drawY, color, shadow);

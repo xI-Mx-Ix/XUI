@@ -10,19 +10,19 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.text.UITextComponent;
-import net.xmx.xui.impl.UIRenderImpl;
+import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.text.TextComponent;
+import net.xmx.xui.impl.RenderImpl;
 
 /**
- * Implementation of {@link UIFont} that delegates to the internal Minecraft font renderer.
+ * Implementation of {@link Font} that delegates to the internal Minecraft font renderer.
  * Ensures consistent look and feel with the base game and resource pack support.
  *
  * @author xI-Mx-Ix
  */
-public class UIVanillaFont extends UIFont {
+public class VanillaFont extends Font {
 
-    public UIVanillaFont() {
+    public VanillaFont() {
         super(Type.VANILLA);
     }
 
@@ -32,17 +32,17 @@ public class UIVanillaFont extends UIFont {
     }
 
     @Override
-    public float getWidth(UITextComponent component) {
+    public float getWidth(TextComponent component) {
         return Minecraft.getInstance().font.width(toMinecraftComponent(component));
     }
 
     @Override
-    public float getWordWrapHeight(UITextComponent component, float maxWidth) {
+    public float getWordWrapHeight(TextComponent component, float maxWidth) {
         return Minecraft.getInstance().font.wordWrapHeight(toMinecraftComponent(component), (int) maxWidth);
     }
 
     @Override
-    public void draw(UIRenderImpl context, UITextComponent component, float x, float y, int color, boolean shadow) {
+    public void draw(RenderImpl context, TextComponent component, float x, float y, int color, boolean shadow) {
         GuiGraphics graphics = context.getGuiGraphics();
         if (graphics == null) return;
 
@@ -56,7 +56,7 @@ public class UIVanillaFont extends UIFont {
     }
 
     @Override
-    public void drawWrapped(UIRenderImpl context, UITextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
+    public void drawWrapped(RenderImpl context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
         GuiGraphics graphics = context.getGuiGraphics();
         if (graphics == null) return;
 
@@ -68,7 +68,7 @@ public class UIVanillaFont extends UIFont {
     /**
      * Helper to convert XUI Component tree to Minecraft Component tree.
      */
-    private Component toMinecraftComponent(UITextComponent uiComp) {
+    private Component toMinecraftComponent(TextComponent uiComp) {
         MutableComponent mcComp = Component.literal(uiComp.getText());
         Style style = Style.EMPTY
                 .withBold(uiComp.isBold())
@@ -83,7 +83,7 @@ public class UIVanillaFont extends UIFont {
 
         mcComp.setStyle(style);
 
-        for (UITextComponent sibling : uiComp.getSiblings()) {
+        for (TextComponent sibling : uiComp.getSiblings()) {
             mcComp.append(toMinecraftComponent(sibling));
         }
 

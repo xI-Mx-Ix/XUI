@@ -15,12 +15,12 @@ import java.util.Map;
  */
 public class StyleSheet {
 
-    private final Map<UIState, Map<UIProperty<?>, Object>> stateMap = new HashMap<>();
+    private final Map<InteractionState, Map<StyleKey<?>, Object>> stateMap = new HashMap<>();
     private float transitionSpeed = 0.2f;
 
     public StyleSheet() {
         // Initialize maps for all states
-        for (UIState state : UIState.values()) {
+        for (InteractionState state : InteractionState.values()) {
             stateMap.put(state, new HashMap<>());
         }
     }
@@ -33,7 +33,7 @@ public class StyleSheet {
      * @param value    The value to set.
      * @return The stylesheet instance for chaining.
      */
-    public <T> StyleSheet set(UIState state, UIProperty<T> property, T value) {
+    public <T> StyleSheet set(InteractionState state, StyleKey<T> property, T value) {
         stateMap.get(state).put(property, value);
         return this;
     }
@@ -45,8 +45,8 @@ public class StyleSheet {
      * @param value    The value to set.
      * @return The stylesheet instance for chaining.
      */
-    public <T> StyleSheet set(UIProperty<T> property, T value) {
-        return set(UIState.DEFAULT, property, value);
+    public <T> StyleSheet set(StyleKey<T> property, T value) {
+        return set(InteractionState.DEFAULT, property, value);
     }
 
     /**
@@ -58,8 +58,8 @@ public class StyleSheet {
      * @return The determined value.
      */
     @SuppressWarnings("unchecked")
-    public <T> T getValue(UIState currentState, UIProperty<T> property) {
-        Map<UIProperty<?>, Object> props = stateMap.get(currentState);
+    public <T> T getValue(InteractionState currentState, StyleKey<T> property) {
+        Map<StyleKey<?>, Object> props = stateMap.get(currentState);
 
         // 1. Check specific state
         if (props.containsKey(property)) {
@@ -67,8 +67,8 @@ public class StyleSheet {
         }
 
         // 2. Fallback to DEFAULT (if not currently default)
-        if (currentState != UIState.DEFAULT) {
-            Map<UIProperty<?>, Object> defaults = stateMap.get(UIState.DEFAULT);
+        if (currentState != InteractionState.DEFAULT) {
+            Map<StyleKey<?>, Object> defaults = stateMap.get(InteractionState.DEFAULT);
             if (defaults.containsKey(property)) {
                 return (T) defaults.get(property);
             }
