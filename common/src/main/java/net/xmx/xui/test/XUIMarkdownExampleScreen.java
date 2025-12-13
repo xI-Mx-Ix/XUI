@@ -13,6 +13,7 @@ import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIScrollPanel;
 import net.xmx.xui.core.components.markdown.UIMarkdown;
+import net.xmx.xui.core.font.UIDefaultFonts;
 import net.xmx.xui.core.style.Properties;
 
 /**
@@ -106,6 +107,7 @@ public class XUIMarkdownExampleScreen extends Screen {
         UIMarkdown markdown = new UIMarkdown();
         markdown.setContentWidth(440);
         markdown.setMarkdown(SAMPLE_MARKDOWN);
+        markdown.setFont(UIDefaultFonts.getVanilla());
 
         // Add to hierarchy
         scrollPanel.add(markdown);

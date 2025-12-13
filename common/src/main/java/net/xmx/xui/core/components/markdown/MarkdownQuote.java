@@ -7,6 +7,7 @@ package net.xmx.xui.core.components.markdown;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.text.UITextComponent;
 
@@ -25,24 +26,32 @@ public class MarkdownQuote extends UIPanel {
      *
      * @param text         The text inside the quote.
      * @param contentWidth The available width.
+     * @param font         The font to use for the quote text.
      */
-    public MarkdownQuote(UITextComponent text, float contentWidth) {
+    public MarkdownQuote(UITextComponent text, float contentWidth, UIFont font) {
         float padding = 4;
         float barWidth = 2;
         float quoteX = 10;
-        int fontHeight = UITextComponent.getFontHeight();
+        
+        // Use dynamic font height
+        float fontHeight = font.getLineHeight();
 
         // Create the text widget first to measure it.
         // We style it Gray and Italic to represent a quote.
+        UITextComponent styled = text.copy().setColor(0xFFAAAAAA).setItalic(true);
+        
+        // Apply the font
+        MarkdownUtils.applyFontRecursive(styled, font);
+
         UIWrappedText textWidget = MarkdownUtils.createWrappingText(
-                text.copy().setColor(0xFFAAAAAA).setItalic(true),
+                styled,
                 quoteX + padding,
                 contentWidth
         );
 
         // We shift the widget UP by fontHeight to make the visible text start exactly at 'padding'.
         // This compensates for the empty line inserted by creatingWrappingText.
-        textWidget.setY(Constraints.pixel(padding - fontHeight));
+        textWidget.setY(Constraints.pixel(padding - fontHeight + 1));
         textWidget.layout();
 
         // Height Correction: The widget height includes the empty line.

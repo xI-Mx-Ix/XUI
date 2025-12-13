@@ -7,6 +7,7 @@ package net.xmx.xui.core.components.markdown;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.text.UITextComponent;
 
@@ -27,17 +28,21 @@ public class MarkdownCodeBlock extends UIPanel {
      *
      * @param lines        The lines of code.
      * @param contentWidth The available width.
+     * @param font         The font to use for the code text.
      */
-    public MarkdownCodeBlock(List<String> lines, float contentWidth) {
+    public MarkdownCodeBlock(List<String> lines, float contentWidth, UIFont font) {
         StringBuilder sb = new StringBuilder();
         for (String s : lines) sb.append(s).append("\n");
 
         String code = sb.toString();
-        // Retrieve the font height from the render implementation to support custom fonts
-        int fontHeight = UITextComponent.getFontHeight();
+        // Retrieve the font height from the provided font instance
+        float fontHeight = font.getLineHeight();
 
         // Apply syntax highlighting to the raw code string, returning a styled UITextComponent tree
         UITextComponent coloredCode = MarkdownUtils.highlightCode(code);
+        
+        // IMPORTANT: Recursively apply the code font to all highlight segments
+        MarkdownUtils.applyFontRecursive(coloredCode, font);
 
         // Create wrapping text widget to handle line breaks
         UIWrappedText content = MarkdownUtils.createWrappingText(coloredCode, 0, contentWidth);

@@ -6,6 +6,7 @@ package net.xmx.xui.core.components.markdown;
 
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIWrappedText;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.text.UITextComponent;
 
 import java.util.regex.Matcher;
@@ -33,11 +34,34 @@ public class MarkdownUtils {
     );
 
     /**
+     * Recursively applies a specific font to a component and all its siblings/children.
+     * <p>
+     * This is necessary because Markdown parsing often creates a tree of components
+     * (e.g., a bold word inside a sentence), and the font needs to be propagated
+     * to every part of that tree for consistent rendering and measurement.
+     * </p>
+     *
+     * @param root The root text component to modify.
+     * @param font The font to apply.
+     */
+    public static void applyFontRecursive(UITextComponent root, UIFont font) {
+        if (root == null || font == null) return;
+
+        // Apply to the current node
+        root.setFont(font);
+
+        // Recursively apply to all siblings
+        for (UITextComponent sibling : root.getSiblings()) {
+            applyFontRecursive(sibling, font);
+        }
+    }
+
+    /**
      * Helper to create a text widget that wraps correctly using standard UIText logic.
      * Used for headers, quotes, and code blocks where links are not prioritized.
      *
-     * @param content The text component to render.
-     * @param widthOffset The x-offset to subtract from the total content width.
+     * @param content      The text component to render.
+     * @param widthOffset  The x-offset to subtract from the total content width.
      * @param contentWidth The total available width.
      * @return A configured UIWrappedText widget with layout calculated.
      */

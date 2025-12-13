@@ -7,6 +7,7 @@ package net.xmx.xui.core.components.markdown;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.text.UITextComponent;
 import net.xmx.xui.util.URLUtil;
@@ -27,22 +28,27 @@ public class MarkdownParagraph extends UIPanel {
     private float currentLayoutY = 0;
     private final float contentWidth;
     private final float renderHeight;
+    private final UIFont font;
 
     /**
      * Constructs a paragraph component.
      *
      * @param rawText      The full raw text of the paragraph.
      * @param contentWidth The available width.
+     * @param font         The font to use for text rendering.
      */
-    public MarkdownParagraph(String rawText, float contentWidth) {
+    public MarkdownParagraph(String rawText, float contentWidth, UIFont font) {
         this.contentWidth = contentWidth;
+        this.font = font;
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
 
         buildFlow(rawText);
 
         // After flow is built, set height.
-        this.renderHeight = currentLayoutY + UITextComponent.getFontHeight();
+        // Use the font's line height to determine the final height correctly
+        float lineHeight = font.getLineHeight();
+        this.renderHeight = currentLayoutY + lineHeight;
         this.setHeight(Constraints.pixel(renderHeight));
     }
 
@@ -55,19 +61,20 @@ public class MarkdownParagraph extends UIPanel {
 
         // Current X position relative to the container for this paragraph flow
         float cursorX = 0;
-        float fontHeight = UITextComponent.getFontHeight();
+        // Use dynamic line height from the font
+        float lineHeight = font.getLineHeight();
 
         while (matcher.find()) {
             // 1. Text before the link
             String preText = rawText.substring(lastIndex, matcher.start());
             if (!preText.isEmpty()) {
-                cursorX = addFlowWords(preText, cursorX, fontHeight, false, null);
+                cursorX = addFlowWords(preText, cursorX, lineHeight, false, null);
             }
 
             // 2. The Link itself
             String label = matcher.group(1);
             String url = matcher.group(2);
-            cursorX = addFlowWords(label, cursorX, fontHeight, true, url);
+            cursorX = addFlowWords(label, cursorX, lineHeight, true, url);
 
             lastIndex = matcher.end();
         }
@@ -75,7 +82,7 @@ public class MarkdownParagraph extends UIPanel {
         // 3. Text after the last link
         String remaining = rawText.substring(lastIndex);
         if (!remaining.isEmpty()) {
-            addFlowWords(remaining, cursorX, fontHeight, false, null);
+            addFlowWords(remaining, cursorX, lineHeight, false, null);
         }
     }
 
@@ -97,11 +104,16 @@ public class MarkdownParagraph extends UIPanel {
 
             // Parse styles (bold/italic/code) using MarkdownUtils
             UITextComponent wordComp = MarkdownUtils.parseInline(word);
+            
+            // IMPORTANT: Apply the font to the parsed component tree
+            MarkdownUtils.applyFontRecursive(wordComp, this.font);
+            
             if (isLink) {
                 // Style links as Blue (0xFF5555FF) and Underlined
                 wordComp = wordComp.copy().setColor(0xFF5555FF).setUnderline(true);
             }
 
+            // Calculate width using the component's font (which we just set)
             int wordWidth = UITextComponent.getTextWidth(wordComp);
 
             // Check if we need to wrap

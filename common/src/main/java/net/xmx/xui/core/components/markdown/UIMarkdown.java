@@ -6,6 +6,8 @@ package net.xmx.xui.core.components.markdown;
 
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
+import net.xmx.xui.core.font.UIFont;
+import net.xmx.xui.core.font.UIDefaultFonts;
 import net.xmx.xui.core.style.Properties;
 
 import java.util.ArrayList;
@@ -23,6 +25,12 @@ public class UIMarkdown extends UIPanel {
     private float currentLayoutY = 0;
     private float contentWidth = 200.0f;
 
+    // --- Font Configurations ---
+    // Default to Vanilla to ensure compatibility if nothing is set
+    private UIFont regularFont = UIDefaultFonts.getVanilla();
+    private UIFont headerFont = UIDefaultFonts.getVanilla();
+    private UIFont codeFont = UIDefaultFonts.getVanilla();
+
     /**
      * Constructs a Markdown viewer with default settings.
      * Use {@link #setContentWidth(float)} to define wrap width and {@link #setMarkdown(String)} to set content.
@@ -31,6 +39,59 @@ public class UIMarkdown extends UIPanel {
         // Transparent background by default
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
+    }
+
+    /**
+     * Sets the font family for ALL markdown elements (Text, Headers, Code, Tables).
+     * This is a convenience method that overrides any previously set specific fonts.
+     *
+     * @param font The font to use for everything.
+     * @return This widget for chaining.
+     */
+    public UIMarkdown setFont(UIFont font) {
+        this.regularFont = font;
+        this.headerFont = font;
+        this.codeFont = font;
+        // If content already exists, we must rebuild the widgets to apply the new font
+        if (!rawMarkdown.isEmpty()) rebuild();
+        return this;
+    }
+
+    /**
+     * Sets the font used for regular text elements.
+     * Includes paragraphs, lists, quotes, and table content.
+     *
+     * @param font The font family.
+     * @return This widget for chaining.
+     */
+    public UIMarkdown setRegularFont(UIFont font) {
+        this.regularFont = font;
+        if (!rawMarkdown.isEmpty()) rebuild();
+        return this;
+    }
+
+    /**
+     * Sets the font used specifically for header elements (#, ##, ###).
+     *
+     * @param font The font family.
+     * @return This widget for chaining.
+     */
+    public UIMarkdown setHeaderFont(UIFont font) {
+        this.headerFont = font;
+        if (!rawMarkdown.isEmpty()) rebuild();
+        return this;
+    }
+
+    /**
+     * Sets the font used specifically for code blocks (```).
+     *
+     * @param font The font family.
+     * @return This widget for chaining.
+     */
+    public UIMarkdown setCodeFont(UIFont font) {
+        this.codeFont = font;
+        if (!rawMarkdown.isEmpty()) rebuild();
+        return this;
     }
 
     /**
@@ -142,7 +203,8 @@ public class UIMarkdown extends UIPanel {
     // --- Component Generators ---
 
     private void flushTable(List<String> lines) {
-        MarkdownTable table = new MarkdownTable(lines, contentWidth);
+        // Pass regular font to table
+        MarkdownTable table = new MarkdownTable(lines, contentWidth, regularFont);
         table.setY(Constraints.pixel(currentLayoutY));
         this.add(table);
 
@@ -158,7 +220,8 @@ public class UIMarkdown extends UIPanel {
     }
 
     private void addHeader(String rawText, int color) {
-        MarkdownHeader header = new MarkdownHeader(MarkdownUtils.parseInline(rawText), color, contentWidth);
+        // Pass header font
+        MarkdownHeader header = new MarkdownHeader(MarkdownUtils.parseInline(rawText), color, contentWidth, headerFont);
         header.setY(Constraints.pixel(currentLayoutY));
         this.add(header);
 
@@ -166,7 +229,8 @@ public class UIMarkdown extends UIPanel {
     }
 
     private void addQuote(String rawText) {
-        MarkdownQuote quote = new MarkdownQuote(MarkdownUtils.parseInline(rawText), contentWidth);
+        // Pass regular font
+        MarkdownQuote quote = new MarkdownQuote(MarkdownUtils.parseInline(rawText), contentWidth, regularFont);
         quote.setY(Constraints.pixel(currentLayoutY));
         this.add(quote);
 
@@ -174,7 +238,8 @@ public class UIMarkdown extends UIPanel {
     }
 
     private void addListItem(String rawText) {
-        MarkdownListItem item = new MarkdownListItem(rawText, contentWidth);
+        // Pass regular font
+        MarkdownListItem item = new MarkdownListItem(rawText, contentWidth, regularFont);
         item.setY(Constraints.pixel(currentLayoutY));
         this.add(item);
 
@@ -185,7 +250,8 @@ public class UIMarkdown extends UIPanel {
      * Adds a Task List item using the new visual renderer.
      */
     private void addTaskListItem(String rawText, boolean checked) {
-        MarkdownTaskListItem item = new MarkdownTaskListItem(rawText, checked, contentWidth);
+        // Pass regular font
+        MarkdownTaskListItem item = new MarkdownTaskListItem(rawText, checked, contentWidth, regularFont);
         item.setY(Constraints.pixel(currentLayoutY));
         this.add(item);
 
@@ -193,7 +259,8 @@ public class UIMarkdown extends UIPanel {
     }
 
     private void addCodeBlock(List<String> lines) {
-        MarkdownCodeBlock block = new MarkdownCodeBlock(lines, contentWidth);
+        // Pass code font
+        MarkdownCodeBlock block = new MarkdownCodeBlock(lines, contentWidth, codeFont);
         block.setY(Constraints.pixel(currentLayoutY));
         this.add(block);
 
@@ -201,7 +268,8 @@ public class UIMarkdown extends UIPanel {
     }
 
     private void addFlowParagraph(String line) {
-        MarkdownParagraph paragraph = new MarkdownParagraph(line, contentWidth);
+        // Pass regular font
+        MarkdownParagraph paragraph = new MarkdownParagraph(line, contentWidth, regularFont);
         paragraph.setY(Constraints.pixel(currentLayoutY));
         this.add(paragraph);
 

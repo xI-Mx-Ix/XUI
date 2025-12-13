@@ -8,6 +8,7 @@ import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.text.UITextComponent;
 
@@ -26,27 +27,31 @@ public class MarkdownListItem extends UIPanel {
      *
      * @param rawText      The raw text of the item (without the bullet marker).
      * @param contentWidth The available width.
+     * @param font         The font to use.
      */
-    public MarkdownListItem(String rawText, float contentWidth) {
+    public MarkdownListItem(String rawText, float contentWidth, UIFont font) {
         // Transparent background
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
 
         float bulletWidth = 15;
 
-        // Bullet point doesn't need wrapping, simple creation using UIText
+        // Bullet point needs the same font to match size/style
         UIText bullet = new UIText();
-        bullet.setText("•");
+        bullet.setText(UITextComponent.literal("•").setFont(font));
         bullet.setX(Constraints.pixel(5));
 
-        float fontHeight = UITextComponent.getFontHeight();
+        float fontHeight = font.getLineHeight();
         bullet.setY(Constraints.pixel(fontHeight));
         
         this.add(bullet);
 
         // Content
+        UITextComponent parsed = MarkdownUtils.parseInline(rawText);
+        MarkdownUtils.applyFontRecursive(parsed, font);
+
         UIWrappedText content = MarkdownUtils.createWrappingText(
-                MarkdownUtils.parseInline(rawText),
+                parsed,
                 bulletWidth,
                 contentWidth
         );

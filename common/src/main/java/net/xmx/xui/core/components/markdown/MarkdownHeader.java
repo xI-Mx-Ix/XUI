@@ -7,6 +7,7 @@ package net.xmx.xui.core.components.markdown;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.text.UITextComponent;
 
@@ -26,8 +27,9 @@ public class MarkdownHeader extends UIPanel {
      * @param text         The raw text of the header.
      * @param color        The color associated with the header level (ARGB Integer).
      * @param contentWidth The available width for wrapping.
+     * @param font         The font to use for the header.
      */
-    public MarkdownHeader(UITextComponent text, int color, float contentWidth) {
+    public MarkdownHeader(UITextComponent text, int color, float contentWidth, UIFont font) {
         // Transparent background
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
@@ -35,6 +37,9 @@ public class MarkdownHeader extends UIPanel {
         // Use color and style to distinguish headers.
         // We create a copy to apply styles without mutating the original component.
         UITextComponent styled = text.copy().setBold(true).setColor(color);
+        
+        // Apply the header font
+        MarkdownUtils.applyFontRecursive(styled, font);
 
         UIWrappedText widget = MarkdownUtils.createWrappingText(styled, 0, contentWidth);
         
@@ -45,7 +50,7 @@ public class MarkdownHeader extends UIPanel {
         this.add(widget);
 
         // We use slightly less padding here because the "empty line" trick in createWrappingText
-        // already adds ~9px of height at the top of the widget.
+        // already adds height at the top of the widget.
         // Logic: topPadding + widgetHeight + 2 (bottom margin)
         this.renderHeight = topPadding + widget.getHeight() + 2;
         this.setHeight(Constraints.pixel(renderHeight));

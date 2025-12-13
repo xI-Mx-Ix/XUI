@@ -9,6 +9,7 @@ import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
 import net.xmx.xui.core.text.UITextComponent;
@@ -31,13 +32,14 @@ public class MarkdownTaskListItem extends UIPanel {
      * @param rawText      The text content of the item.
      * @param isChecked    Whether the box should be checked.
      * @param contentWidth The available width.
+     * @param font         The font to use.
      */
-    public MarkdownTaskListItem(String rawText, boolean isChecked, float contentWidth) {
+    public MarkdownTaskListItem(String rawText, boolean isChecked, float contentWidth, UIFont font) {
         // Transparent background for the container
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
 
-        int fontHeight = UITextComponent.getFontHeight();
+        float fontHeight = font.getLineHeight();
         float boxSize = 10.0f;
 
         // Calculate Y offset:
@@ -59,8 +61,11 @@ public class MarkdownTaskListItem extends UIPanel {
         // Indent text so it doesn't overlap the box (Box + Margin)
         float textIndent = 18.0f;
 
+        UITextComponent parsed = MarkdownUtils.parseInline(rawText);
+        MarkdownUtils.applyFontRecursive(parsed, font);
+
         UIWrappedText content = MarkdownUtils.createWrappingText(
-                MarkdownUtils.parseInline(rawText),
+                parsed,
                 textIndent,
                 contentWidth
         );
@@ -103,8 +108,6 @@ public class MarkdownTaskListItem extends UIPanel {
 
         @Override
         protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
-            // FIX: Use helper methods with deltaTime instead of style().getValue()
-            // so hover effects are animated smoothly.
             int bg = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
             int border = getColor(Properties.BORDER_COLOR, state, deltaTime);
             float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);

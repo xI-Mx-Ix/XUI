@@ -7,6 +7,7 @@ package net.xmx.xui.core.components.markdown;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.text.UITextComponent;
 
@@ -30,8 +31,9 @@ public class MarkdownTable extends UIPanel {
      *
      * @param lines        The raw lines of the table (including header and separator).
      * @param contentWidth The maximum available width.
+     * @param font         The font to use for table content.
      */
-    public MarkdownTable(List<String> lines, float contentWidth) {
+    public MarkdownTable(List<String> lines, float contentWidth, UIFont font) {
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
 
@@ -67,7 +69,12 @@ public class MarkdownTable extends UIPanel {
 
             for (int c = 0; c < columns && c < row.size(); c++) {
                 String text = row.get(c);
-                int textWidth = UITextComponent.getTextWidth(MarkdownUtils.parseInline(text));
+                UITextComponent comp = MarkdownUtils.parseInline(text);
+                
+                // IMPORTANT: Apply the font before measuring, as width depends on the font!
+                MarkdownUtils.applyFontRecursive(comp, font);
+                
+                int textWidth = UITextComponent.getTextWidth(comp);
                 if (textWidth + cellPadding > colWidths[c]) {
                     colWidths[c] = textWidth + cellPadding;
                 }
@@ -87,7 +94,8 @@ public class MarkdownTable extends UIPanel {
 
         // Build UI Components
         float currentY = 0;
-        float rowHeight = UITextComponent.getFontHeight() + 8; // Text + padding
+        // Calculate row height based on font size
+        float rowHeight = font.getLineHeight() + 8; // Text + padding
 
         for (int r = 0; r < rows.size(); r++) {
             List<String> row = rows.get(r);
@@ -124,6 +132,7 @@ public class MarkdownTable extends UIPanel {
             for (int c = 0; c < columns && c < row.size(); c++) {
                 String cellText = row.get(c);
                 UITextComponent content = MarkdownUtils.parseInline(cellText);
+                MarkdownUtils.applyFontRecursive(content, font);
                 
                 if (isHeader) {
                     // Header text is Bold and Yellow
