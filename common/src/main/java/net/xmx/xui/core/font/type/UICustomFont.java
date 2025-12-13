@@ -246,6 +246,11 @@ public class UICustomFont extends UIFont {
 
         char[] chars = text.toCharArray();
 
+        // Setup the random generator for obfuscation exactly as requested to match the visual style.
+        // The seed changes every 30ms, creating the specific static noise effect.
+        long seed = System.currentTimeMillis() / 30;
+        Random obfuscationRandom = new Random(seed);
+
         // --- 3. Render Loop ---
         for (int i = 0; i < chars.length; i++) {
             char c = chars[i];
@@ -274,7 +279,7 @@ public class UICustomFont extends UIFont {
                         fontChanged = true;
 
                     } else if (fmt.isColor()) {
-                        // Apply Color and reset styles (Vanilla behavior)
+                        // Apply Color and reset styles
                         int fmtColor = fmt.getColor();
                         r = ((fmtColor >> 16) & 0xFF) / 255.0f;
                         g = ((fmtColor >> 8) & 0xFF) / 255.0f;
@@ -303,7 +308,7 @@ public class UICustomFont extends UIFont {
                         }
                     }
 
-                    // If style changes affect the font atlas, we must switch textures
+                    // Switch texture if font style changed
                     if (fontChanged) {
                         UIFontAtlas targetFont;
                         if (isBold && this.bold != null) targetFont = this.bold;
@@ -332,15 +337,15 @@ public class UICustomFont extends UIFont {
                 continue;
             }
 
-            if (isObfuscated) {
-                if (c > 32) c = (char) (33 + (System.currentTimeMillis() / 50 + i) % 90);
+            // Apply obfuscation logic if active using the specific helper method
+            if (isObfuscated && c > 32) {
+                c = getObfuscatedChar(obfuscationRandom);
             }
 
             // --- Glyph Resolution & Fallback Strategy ---
-            // 1. Try to find the glyph in the currently active font (e.g., Bold)
             MSDFData.Glyph glyph = currentFont.getGlyph(c);
 
-            // 2. Fallback: If missing in style (e.g., Bold), try Regular font
+            // Fallback to Regular if missing in current style (Bold/Italic)
             if (glyph == null && currentFont != this.regular && this.regular != null) {
                 MSDFData.Glyph fallback = this.regular.getGlyph(c);
                 if (fallback != null) {
@@ -359,7 +364,7 @@ public class UICustomFont extends UIFont {
                 }
             }
 
-            // 3. Fallback: If still null (missing in Regular too), treat as missing character
+            // Fallback for completely missing characters
             if (glyph == null) {
                 // Determine a safe advance width (e.g. from space or '?' char)
                 // This prevents text collapsing when characters are missing
@@ -390,9 +395,19 @@ public class UICustomFont extends UIFont {
             pendingDecorations.add(new Decoration(x, lineY, textWidth, thickness, finalColor));
         }
 
-        // Final flush of whatever texture is currently active
         UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
         return cursorX;
+    }
+
+    /**
+     * Generates a single random character using the provided Random instance.
+     * This preserves the specific visual noise logic requested (replacing the linear atlas scroll).
+     *
+     * @param random The pre-seeded random instance to ensure consistent noise across the string.
+     * @return A random printable character.
+     */
+    private char getObfuscatedChar(Random random) {
+        return (char) (33 + random.nextInt(90));
     }
 
     /**
@@ -459,20 +474,6 @@ public class UICustomFont extends UIFont {
         if (comp.isBold()) return bold != null ? bold : regular;
         if (comp.isItalic()) return italic != null ? italic : regular;
         return regular;
-    }
-
-    /**
-     * Generates obfuscated text for the "magic" formatting code.
-     */
-    private String obfuscateText(String input) {
-        StringBuilder sb = new StringBuilder();
-        long seed = System.currentTimeMillis() / 30;
-        Random localRand = new Random(seed);
-        for (char c : input.toCharArray()) {
-            if (c <= 32) sb.append(c);
-            else sb.append((char) (33 + localRand.nextInt(90)));
-        }
-        return sb.toString();
     }
 
     /**
