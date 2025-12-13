@@ -88,9 +88,9 @@ public class UIButton extends UIWidget {
         }
 
         // 6. Draw Text (Centered)
-        // Uses renderer.getTextWidth() for Component width calculation
-        int strWidth = renderer.getTextWidth(label);
-        int strHeight = renderer.getFontHeight();
+        // Uses UIComponent.getTextWidth() for Component width calculation
+        int strWidth = UIComponent.getTextWidth(label);
+        int strHeight = UIComponent.getFontHeight();
 
         float textX = x + (width - strWidth) / 2.0f;
         float textY = y + (height - strHeight) / 2.0f + 1;

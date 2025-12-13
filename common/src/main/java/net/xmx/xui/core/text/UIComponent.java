@@ -186,13 +186,37 @@ public class UIComponent {
     /**
      * Returns true if bold is explicitly set to true.
      */
-    public boolean isBold() { return Boolean.TRUE.equals(bold); }
+    public boolean isBold() {
+        return Boolean.TRUE.equals(bold);
+    }
     
-    public boolean isItalic() { return Boolean.TRUE.equals(italic); }
+    public boolean isItalic() {
+        return Boolean.TRUE.equals(italic);
+    }
     
-    public boolean isUnderline() { return Boolean.TRUE.equals(underline); }
+    public boolean isUnderline() {
+        return Boolean.TRUE.equals(underline);
+    }
     
-    public boolean isStrikethrough() { return Boolean.TRUE.equals(strikethrough); }
+    public boolean isStrikethrough() {
+        return Boolean.TRUE.equals(strikethrough);
+    }
     
-    public boolean isObfuscated() { return Boolean.TRUE.equals(obfuscated); }
+    public boolean isObfuscated() {
+        return Boolean.TRUE.equals(obfuscated);
+    }
+
+    public static int getTextWidth(UIComponent text) {
+        if (text == null || text.getFont() == null) return 0;
+        return (int) Math.ceil(text.getFont().getWidth(text));
+    }
+
+    public static int getFontHeight() {
+        return 9;
+    }
+
+    public static int getWordWrapHeight(UIComponent text, int maxWidth) {
+        if (text == null || text.getFont() == null) return 0;
+        return (int) Math.ceil(text.getFont().getWordWrapHeight(text, maxWidth));
+    }
 }

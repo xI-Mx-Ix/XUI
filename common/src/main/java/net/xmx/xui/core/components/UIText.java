@@ -10,7 +10,6 @@ import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
 import net.xmx.xui.core.text.UIComponent;
-import net.xmx.xui.impl.UIRenderImpl;
 
 /**
  * A standard text component representing a single line of text.
@@ -112,8 +111,8 @@ public class UIText extends UIWidget {
         if (!isVisible) return;
 
         // Calculate required dimensions for the single line
-        int textWidth = UIRenderImpl.getInstance().getTextWidth(this.content);
-        int textHeight = UIRenderImpl.getInstance().getFontHeight();
+        int textWidth = UIComponent.getTextWidth(this.content);
+        int textHeight = UIComponent.getFontHeight();
 
         // Apply dimensions to constraints
         this.widthConstraint = Constraints.pixel(textWidth);
@@ -141,7 +140,7 @@ public class UIText extends UIWidget {
 
         // Calculate centering offset if enabled
         if (centered) {
-            drawX = this.x + (this.width - renderer.getTextWidth(this.content)) / 2.0f;
+            drawX = this.x + (this.width - UIComponent.getTextWidth(this.content)) / 2.0f;
         }
 
         renderer.drawText(this.content, drawX, drawY, color, shadow);

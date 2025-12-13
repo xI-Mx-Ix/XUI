@@ -128,25 +128,6 @@ public class UIRenderImpl implements UIRenderInterface {
         text.getFont().drawWrapped(this, text, ax, ay, aw, color, shadow);
     }
 
-    @Override
-    public int getTextWidth(UIComponent text) {
-        if (text == null || text.getFont() == null) return 0;
-        return (int) Math.ceil(text.getFont().getWidth(text));
-    }
-
-    @Override
-    public int getFontHeight() {
-        // Returns Vanilla height by default as a generic metric,
-        // components needing specific font height should call text.getFont().getLineHeight()
-        return Minecraft.getInstance().font.lineHeight;
-    }
-
-    @Override
-    public int getWordWrapHeight(UIComponent text, int maxWidth) {
-        if (text == null || text.getFont() == null) return 0;
-        return (int) Math.ceil(text.getFont().getWordWrapHeight(text, maxWidth));
-    }
-
     // --- Scissor & Transforms ---
 
     @Override

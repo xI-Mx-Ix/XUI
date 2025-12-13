@@ -142,7 +142,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         }
 
         if (selectedIndex >= 0 && selectedIndex < options.size()) {
-            float textY = y + (height - renderer.getFontHeight()) / 2.0f;
+            float textY = y + (height - UIComponent.getFontHeight()) / 2.0f;
             renderer.drawText(options.get(selectedIndex), x + 5, textY, textColor, false);
         }
 
@@ -218,7 +218,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
             }
 
             UIComponent text = options.get(i);
-            float textY = optY + (optionHeight - renderer.getFontHeight()) / 2.0f;
+            float textY = optY + (optionHeight - UIComponent.getFontHeight()) / 2.0f;
             renderer.drawText(text, x + 5, textY, textColor, false);
         }
     }

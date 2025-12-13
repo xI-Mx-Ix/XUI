@@ -9,7 +9,6 @@ import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.text.UIComponent;
-import net.xmx.xui.impl.UIRenderImpl;
 import net.xmx.xui.util.URLUtil;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
@@ -42,9 +41,8 @@ public class MarkdownParagraph extends UIPanel {
 
         buildFlow(rawText);
 
-        // After flow is built, set height
-        // Add final line height to accommodate the last line (logic matches original)
-        this.renderHeight = currentLayoutY + UIRenderImpl.getInstance().getFontHeight();
+        // After flow is built, set height.
+        this.renderHeight = currentLayoutY + UIComponent.getFontHeight();
         this.setHeight(Constraints.pixel(renderHeight));
     }
 
@@ -57,7 +55,7 @@ public class MarkdownParagraph extends UIPanel {
 
         // Current X position relative to the container for this paragraph flow
         float cursorX = 0;
-        float fontHeight = UIRenderImpl.getInstance().getFontHeight();
+        float fontHeight = UIComponent.getFontHeight();
 
         while (matcher.find()) {
             // 1. Text before the link
@@ -104,7 +102,7 @@ public class MarkdownParagraph extends UIPanel {
                 wordComp = wordComp.copy().setColor(0xFF5555FF).setUnderline(true);
             }
 
-            int wordWidth = UIRenderImpl.getInstance().getTextWidth(wordComp);
+            int wordWidth = UIComponent.getTextWidth(wordComp);
 
             // Check if we need to wrap
             if (currentX + wordWidth > contentWidth) {

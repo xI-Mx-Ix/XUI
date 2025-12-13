@@ -10,7 +10,6 @@ import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
-import net.xmx.xui.impl.UIRenderImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -145,12 +144,12 @@ public class UIWrappedText extends UIWidget {
         for (TextLine line : lines) {
             if (line.wrap) {
                 // For wrapping lines, height depends on the current resolved width
-                totalHeight += UIRenderImpl.getInstance().getWordWrapHeight(line.content, (int) this.width);
+                totalHeight += UIComponent.getWordWrapHeight(line.content, (int) this.width);
                 anyLineWraps = true;
             } else {
                 // For non-wrapping lines, standard height and width calculation
-                totalHeight += UIRenderImpl.getInstance().getFontHeight();
-                int lineWidth = UIRenderImpl.getInstance().getTextWidth(line.content);
+                totalHeight += UIComponent.getFontHeight();
+                int lineWidth = UIComponent.getTextWidth(line.content);
                 if (lineWidth > maxLineWidth) {
                     maxLineWidth = lineWidth;
                 }
@@ -183,15 +182,15 @@ public class UIWrappedText extends UIWidget {
             if (line.wrap) {
                 // Render wrapped block
                 renderer.drawWrappedText(line.content, lineDrawX, currentY, this.width, color, shadow);
-                lineHeight = renderer.getWordWrapHeight(line.content, (int) this.width);
+                lineHeight = UIComponent.getWordWrapHeight(line.content, (int) this.width);
             } else {
                 // Render single line
                 if (centered) {
                     // Center this specific line within the widget width
-                    lineDrawX = this.x + (this.width - renderer.getTextWidth(line.content)) / 2.0f;
+                    lineDrawX = this.x + (this.width - UIComponent.getTextWidth(line.content)) / 2.0f;
                 }
                 renderer.drawText(line.content, lineDrawX, currentY, color, shadow);
-                lineHeight = renderer.getFontHeight();
+                lineHeight = UIComponent.getFontHeight();
             }
 
             // Advance Y position for the next line

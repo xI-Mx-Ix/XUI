@@ -98,30 +98,6 @@ public interface UIRenderInterface {
     void drawWrappedText(UIComponent text, float x, float y, float width, int color, boolean shadow);
 
     /**
-     * Calculates the width of the given text component in pixels.
-     *
-     * @param text The text to measure.
-     * @return The width in pixels.
-     */
-    int getTextWidth(UIComponent text);
-
-    /**
-     * Returns the height of the standard font line.
-     *
-     * @return The font height in pixels.
-     */
-    int getFontHeight();
-
-    /**
-     * Calculates the total height required to render the text with the given maximum width constraint.
-     *
-     * @param text     The text to measure.
-     * @param maxWidth The wrapping width.
-     * @return The total height in pixels.
-     */
-    int getWordWrapHeight(UIComponent text, int maxWidth);
-
-    /**
      * Enables a scissor test to clip rendering to a specific screen region.
      * <p>
      * <b>Implementation Note:</b> This method accepts float coordinates to allow for

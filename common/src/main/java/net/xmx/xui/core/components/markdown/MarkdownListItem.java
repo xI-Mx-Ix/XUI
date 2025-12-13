@@ -9,7 +9,7 @@ import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
-import net.xmx.xui.impl.UIRenderImpl;
+import net.xmx.xui.core.text.UIComponent;
 
 /**
  * Represents a List Item in Markdown (- or *).
@@ -39,10 +39,7 @@ public class MarkdownListItem extends UIPanel {
         bullet.setText("•");
         bullet.setX(Constraints.pixel(5));
 
-        // Determine Y offset.
-        // We align the bullet to the second line of the content widget (where text actually starts),
-        // because createWrappingText adds an empty line at the top.
-        float fontHeight = UIRenderImpl.getInstance().getFontHeight();
+        float fontHeight = UIComponent.getFontHeight();
         bullet.setY(Constraints.pixel(fontHeight));
         
         this.add(bullet);
