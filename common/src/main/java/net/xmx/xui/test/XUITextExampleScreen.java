@@ -93,17 +93,17 @@ public class XUITextExampleScreen extends Screen {
                 .setFont(UIDefaultFonts.getRoboto()));
 
         // Vanilla Line
-        fontCompare.addText(UIComponent.literal("• Vanilla:   The quick brown fox jumps.")
+        fontCompare.addText(UIComponent.literal("Vanilla: The quick brown fox jumps.")
                 .setColor(0xFFFFFFFF)
                 .setFont(UIDefaultFonts.getVanilla()), false);
 
         // Roboto Line
-        fontCompare.addText(UIComponent.literal("• Roboto:    The quick brown fox jumps.")
+        fontCompare.addText(UIComponent.literal("Roboto: The quick brown fox jumps.")
                 .setColor(0xFFDDDDDD)
                 .setFont(UIDefaultFonts.getRoboto()), false);
 
         // JetBrains Mono Line
-        fontCompare.addText(UIComponent.literal("• JB Mono:   The quick brown fox jumps.")
+        fontCompare.addText(UIComponent.literal("JB Mono: The quick brown fox jumps.")
                 .setColor(0xFFB9FBC0) // Light Green
                 .setFont(UIDefaultFonts.getJetBrainsMono()), false);
 
@@ -171,12 +171,11 @@ public class XUITextExampleScreen extends Screen {
 
         // --- Close Button ---
         UIButton closeBtn = new UIButton();
-        closeBtn.setLabel(UIComponent.literal("Dismiss").setFont(UIDefaultFonts.getRoboto()));
+        closeBtn.setLabel(UIComponent.literal("Close").setFont(UIDefaultFonts.getRoboto()));
         closeBtn.setX(Constraints.center())
                 .setY(Constraints.anchorEnd(20))
-                .setWidth(Constraints.pixel(120))
-                .setHeight(Constraints.pixel(24));
-
+                .setWidth(Constraints.pixel(100))
+                .setHeight(Constraints.pixel(20));
         closeBtn.setOnClick(w -> this.onClose());
 
         // Add to hierarchy
