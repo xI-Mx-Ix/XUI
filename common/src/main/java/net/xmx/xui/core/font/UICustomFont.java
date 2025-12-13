@@ -4,23 +4,22 @@
  */
 package net.xmx.xui.core.font;
 
+import net.xmx.xui.core.font.data.MSDFData;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.gl.vertex.UIMeshBuffer;
 import net.xmx.xui.core.text.UIComponent;
 import net.xmx.xui.impl.UIRenderImpl;
-import org.lwjgl.stb.STBTTPackedchar;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /**
- * Implementation of {@link UIFont} utilizing a custom TrueType renderer (STB).
- * Supports high-resolution text, multi-line wrapping, and standard style codes.
+ * Implementation of the {@link UIFont} interface utilizing MSDF (Multi-channel Signed Distance Field) rendering.
  * <p>
- * To ensure high render quality at small sizes (like the Vanilla 9px standard),
- * this class loads the font texture at a much higher resolution (High-DPI)
- * and scales the geometry down during the render pass.
+ * This class handles the geometry generation for text by mapping Unicode characters
+ * to their corresponding bounds defined in the imported JSON metadata.
+ * It supports high-quality scaling without pixelation artifacts typical of raster fonts.
  * </p>
  *
  * @author xI-Mx-Ix
@@ -32,44 +31,53 @@ public class UICustomFont extends UIFont {
     private UILoadedFont italic;
 
     /**
-     * The internal texture resolution size.
-     * Loading at 48px ensures crisp edges even when scaled down.
+     * The logical visual size of the font in pixels.
+     * This defines the size of 1 em unit on the screen.
      */
-    private static final float TEXTURE_FONT_SIZE = 48.0f;
-
-    /**
-     * The logical height we want the font to appear on screen.
-     * Matches Minecraft's Vanilla font height.
-     */
-    private static final float TARGET_VISUAL_SIZE = 9.0f;
+    private static final float FONT_SIZE = 9.0f;
 
     public UICustomFont() {
         super(Type.CUSTOM);
     }
 
-    // --- Configuration ---
-
-    public UICustomFont setRegular(String path) {
-        this.regular = new UILoadedFont(path, TEXTURE_FONT_SIZE);
+    /**
+     * Sets the font used for standard text.
+     *
+     * @param name The asset name of the font.
+     * @return This instance for chaining.
+     */
+    public UICustomFont setRegular(String name) {
+        this.regular = new UILoadedFont(name);
         return this;
     }
 
-    public UICustomFont setBold(String path) {
-        this.bold = new UILoadedFont(path, TEXTURE_FONT_SIZE);
+    /**
+     * Sets the font used when the Bold style is active.
+     *
+     * @param name The asset name of the font.
+     * @return This instance for chaining.
+     */
+    public UICustomFont setBold(String name) {
+        this.bold = new UILoadedFont(name);
         return this;
     }
 
-    public UICustomFont setItalic(String path) {
-        this.italic = new UILoadedFont(path, TEXTURE_FONT_SIZE);
+    /**
+     * Sets the font used when the Italic style is active.
+     *
+     * @param name The asset name of the font.
+     * @return This instance for chaining.
+     */
+    public UICustomFont setItalic(String name) {
+        this.italic = new UILoadedFont(name);
         return this;
     }
-
-    // --- Metrics ---
 
     @Override
     public float getLineHeight() {
-        // Always return 9.0f (Target Size), regardless of texture size
-        return TARGET_VISUAL_SIZE;
+        if (regular == null) return FONT_SIZE;
+        // Calculate the visual line height based on the font's metrics and the target font size
+        return regular.getData().metrics.lineHeight * FONT_SIZE;
     }
 
     @Override
@@ -81,15 +89,24 @@ public class UICustomFont extends UIFont {
         return width;
     }
 
+    /**
+     * Calculates the width of a single text component segment.
+     */
     private float getSingleComponentWidth(UIComponent component) {
-        UILoadedFont font = resolveFontData(component);
-        if (font == null || component.getText() == null) return 0;
+        String text = component.getText();
+        if (text == null || text.isEmpty()) return 0;
 
-        // Calculate scale factor (e.g., 9 / 48 = 0.1875)
-        float scale = TARGET_VISUAL_SIZE / font.getFontSize();
+        UILoadedFont font = resolveFont(component);
+        if (font == null) return 0;
 
-        // Measure raw width from texture and scale down
-        return font.getStringWidth(component.getText()) * scale;
+        float width = 0;
+        for (char c : text.toCharArray()) {
+            MSDFData.Glyph glyph = font.getGlyph(c);
+            if (glyph != null) {
+                width += glyph.advance * FONT_SIZE;
+            }
+        }
+        return width;
     }
 
     @Override
@@ -109,11 +126,13 @@ public class UICustomFont extends UIFont {
         renderer.getStateManager().capture();
         renderer.getStateManager().setupForUI();
 
+        // Begin the text rendering pass, providing the atlas info for shader configuration
+        renderer.getText().begin(context.getCurrentScale(), regular.getData().atlas);
+
         try {
-            renderer.getText().begin(context.getCurrentScale());
             drawComponentRecursive(context, component, x, y, x, color);
-            renderer.getText().end();
         } finally {
+            renderer.getText().end();
             // Restore the previous OpenGL state to ensure compatibility with the game engine.
             renderer.getStateManager().restore();
         }
@@ -129,24 +148,23 @@ public class UICustomFont extends UIFont {
 
     @Override
     public void drawWrapped(UIRenderImpl context, UIComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
+        if (regular == null) return;
+
         List<LineLayout> lines = computeWrappedLayout(component, maxWidth);
         UIRenderer renderer = UIRenderer.getInstance();
 
-        // Capture the current OpenGL state (including the active VAO)
-        // and configure the state required for UI rendering.
         renderer.getStateManager().capture();
         renderer.getStateManager().setupForUI();
+        renderer.getText().begin(context.getCurrentScale(), regular.getData().atlas);
 
         try {
-            renderer.getText().begin(context.getCurrentScale());
-
             float currentY = y;
             float lineHeight = getLineHeight();
 
             for (LineLayout line : lines) {
                 float currentX = x;
                 for (LineSegment segment : line.segments) {
-                    // Temporarily swap text content to render individual segments
+                    // Temporarily swap text content to render individual wrapped segments
                     String originalText = segment.component.getText();
                     segment.component.setText(segment.text);
 
@@ -156,106 +174,127 @@ public class UICustomFont extends UIFont {
                 }
                 currentY += lineHeight;
             }
-
-            renderer.getText().end();
         } finally {
-            // Restore the previous OpenGL state to ensure compatibility with the game engine.
+            renderer.getText().end();
             renderer.getStateManager().restore();
         }
     }
 
-    // --- Core Draw Logic ---
-
+    /**
+     * Renders the text string of a single component using geometry calculated from the MSDF data.
+     *
+     * @param context      The render implementation.
+     * @param comp         The component containing text and style.
+     * @param x            The starting X coordinate.
+     * @param y            The starting Y coordinate.
+     * @param startX       The X coordinate to return to on newline.
+     * @param defaultColor The inherited color if the component has none.
+     * @return The X coordinate after rendering the text.
+     */
     private float drawSingleString(UIRenderImpl context, UIComponent comp, float x, float y, float startX, int defaultColor) {
         String text = comp.getText();
         if (text == null || text.isEmpty()) return x;
 
-        UILoadedFont fontData = resolveFontData(comp);
-        if (fontData == null) return x;
+        UILoadedFont font = resolveFont(comp);
+        if (font == null) return x;
 
-        // Calculate scaling factor to map High-Res Texture -> 9px Visual
-        float scale = TARGET_VISUAL_SIZE / fontData.getFontSize();
-
+        // Color handling
         int color = (comp.getColor() != null) ? comp.getColor() : defaultColor;
         if (comp.isObfuscated()) {
             text = obfuscateText(text);
         }
 
+        // Unpack ARGB color to normalized floats
         float r = ((color >> 16) & 0xFF) / 255.0f;
         float g = ((color >> 8) & 0xFF) / 255.0f;
         float b = (color & 0xFF) / 255.0f;
         float a = ((color >> 24) & 0xFF) / 255.0f;
 
-        net.xmx.xui.core.gl.renderer.UITextRenderer textRenderer = UIRenderer.getInstance().getText();
-        textRenderer.drawBatch(fontData.getTextureId());
-
-        UIMeshBuffer mesh = textRenderer.getMesh();
-        STBTTPackedchar.Buffer charData = fontData.getCharData();
+        // Render previous batch if texture changes (though usually handled by outer loop)
+        UIRenderer.getInstance().getText().drawBatch(font.getTextureId());
+        UIMeshBuffer mesh = UIRenderer.getInstance().getText().getMesh();
 
         float cursorX = x;
-        // Scale the ascent (baseline offset)
-        float ascent = fontData.getAscent() * scale;
 
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
+        // Calculate baseline:
+        // XUI coordinates are Top-Left based.
+        // Font metrics (ascender) tell us how far down the baseline is from the top of the line.
+        float baselineOffset = font.getData().metrics.ascender * FONT_SIZE;
+        float cursorY = y + baselineOffset;
 
+        float atlasW = font.getData().atlas.width;
+        float atlasH = font.getData().atlas.height;
+
+        for (char c : text.toCharArray()) {
             if (c == '\n') {
                 cursorX = startX;
                 continue;
             }
 
-            if (c < 32 || c >= 32 + 255) continue;
-            STBTTPackedchar info = charData.get(c - 32);
+            MSDFData.Glyph glyph = font.getGlyph(c);
+            if (glyph == null) continue;
 
-            float drawY = y + ascent;
+            // Only generate geometry if the glyph has visual data (e.g., space characters have no bounds)
+            if (glyph.planeBounds != null && glyph.atlasBounds != null) {
 
-            // Apply scale to all horizontal and vertical offsets
-            // Note: info.x0(), y0(), etc. are texture coordinates, they are NOT scaled.
-            // info.xoff(), yoff(), xadvance() are pixel units, they MUST be scaled.
+                // 1. Calculate Screen Positions (Vertex Coordinates)
+                // Plane bounds are normalized (EM space), so we multiply by FONT_SIZE.
+                // We subtract from cursorY because in OpenGL Y-Down, "Up" in font metrics means lower Y value.
+                float pl = glyph.planeBounds.left;
+                float pb = glyph.planeBounds.bottom;
+                float pr = glyph.planeBounds.right;
+                float pt = glyph.planeBounds.top;
 
-            float x0 = cursorX + (info.xoff() * scale);
-            float y0 = drawY + (info.yoff() * scale);
-            float x1 = x0 + ((info.xoff2() - info.xoff()) * scale);
-            float y1 = y0 + ((info.yoff2() - info.yoff()) * scale);
+                float x0 = cursorX + (pl * FONT_SIZE);
+                float x1 = cursorX + (pr * FONT_SIZE);
 
-            // UV coordinates remain 0.0 to 1.0 (Texture Space)
-            float u0 = info.x0() / 1024.0f;
-            float v0 = info.y0() / 1024.0f;
-            float u1 = info.x1() / 1024.0f;
-            float v1 = info.y1() / 1024.0f;
+                float y0 = cursorY - (pt * FONT_SIZE); // Top edge of glyph
+                float y1 = cursorY - (pb * FONT_SIZE); // Bottom edge of glyph
 
-            mesh.pos(x0, y0, 0).color(r, g, b, a).uv(u0, v0).endVertex();
-            mesh.pos(x0, y1, 0).color(r, g, b, a).uv(u0, v1).endVertex();
-            mesh.pos(x1, y0, 0).color(r, g, b, a).uv(u1, v0).endVertex();
+                // 2. Calculate Texture Coordinates (UVs)
+                // Atlas bounds are in raw pixels. We normalize by atlas dimensions.
+                // Note: msdf-atlas-gen JSON assumes 0 at bottom for Y, but standard image load is 0 at top.
+                // We flip the V coordinate: 1.0 - (y / height).
+                float u0 = glyph.atlasBounds.left / atlasW;
+                float u1 = glyph.atlasBounds.right / atlasW;
+                float v0 = 1.0f - (glyph.atlasBounds.top / atlasH);
+                float v1 = 1.0f - (glyph.atlasBounds.bottom / atlasH);
 
-            mesh.pos(x1, y0, 0).color(r, g, b, a).uv(u1, v0).endVertex();
-            mesh.pos(x0, y1, 0).color(r, g, b, a).uv(u0, v1).endVertex();
-            mesh.pos(x1, y1, 0).color(r, g, b, a).uv(u1, v1).endVertex();
+                // 3. Push Vertices (Two Triangles -> Quad)
+                // Triangle 1
+                mesh.pos(x0, y1, 0).color(r, g, b, a).uv(u0, v1).endVertex(); // Bottom-Left
+                mesh.pos(x1, y1, 0).color(r, g, b, a).uv(u1, v1).endVertex(); // Bottom-Right
+                mesh.pos(x1, y0, 0).color(r, g, b, a).uv(u1, v0).endVertex(); // Top-Right
 
-            // Advance cursor by scaled width
-            cursorX += (info.xadvance() * scale);
-        }
-
-        textRenderer.drawBatch(fontData.getTextureId());
-
-        // Decorations (Underline / Strikethrough)
-        if (comp.isUnderline() || comp.isStrikethrough()) {
-            float width = cursorX - x;
-            if (width > 0) {
-                // Adjust thickness and offset for the small font size
-                if (comp.isUnderline()) {
-                    context.drawRect(x, y + ascent + 1.0f, width, 0.5f, color, 0);
-                }
-                if (comp.isStrikethrough()) {
-                    context.drawRect(x, y + (ascent / 2.0f) + 0.5f, width, 0.5f, color, 0);
-                }
+                // Triangle 2
+                mesh.pos(x1, y0, 0).color(r, g, b, a).uv(u1, v0).endVertex(); // Top-Right
+                mesh.pos(x0, y0, 0).color(r, g, b, a).uv(u0, v0).endVertex(); // Top-Left
+                mesh.pos(x0, y1, 0).color(r, g, b, a).uv(u0, v1).endVertex(); // Bottom-Left
             }
+
+            // Advance cursor for next character
+            cursorX += glyph.advance * FONT_SIZE;
         }
+
+        // Flush this batch to ensure ordering
+        UIRenderer.getInstance().getText().drawBatch(font.getTextureId());
 
         return cursorX;
     }
 
-    // --- Word Wrap Logic ---
+    /**
+     * Resolves the correct font variant based on the component's style.
+     *
+     * @param comp The component to query.
+     * @return The loaded font instance (regular, bold, or italic).
+     */
+    private UILoadedFont resolveFont(UIComponent comp) {
+        if (comp.isBold()) return bold != null ? bold : regular;
+        if (comp.isItalic()) return italic != null ? italic : regular;
+        return regular;
+    }
+
+    // --- Helper classes for Word Wrapping logic ---
 
     private static class LineSegment {
         UIComponent component;
@@ -267,11 +306,17 @@ public class UICustomFont extends UIFont {
         List<LineSegment> segments = new ArrayList<>();
     }
 
+    /**
+     * Splits the text into lines that fit within the given maximum width.
+     *
+     * @param root     The root component.
+     * @param maxWidth The maximum width in pixels.
+     * @return A list of LineLayout objects representing the wrapped text.
+     */
     private List<LineLayout> computeWrappedLayout(UIComponent root, float maxWidth) {
         List<LineLayout> lines = new ArrayList<>();
         LineLayout currentLine = new LineLayout();
         float currentLineWidth = 0;
-
         List<UIComponent> flatList = new ArrayList<>();
         flatten(root, flatList);
 
@@ -279,12 +324,10 @@ public class UICustomFont extends UIFont {
             String text = comp.getText();
             if (text == null || text.isEmpty()) continue;
 
-            UILoadedFont font = resolveFontData(comp);
+            UILoadedFont font = resolveFont(comp);
             if (font == null) continue;
 
-            // Calculate scale once for this component
-            float scale = TARGET_VISUAL_SIZE / font.getFontSize();
-
+            // Split by whitespace boundaries while keeping delimiters
             String[] words = text.split("((?<=\\s)|(?=\\s))");
 
             for (String word : words) {
@@ -295,8 +338,11 @@ public class UICustomFont extends UIFont {
                     continue;
                 }
 
-                // Get raw width and apply scale
-                float wordWidth = font.getStringWidth(word) * scale;
+                float wordWidth = 0;
+                for(char c : word.toCharArray()) {
+                    MSDFData.Glyph g = font.getGlyph(c);
+                    if(g != null) wordWidth += g.advance * FONT_SIZE;
+                }
 
                 if (currentLineWidth + wordWidth <= maxWidth) {
                     currentLine.segments.add(new LineSegment(comp, word));
@@ -309,27 +355,18 @@ public class UICustomFont extends UIFont {
                 }
             }
         }
-
-        if (!currentLine.segments.isEmpty()) {
-            lines.add(currentLine);
-        }
-
+        if (!currentLine.segments.isEmpty()) lines.add(currentLine);
         return lines;
     }
 
     private void flatten(UIComponent comp, List<UIComponent> list) {
         list.add(comp);
-        for (UIComponent s : comp.getSiblings()) {
-            flatten(s, list);
-        }
+        for (UIComponent s : comp.getSiblings()) flatten(s, list);
     }
 
-    private UILoadedFont resolveFontData(UIComponent comp) {
-        if (comp.isBold()) return bold != null ? bold : regular;
-        if (comp.isItalic()) return italic != null ? italic : regular;
-        return regular;
-    }
-
+    /**
+     * Generates obfuscated text for the "magic" formatting code.
+     */
     private String obfuscateText(String input) {
         StringBuilder sb = new StringBuilder();
         long seed = System.currentTimeMillis() / 30;

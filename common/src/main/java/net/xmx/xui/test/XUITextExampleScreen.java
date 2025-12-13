@@ -14,16 +14,20 @@ import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
-import net.xmx.xui.core.font.UIStandardFonts;
+import net.xmx.xui.core.font.UIDefaultFonts;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.text.UIComponent;
 
 /**
- * Example screen demonstrating the multi-line and wrapping capabilities of UIText via {@link UIContext}.
- * Shows how to mix single lines, styled components, and wrapped blocks within one widget.
+ * Example screen demonstrating the advanced text rendering capabilities of XUI.
  * <p>
- * This example explicitly uses {@link UIStandardFonts#getJetBrainsMono()} to demonstrate
- * high-resolution TrueType font rendering mixed with standard UI elements.
+ * This screen showcases:
+ * <ul>
+ *     <li>Mixing different font families (Vanilla, Roboto, JetBrains Mono) in a single context.</li>
+ *     <li>Rich text styling (Bold, Italic, Underline, Strikethrough, Obfuscated).</li>
+ *     <li>Multi-line wrapping with mixed styles.</li>
+ *     <li>Proper z-ordering and layout constraints.</li>
+ * </ul>
  * </p>
  *
  * @author xI-Mx-Ix
@@ -33,7 +37,7 @@ public class XUITextExampleScreen extends Screen {
     private final UIContext uiContext = new UIContext();
 
     public XUITextExampleScreen() {
-        super(Component.literal("Text Layout Demo"));
+        super(Component.literal("XUI Font Engine Demo"));
     }
 
     @Override
@@ -48,109 +52,151 @@ public class XUITextExampleScreen extends Screen {
         }
     }
 
+    /**
+     * Constructs the UI hierarchy.
+     */
     private void buildUI() {
         UIPanel root = uiContext.getRoot();
         root.style().set(Properties.BACKGROUND_COLOR, 0xFF101010);
 
-        // 2. Main Paper/Card Panel
+        // Main Container Panel
         UIPanel paperPanel = new UIPanel();
         paperPanel.setX(Constraints.center())
                 .setY(Constraints.center())
-                .setWidth(Constraints.pixel(400))
-                .setHeight(Constraints.pixel(350));
+                .setWidth(Constraints.pixel(420))
+                .setHeight(Constraints.pixel(380));
 
         paperPanel.style()
-                .set(Properties.BACKGROUND_COLOR, 0xFF252525)
+                .set(Properties.BACKGROUND_COLOR, 0xFF1E1E1E)
                 .set(Properties.BORDER_RADIUS, 8.0f)
-                .set(Properties.BORDER_COLOR, 0xFF404040)
+                .set(Properties.BORDER_COLOR, 0xFF333333)
                 .set(Properties.BORDER_THICKNESS, 1.0f);
 
-        // --- WIDGET 1: Simple Header (Single Line, Centered) ---
+        // --- WIDGET 1: Header (Roboto Bold) ---
         UIText header = new UIText();
-
-        // Use UIComponent with Hex Color (Gold), Bold flag, and Custom TTF Font
-        header.setText(UIComponent.literal("Update Changelog")
-                .setColor(0xFFFFAA00)
+        header.setText(UIComponent.literal("Typography Showcase")
+                .setColor(0xFF4FC3F7) // Light Blue
                 .setBold(true)
-                .setFont(UIStandardFonts.getJetBrainsMono())); // Apply JetBrains Mono
+                .setFont(UIDefaultFonts.getRoboto()));
 
         header.setCentered(true)
                 .setX(Constraints.center())
-                .setY(Constraints.pixel(20));
+                .setY(Constraints.pixel(15));
 
-        // --- WIDGET 2: Multi-line List ---
-        // UIWrappedText supports adding multiple vertical lines.
-        UIWrappedText featureList = new UIWrappedText();
+        // --- WIDGET 2: Font Family Comparison ---
+        UIWrappedText fontCompare = new UIWrappedText();
 
-        // Add the title line (Underlined) - Keeps Vanilla font for contrast
-        featureList.setText(UIComponent.literal("New Features:").setUnderline(true));
-
-        // Add subsequent lines. Passing 'false' for wrapping means they act as hard line breaks.
-        // We apply the Custom Font here to make the list look cleaner/more technical.
-        featureList.addText(UIComponent.literal("• Added multi-line text support")
-                        .setColor(0xFF55FF55)
-                        .setFont(UIStandardFonts.getJetBrainsMono()), false)
-
-                .addText(UIComponent.literal("• Integrated Minecraft Components")
-                        .setColor(0xFF55FFFF)
-                        .setFont(UIStandardFonts.getJetBrainsMono()), false)
-
-                .addText(UIComponent.literal("• Dynamic height calculation")
-                        .setColor(0xFFFFFF55)
-                        .setFont(UIStandardFonts.getJetBrainsMono()), false);
-
-        featureList.setX(Constraints.pixel(20))
-                .setY(Constraints.sibling(header, 30, true)); // Position below header
-
-        // --- WIDGET 3: Mixed Wrapping (Introduction + Long Text) ---
-        UIWrappedText description = new UIWrappedText();
-        description.setText(UIComponent.literal("Technical Details:").setColor(0xFFFF5555)); // Red (Vanilla Font)
-
-        // Add a long paragraph with wrapping enabled (true)
-        String longLorem = "The UIWrappedText component now supports an internal list of lines. " +
-                "You can mix standard lines with auto-wrapping lines in the same widget. " +
-                "The height of the widget is recalculated automatically based on the font renderer.";
-
-        // Color: Gray (AAAAAA), Font: JetBrains Mono
-        description.addText(UIComponent.literal(longLorem)
+        // Title
+        fontCompare.setText(UIComponent.literal("1. Font Families")
                 .setColor(0xFFAAAAAA)
-                .setFont(UIStandardFonts.getJetBrainsMono()), true);
+                .setUnderline(true)
+                .setFont(UIDefaultFonts.getRoboto()));
 
-        // Add another line without wrapping (might overflow if too long, but useful for signatures etc)
-        // Style: Italic, Dark Gray (555555), Vanilla Font
-        description.addText(UIComponent.literal("End of report.").setItalic(true).setColor(0xFF555555), false);
+        // Vanilla Line
+        fontCompare.addText(UIComponent.literal("• Vanilla:   The quick brown fox jumps.")
+                .setColor(0xFFFFFFFF)
+                .setFont(UIDefaultFonts.getVanilla()), false);
 
-        description.setX(Constraints.pixel(20))
-                .setY(Constraints.sibling(featureList, 20, true))
-                .setWidth(Constraints.pixel(360)); // Restrict width to force wrapping inside the panel
+        // Roboto Line
+        fontCompare.addText(UIComponent.literal("• Roboto:    The quick brown fox jumps.")
+                .setColor(0xFFDDDDDD)
+                .setFont(UIDefaultFonts.getRoboto()), false);
+
+        // JetBrains Mono Line
+        fontCompare.addText(UIComponent.literal("• JB Mono:   The quick brown fox jumps.")
+                .setColor(0xFFB9FBC0) // Light Green
+                .setFont(UIDefaultFonts.getJetBrainsMono()), false);
+
+        fontCompare.setX(Constraints.pixel(20))
+                .setY(Constraints.sibling(header, 25, true))
+                .setWidth(Constraints.pixel(380));
+
+        // --- WIDGET 3: Rich Styles & Obfuscation ---
+        UIWrappedText styleShowcase = new UIWrappedText();
+
+        styleShowcase.setText(UIComponent.literal("2. Rich Styles & Magic")
+                .setColor(0xFFAAAAAA)
+                .setUnderline(true)
+                .setFont(UIDefaultFonts.getRoboto()));
+
+        // Mixed styles in one line using Roboto
+        UIComponent mixedLine = UIComponent.literal("We support ")
+                .setFont(UIDefaultFonts.getRoboto())
+                .append(UIComponent.literal("Bold, ").setBold(true).setColor(0xFFE57373))
+                .append(UIComponent.literal("Italic, ").setItalic(true).setColor(0xFFFFF176))
+                .append(UIComponent.literal("Underline ").setUnderline(true).setColor(0xFF64B5F6))
+                .append(UIComponent.literal("& ").setColor(0xFF888888))
+                .append(UIComponent.literal("Strikethrough").setStrikethrough(true).setColor(0xFFA1887F));
+
+        styleShowcase.addText(mixedLine, false);
+
+        // Obfuscation test (Matrix effect)
+        UIComponent magicLine = UIComponent.literal("Secret Data: ")
+                .setFont(UIDefaultFonts.getJetBrainsMono())
+                .setColor(0xFF888888)
+                .append(UIComponent.literal("kjd8s7d8s7d").setObfuscated(true).setColor(0xFFFF5555));
+
+        styleShowcase.addText(magicLine, false);
+
+        styleShowcase.setX(Constraints.pixel(20))
+                .setY(Constraints.sibling(fontCompare, 20, true))
+                .setWidth(Constraints.pixel(380));
+
+        // --- WIDGET 4: Word Wrapping Paragraph ---
+        UIWrappedText paragraph = new UIWrappedText();
+
+        paragraph.setText(UIComponent.literal("3. Word Wrapping (Roboto)")
+                .setColor(0xFFAAAAAA)
+                .setUnderline(true)
+                .setFont(UIDefaultFonts.getRoboto()));
+
+        String lore = "XUI uses MSDF rendering to ensure text remains crisp at any scale. " +
+                "This paragraph demonstrates automatic line wrapping within the container bounds. " +
+                "It handles spaces, punctuation, and mixed font styles seamlessly.";
+
+        UIComponent bodyText = UIComponent.literal(lore)
+                .setColor(0xFFE0E0E0)
+                .setFont(UIDefaultFonts.getRoboto());
+
+        // Append a highlighed Mono section at the end
+        bodyText.append(UIComponent.literal(" [System Status: OK]")
+                .setFont(UIDefaultFonts.getJetBrainsMono())
+                .setColor(0xFF00E676));
+
+        paragraph.addText(bodyText, true); // true = enable wrapping
+
+        paragraph.setX(Constraints.pixel(20))
+                .setY(Constraints.sibling(styleShowcase, 20, true))
+                .setWidth(Constraints.pixel(380));
 
         // --- Close Button ---
         UIButton closeBtn = new UIButton();
-        // setLabel now accepts String or UIComponent automatically
-        // We keep the button label Vanilla for consistent UI feel
-        closeBtn.setLabel("Close");
+        closeBtn.setLabel(UIComponent.literal("Dismiss").setFont(UIDefaultFonts.getRoboto()));
         closeBtn.setX(Constraints.center())
                 .setY(Constraints.anchorEnd(20))
-                .setWidth(Constraints.pixel(100))
-                .setHeight(Constraints.pixel(20));
+                .setWidth(Constraints.pixel(120))
+                .setHeight(Constraints.pixel(24));
+
         closeBtn.setOnClick(w -> this.onClose());
 
-        // Build Tree
+        // Add to hierarchy
         paperPanel.add(header);
-        paperPanel.add(featureList);
-        paperPanel.add(description);
+        paperPanel.add(fontCompare);
+        paperPanel.add(styleShowcase);
+        paperPanel.add(paragraph);
         paperPanel.add(closeBtn);
-        root.add(paperPanel);
 
+        root.add(paperPanel);
         root.layout();
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        // Delegate rendering to the context
         uiContext.render(mouseX, mouseY, partialTick);
     }
+
+    // --- Input Forwarding ---
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {

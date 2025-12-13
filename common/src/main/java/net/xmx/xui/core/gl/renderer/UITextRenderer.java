@@ -4,8 +4,8 @@
  */
 package net.xmx.xui.core.gl.renderer;
 
-import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.gl.shader.impl.UITextShader;
+import net.xmx.xui.core.font.data.MSDFData;
+import net.xmx.xui.core.gl.shader.impl.UIMSDFShader;
 import net.xmx.xui.core.gl.vertex.UIMeshBuffer;
 import net.xmx.xui.core.gl.vertex.UIVertexFormat;
 import org.joml.Matrix4f;
@@ -13,65 +13,58 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
 /**
- * Handles the rendering pipeline for text elements.
- * <p>
- * This class manages the {@link UITextShader} and the generic {@link UIMeshBuffer}.
- * It is responsible for setting up the text shader state (projection, texture units)
- * and executing the draw calls for font batches.
- * </p>
- * <p>
- * Note: Actual glyph geometry generation is handled by the {@link UIFont} class,
- * which populates the mesh buffer exposed by {@link #getMesh()}.
- * </p>
+ * Handles the rendering lifecycle for text elements using the MSDF shader.
+ * Acts as the bridge between high-level draw calls and OpenGL draw commands.
  *
  * @author xI-Mx-Ix
  */
 public class UITextRenderer {
 
-    private final UITextShader shader;
+    private final UIMSDFShader shader;
     private final UIMeshBuffer mesh;
     private final Matrix4f projectionMatrix = new Matrix4f();
 
     /**
-     * Constructs a new text renderer.
-     * Initializes the text shader and the mesh buffer optimized for Position + Color + UV.
+     * Constructs a new text renderer with an MSDF shader and a standard mesh buffer.
      */
     public UITextRenderer() {
-        this.shader = new UITextShader();
+        this.shader = new UIMSDFShader();
+        // Uses the generic Position + Color + UV vertex format
         this.mesh = new UIMeshBuffer(UIVertexFormat.POS_COLOR_UV);
     }
 
     /**
-     * Provides access to the underlying mesh buffer.
-     * Used by {@link UIFont} to append glyph vertices.
+     * Provides access to the mesh buffer for pushing vertex data.
      *
-     * @return The active text mesh buffer.
+     * @return The active mesh buffer.
      */
     public UIMeshBuffer getMesh() {
         return mesh;
     }
 
     /**
-     * Prepares the OpenGL state for text rendering.
-     * <p>
-     * Binds the text shader, calculates the orthographic projection, and ensures
-     * the texture sampler uniform is set to unit 0.
-     * </p>
+     * Initializes the rendering state for a batch of text.
+     * Sets up the projection matrix and configures shader uniforms based on the font atlas.
      *
-     * @param guiScale The current GUI scale factor.
+     * @param guiScale  The current GUI scale factor.
+     * @param atlasInfo The metadata of the font atlas currently being rendered.
      */
-    public void begin(double guiScale) {
-        // Retrieve viewport to calculate projection
+    public void begin(double guiScale, MSDFData.AtlasInfo atlasInfo) {
         int[] viewport = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
 
-        // Setup Orthographic Projection
+        // Setup Orthographic Projection (0,0 at top-left)
         projectionMatrix.identity().ortho(0, viewport[2], viewport[3], 0, 1000, -1000);
         projectionMatrix.scale((float) guiScale, (float) guiScale, 1.0f);
 
         shader.bind();
         shader.uploadProjection(projectionMatrix);
-        shader.uploadTextureUnit(0); // Ensure shader samples from Texture Unit 0
+        shader.uploadTextureUnit(0);
+
+        if (atlasInfo != null) {
+            // Pass the distance range from the JSON to the shader
+            shader.uploadPxRange(atlasInfo.distanceRange);
+        }
     }
 
     /**
@@ -92,23 +85,9 @@ public class UITextRenderer {
     }
 
     /**
-     * Finalizes the text rendering pass.
-     * Unbinds the shader.
+     * Finalizes the rendering pass and unbinds the shader.
      */
     public void end() {
         shader.unbind();
-    }
-
-    /**
-     * Gets the projection matrix currently in use by the renderer.
-     * <p>
-     * This can be useful for advanced font effects that might need to know the
-     * current transformation state.
-     * </p>
-     *
-     * @return The active 4x4 projection matrix.
-     */
-    public Matrix4f getProjectionMatrix() {
-        return projectionMatrix;
     }
 }

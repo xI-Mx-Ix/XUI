@@ -5,7 +5,7 @@
 package net.xmx.xui.core.text;
 
 import net.xmx.xui.core.font.UIFont;
-import net.xmx.xui.core.font.UIStandardFonts;
+import net.xmx.xui.core.font.UIDefaultFonts;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,7 @@ public class UIComponent {
      * @param text The text content.
      */
     public UIComponent(String text) {
-        this(text, UIStandardFonts.getVanilla());
+        this(text, UIDefaultFonts.getVanilla());
     }
 
     /**
