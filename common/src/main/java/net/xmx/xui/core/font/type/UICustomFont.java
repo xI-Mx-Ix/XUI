@@ -42,6 +42,13 @@ public class UICustomFont extends UIFont {
      */
     public static final float FONT_SIZE = 9.0f;
 
+    /**
+     * Empirically determined vertical correction to align MSDF fonts with
+     * the visual center of Vanilla font/standard UI elements.
+     * Positive shifts text UP (subtracts from Y).
+     */
+    private static final float VERTICAL_SHIFT_CORRECTION = 1.5f;
+
     private final TextLayoutEngine layoutEngine;
     
     /**
@@ -223,7 +230,7 @@ public class UICustomFont extends UIFont {
         // XUI coordinates are Top-Left based.
         // Font metrics (ascender) tell us how far down the baseline is from the top of the line.
         float baselineOffset = font.getData().metrics.ascender * FONT_SIZE;
-        float cursorY = y + baselineOffset;
+        float cursorY = y + baselineOffset - VERTICAL_SHIFT_CORRECTION;
 
         float atlasW = font.getData().atlas.width;
         float atlasH = font.getData().atlas.height;
@@ -257,7 +264,7 @@ public class UICustomFont extends UIFont {
                 // 2. Calculate Texture Coordinates (UVs)
                 // Atlas bounds are in raw pixels. We normalize by atlas dimensions.
                 // Note: msdf-atlas-gen JSON assumes 0 at bottom for Y, but standard image load is 0 at top.
-                // We flip the V coordinate: 1.0 - (y / height).
+                // We flip the V coordinate: 1.0f - (y / height).
                 float u0 = glyph.atlasBounds.left / atlasW;
                 float u1 = glyph.atlasBounds.right / atlasW;
                 float v0 = 1.0f - (glyph.atlasBounds.top / atlasH);
@@ -281,7 +288,7 @@ public class UICustomFont extends UIFont {
         // --- Decoration Handling ---
         // We calculate the geometry for lines now, but add them to a list
         // to be rendered in the second pass.
-        
+
         float textWidth = cursorX - x;
         float thickness = Math.max(0.65f, FONT_SIZE / 12.0f); // Scale line thickness with font size
 
@@ -295,7 +302,7 @@ public class UICustomFont extends UIFont {
         // We estimate x-height as half the ascender height
         if (comp.isStrikethrough()) {
             float midOffset = (font.getData().metrics.ascender * FONT_SIZE) * 0.4f;
-            float lineY = cursorY - midOffset; 
+            float lineY = cursorY - midOffset;
             pendingDecorations.add(new Decoration(x, lineY, textWidth, thickness, color));
         }
 
