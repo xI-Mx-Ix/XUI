@@ -5,7 +5,7 @@
 package net.xmx.xui.core.components;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
+import net.xmx.xui.core.text.UIComponent;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
@@ -31,7 +31,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      */
     public static final UIProperty<Integer> ARROW_COLOR = new UIProperty<>("dropdown_arrow_color", 0xFFAAAAAA);
 
-    private final List<Component> options = new ArrayList<>();
+    private final List<UIComponent> options = new ArrayList<>();
 
     private int selectedIndex = -1;
     private boolean isOpen = false;
@@ -47,7 +47,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
     /**
      * Constructs an empty dropdown.
-     * Add options using {@link #addOption(Component)} or {@link #setOptions(List)}.
+     * Add options using {@link #addOption(UIComponent)} or {@link #setOptions(List)}.
      */
     public UIDropdown() {
         setupDefaultStyles();
@@ -59,7 +59,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      * @param option The option component to add.
      * @return This dropdown instance.
      */
-    public UIDropdown addOption(Component option) {
+    public UIDropdown addOption(UIComponent option) {
         this.options.add(option);
         if (this.selectedIndex == -1) {
             this.selectedIndex = 0;
@@ -73,7 +73,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      * @param options The list of options.
      * @return This dropdown instance.
      */
-    public UIDropdown setOptions(List<Component> options) {
+    public UIDropdown setOptions(List<UIComponent> options) {
         this.options.clear();
         this.options.addAll(options);
         if (!this.options.isEmpty()) {
@@ -217,7 +217,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 renderer.drawRect(x, optY, width, optionHeight, baseHoverColor, 0);
             }
 
-            Component text = options.get(i);
+            UIComponent text = options.get(i);
             float textY = optY + (optionHeight - renderer.getFontHeight()) / 2.0f;
             renderer.drawText(text, x + 5, textY, textColor, false);
         }

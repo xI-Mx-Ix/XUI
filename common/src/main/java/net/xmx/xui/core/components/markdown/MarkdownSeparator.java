@@ -51,6 +51,10 @@ public class MarkdownSeparator extends UIPanel {
         this.setHeight(Constraints.pixel(renderHeight)); 
     }
 
+    /**
+     * Returns the pre-calculated height of this component.
+     * @return The total vertical space this component occupies.
+     */
     public float getRenderHeight() {
         return renderHeight;
     }

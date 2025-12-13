@@ -4,14 +4,14 @@
  */
 package net.xmx.xui.core.components;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
+import net.xmx.xui.core.text.UIComponent;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIProperty;
 import net.xmx.xui.core.style.UIState;
+import net.minecraft.client.Minecraft;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ import java.util.List;
  * - Fully styled via UIProperties (timing, offsets, padding).
  *
  * Usage: Create the tooltip, set the target via {@link #setTarget(UIWidget)},
- * set content via {@link #setContent(Component)}, then add the tooltip
+ * set content via {@link #setContent(UIComponent)}, then add the tooltip
  * to the root container (not the target itself) to ensure proper Z-layering.
  *
  * @author xI-Mx-Ix
@@ -69,7 +69,7 @@ public class UITooltip extends UIPanel {
 
     /**
      * Constructs an empty tooltip.
-     * You must call {@link #setTarget(UIWidget)} and {@link #setContent(Component)}
+     * You must call {@link #setTarget(UIWidget)} and {@link #setContent(UIComponent)}
      * before it will function.
      */
     public UITooltip() {
@@ -114,7 +114,7 @@ public class UITooltip extends UIPanel {
      * @param text The component text.
      * @return This tooltip instance.
      */
-    public UITooltip setContent(Component text) {
+    public UITooltip setContent(UIComponent text) {
         this.contentText.setText(text);
         return this;
     }
@@ -136,9 +136,9 @@ public class UITooltip extends UIPanel {
      * @param lines List of components.
      * @return This tooltip instance.
      */
-    public UITooltip setLines(List<Component> lines) {
-        this.contentText.setText(Component.empty()); // Clear initial
-        for (Component line : lines) {
+    public UITooltip setLines(List<UIComponent> lines) {
+        this.contentText.setText(UIComponent.empty()); // Clear initial
+        for (UIComponent line : lines) {
             this.contentText.addText(line, false);
         }
         return this;

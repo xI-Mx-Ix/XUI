@@ -4,18 +4,17 @@
  */
 package net.xmx.xui.core.components;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
+import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.impl.UIRenderImpl;
 
 /**
  * A standard text component representing a single line of text.
- * It supports adding multiple text segments (horizontal concatenation) via {@link #addText(Component)},
+ * It supports adding multiple text segments (horizontal concatenation) via {@link #addText(UIComponent)},
  * but does not support automatic line wrapping.
  * The widget automatically resizes its width and height to fit the content.
  *
@@ -23,8 +22,8 @@ import net.xmx.xui.core.style.UIState;
  */
 public class UIText extends UIWidget {
 
-    // We use a MutableComponent to accumulate appended text segments into a single logic line.
-    private MutableComponent content;
+    // We use UIComponent to accumulate appended text segments into a single logic line.
+    private UIComponent content;
     private boolean centered = false;
     private boolean shadow = true;
 
@@ -33,7 +32,7 @@ public class UIText extends UIWidget {
      * The default text color is set to white.
      */
     public UIText() {
-        this.content = Component.empty();
+        this.content = UIComponent.empty();
         this.style().set(Properties.TEXT_COLOR, 0xFFFFFFFF);
     }
 
@@ -44,7 +43,7 @@ public class UIText extends UIWidget {
      * @param text The component to append.
      * @return This widget instance for chaining.
      */
-    public UIText addText(Component text) {
+    public UIText addText(UIComponent text) {
         this.content.append(text);
         return this;
     }
@@ -56,7 +55,7 @@ public class UIText extends UIWidget {
      * @return This widget instance for chaining.
      */
     public UIText setText(String text) {
-        return setText(Component.literal(text));
+        return setText(UIComponent.literal(text));
     }
 
     /**
@@ -65,7 +64,7 @@ public class UIText extends UIWidget {
      * @param text The component to set.
      * @return This widget instance for chaining.
      */
-    public UIText setText(Component text) {
+    public UIText setText(UIComponent text) {
         // Since we need a mutable accumulator, we copy the input
         this.content = text.copy();
         return this;
@@ -76,7 +75,7 @@ public class UIText extends UIWidget {
      *
      * @return The text component.
      */
-    public Component getText() {
+    public UIComponent getText() {
         return this.content;
     }
 
@@ -113,8 +112,8 @@ public class UIText extends UIWidget {
         if (!isVisible) return;
 
         // Calculate required dimensions for the single line
-        int textWidth = Minecraft.getInstance().font.width(this.content);
-        int textHeight = Minecraft.getInstance().font.lineHeight;
+        int textWidth = UIRenderImpl.getInstance().getTextWidth(this.content);
+        int textHeight = UIRenderImpl.getInstance().getFontHeight();
 
         // Apply dimensions to constraints
         this.widthConstraint = Constraints.pixel(textWidth);

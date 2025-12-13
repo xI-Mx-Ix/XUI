@@ -5,7 +5,7 @@
 package net.xmx.xui.core.components;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
+import net.xmx.xui.core.text.UIComponent;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.effect.UIScissorsEffect;
 import net.xmx.xui.core.gl.UIRenderInterface;
@@ -187,20 +187,20 @@ public class UIEditBox extends UIWidget {
             if (isMultiline) {
                 String[] lines = hintText.split("\n", -1);
                 for (int i = 0; i < lines.length; i++) {
-                    renderer.drawText(Component.literal(lines[i]), drawX, drawY + (i * fontHeight), hintColor, true);
+                    renderer.drawText(UIComponent.literal(lines[i]), drawX, drawY + (i * fontHeight), hintColor, true);
                 }
             } else {
-                renderer.drawText(Component.literal(hintText), drawX, drawY, hintColor, true);
+                renderer.drawText(UIComponent.literal(hintText), drawX, drawY, hintColor, true);
             }
         } else {
             // Otherwise, render the actual text content
             if (isMultiline) {
                 String[] lines = text.split("\n", -1);
                 for (int i = 0; i < lines.length; i++) {
-                    renderer.drawText(Component.literal(lines[i]), drawX, drawY + (i * fontHeight), textColor, true);
+                    renderer.drawText(UIComponent.literal(lines[i]), drawX, drawY + (i * fontHeight), textColor, true);
                 }
             } else {
-                renderer.drawText(Component.literal(text), drawX, drawY, textColor, true);
+                renderer.drawText(UIComponent.literal(text), drawX, drawY, textColor, true);
             }
         }
 
@@ -241,11 +241,11 @@ public class UIEditBox extends UIWidget {
             }
 
             String subLine = lines[lineIndex].substring(0, colIndex);
-            cx = renderer.getTextWidth(Component.literal(subLine));
+            cx = renderer.getTextWidth(UIComponent.literal(subLine));
             cy = lineIndex * fontHeight;
         } else {
             String sub = text.substring(0, cursorPosition);
-            cx = renderer.getTextWidth(Component.literal(sub));
+            cx = renderer.getTextWidth(UIComponent.literal(sub));
             cy = 0;
         }
 
@@ -273,8 +273,8 @@ public class UIEditBox extends UIWidget {
                     int e = Math.min(end, lineEnd) - lineStart;
 
                     if (s < e || (s == e && lineStart >= start && lineEnd <= end)) {
-                        int x1 = renderer.getTextWidth(Component.literal(lines[i].substring(0, s)));
-                        int x2 = renderer.getTextWidth(Component.literal(lines[i].substring(0, e)));
+                        int x1 = renderer.getTextWidth(UIComponent.literal(lines[i].substring(0, s)));
+                        int x2 = renderer.getTextWidth(UIComponent.literal(lines[i].substring(0, e)));
                         if (end > lineEnd) x2 += 4;
                         renderer.drawRect(baseX + x1, baseY + (i * fontHeight), x2 - x1, fontHeight, color, 0);
                     }
@@ -282,8 +282,8 @@ public class UIEditBox extends UIWidget {
                 pos += lineLen + 1;
             }
         } else {
-            int x1 = renderer.getTextWidth(Component.literal(text.substring(0, start)));
-            int x2 = renderer.getTextWidth(Component.literal(text.substring(0, end)));
+            int x1 = renderer.getTextWidth(UIComponent.literal(text.substring(0, start)));
+            int x2 = renderer.getTextWidth(UIComponent.literal(text.substring(0, end)));
             renderer.drawRect(baseX + x1, baseY, x2 - x1, fontHeight, color, 0);
         }
     }
@@ -593,7 +593,7 @@ public class UIEditBox extends UIWidget {
             int localCursorIndex = Math.max(0, Math.min(currentLineText.length(), cursorPosition - lineStartPos));
             String subLine = currentLineText.substring(0, localCursorIndex);
 
-            int cursorX = renderer.getTextWidth(Component.literal(subLine));
+            int cursorX = renderer.getTextWidth(UIComponent.literal(subLine));
 
             if (cursorX < scrollX) {
                 scrollX = cursorX;
@@ -602,14 +602,14 @@ public class UIEditBox extends UIWidget {
             }
 
             // Calculate max X scroll for the current line to prevent empty space
-            int lineWidth = renderer.getTextWidth(Component.literal(currentLineText));
+            int lineWidth = renderer.getTextWidth(UIComponent.literal(currentLineText));
             maxScrollX = Math.max(0, lineWidth - visibleWidth + 8);
             scrollX = Math.max(0, Math.min(scrollX, maxScrollX));
 
         } else {
             // Single-line logic: Only X scrolling is relevant
             String sub = text.substring(0, cursorPosition);
-            int cursorX = renderer.getTextWidth(Component.literal(sub));
+            int cursorX = renderer.getTextWidth(UIComponent.literal(sub));
 
             if (cursorX < scrollX) {
                 scrollX = cursorX;
@@ -617,7 +617,7 @@ public class UIEditBox extends UIWidget {
                 scrollX = cursorX - visibleWidth + 4;
             }
 
-            int textWidth = renderer.getTextWidth(Component.literal(text));
+            int textWidth = renderer.getTextWidth(UIComponent.literal(text));
             maxScrollX = Math.max(0, textWidth - visibleWidth + 8);
             scrollX = Math.max(0, Math.min(scrollX, maxScrollX));
 

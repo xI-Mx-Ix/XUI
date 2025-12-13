@@ -4,13 +4,11 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.text.UIComponent;
 
 /**
  * Represents a Header element in Markdown (#, ##, ###).
@@ -26,16 +24,17 @@ public class MarkdownHeader extends UIPanel {
      * Constructs a header component.
      *
      * @param text         The raw text of the header.
-     * @param color        The color associated with the header level.
+     * @param color        The color associated with the header level (ARGB Integer).
      * @param contentWidth The available width for wrapping.
      */
-    public MarkdownHeader(Component text, ChatFormatting color, float contentWidth) {
+    public MarkdownHeader(UIComponent text, int color, float contentWidth) {
         // Transparent background
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
 
-        // Use color and style to distinguish headers
-        MutableComponent styled = text.copy().withStyle(ChatFormatting.BOLD, color);
+        // Use color and style to distinguish headers.
+        // We create a copy to apply styles without mutating the original component.
+        UIComponent styled = text.copy().setBold(true).setColor(color);
 
         UIWrappedText widget = MarkdownUtils.createWrappingText(styled, 0, contentWidth);
         
@@ -54,6 +53,8 @@ public class MarkdownHeader extends UIPanel {
 
     /**
      * Returns the pre-calculated height of this component including padding.
+     *
+     * @return The total vertical space this component occupies.
      */
     public float getRenderHeight() {
         return renderHeight;

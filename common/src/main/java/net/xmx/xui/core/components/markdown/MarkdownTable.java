@@ -4,13 +4,12 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.impl.UIRenderImpl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +68,7 @@ public class MarkdownTable extends UIPanel {
 
             for (int c = 0; c < columns && c < row.size(); c++) {
                 String text = row.get(c);
-                int textWidth = Minecraft.getInstance().font.width(MarkdownUtils.parseInline(text));
+                int textWidth = UIRenderImpl.getInstance().getTextWidth(MarkdownUtils.parseInline(text));
                 if (textWidth + cellPadding > colWidths[c]) {
                     colWidths[c] = textWidth + cellPadding;
                 }
@@ -89,7 +88,7 @@ public class MarkdownTable extends UIPanel {
 
         // Build UI Components
         float currentY = 0;
-        float rowHeight = Minecraft.getInstance().font.lineHeight + 8; // Text + padding
+        float rowHeight = UIRenderImpl.getInstance().getFontHeight() + 8; // Text + padding
 
         for (int r = 0; r < rows.size(); r++) {
             List<String> row = rows.get(r);
@@ -125,10 +124,11 @@ public class MarkdownTable extends UIPanel {
 
             for (int c = 0; c < columns && c < row.size(); c++) {
                 String cellText = row.get(c);
-                Component content = MarkdownUtils.parseInline(cellText);
+                UIComponent content = MarkdownUtils.parseInline(cellText);
                 
                 if (isHeader) {
-                    content = content.copy().withStyle(ChatFormatting.BOLD, ChatFormatting.YELLOW);
+                    // Header text is Bold and Yellow
+                    content = content.copy().setBold(true).setColor(0xFFFFFF55); 
                 }
 
                 UIText cellWidget = new UIText();
@@ -155,6 +155,10 @@ public class MarkdownTable extends UIPanel {
         return first.contains("---");
     }
 
+    /**
+     * Returns the pre-calculated height of this component.
+     * @return The total vertical space this component occupies.
+     */
     public float getRenderHeight() {
         return renderHeight;
     }

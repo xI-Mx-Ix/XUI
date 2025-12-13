@@ -4,7 +4,6 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.minecraft.ChatFormatting;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.style.Properties;
@@ -113,11 +112,11 @@ public class UIMarkdown extends UIPanel {
             if (trimmed.equals("---") || trimmed.equals("***")) {
                 addSeparator();
             } else if (trimmed.startsWith("# ")) {
-                addHeader(trimmed.substring(2), ChatFormatting.GOLD);
+                addHeader(trimmed.substring(2), 0xFFFFAA00); // GOLD
             } else if (trimmed.startsWith("## ")) {
-                addHeader(trimmed.substring(3), ChatFormatting.YELLOW);
+                addHeader(trimmed.substring(3), 0xFFFFFF55); // YELLOW
             } else if (trimmed.startsWith("### ")) {
-                addHeader(trimmed.substring(4), ChatFormatting.AQUA);
+                addHeader(trimmed.substring(4), 0xFF55FFFF); // AQUA
             } else if (trimmed.startsWith("> ")) {
                 addQuote(trimmed.substring(2));
             } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
@@ -158,7 +157,7 @@ public class UIMarkdown extends UIPanel {
         currentLayoutY += separator.getRenderHeight();
     }
 
-    private void addHeader(String rawText, ChatFormatting color) {
+    private void addHeader(String rawText, int color) {
         MarkdownHeader header = new MarkdownHeader(MarkdownUtils.parseInline(rawText), color, contentWidth);
         header.setY(Constraints.pixel(currentLayoutY));
         this.add(header);

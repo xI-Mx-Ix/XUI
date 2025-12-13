@@ -4,11 +4,9 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIWrappedText;
+import net.xmx.xui.core.text.UIComponent;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,10 +41,10 @@ public class MarkdownUtils {
      * @param contentWidth The total available width.
      * @return A configured UIWrappedText widget with layout calculated.
      */
-    public static UIWrappedText createWrappingText(Component content, float widthOffset, float contentWidth) {
+    public static UIWrappedText createWrappingText(UIComponent content, float widthOffset, float contentWidth) {
         UIWrappedText widget = new UIWrappedText();
         // Add empty line for padding logic
-        widget.addText(Component.empty());
+        widget.addText(UIComponent.empty());
         // Add actual content with wrapping enabled
         widget.addText(content, true);
 
@@ -70,7 +68,7 @@ public class MarkdownUtils {
      * @param text The raw text.
      * @return A component with formatting codes applied.
      */
-    public static Component parseInline(String text) {
+    public static UIComponent parseInline(String text) {
         // Escape existing section signs to prevent injection
         String safe = text.replace("§", "");
 
@@ -86,7 +84,7 @@ public class MarkdownUtils {
         // Replace Code `...` (Yellow/Gray)
         safe = safe.replaceAll("`(.*?)`", "§7$1§r");
 
-        return Component.literal(safe);
+        return UIComponent.literal(safe);
     }
 
     /**
@@ -95,8 +93,8 @@ public class MarkdownUtils {
      * @param code The raw code string.
      * @return A Component with colors applied to keywords, strings, etc.
      */
-    public static Component highlightCode(String code) {
-        MutableComponent result = Component.empty();
+    public static UIComponent highlightCode(String code) {
+        UIComponent result = UIComponent.empty();
         Matcher matcher = CODE_TOKEN_PATTERN.matcher(code);
         int lastEnd = 0;
 
@@ -104,29 +102,29 @@ public class MarkdownUtils {
             // Append un-matched segment (plain text / symbols) as gray
             String plain = code.substring(lastEnd, matcher.start());
             if (!plain.isEmpty()) {
-                result.append(Component.literal(plain).withStyle(ChatFormatting.GRAY));
+                result.append(UIComponent.literal(plain).setColor(0xFFAAAAAA)); // Gray
             }
 
             String token = matcher.group();
-            ChatFormatting color;
+            int color;
 
             if (token.startsWith("\"") || token.startsWith("'")) {
-                color = ChatFormatting.GREEN; // Strings
+                color = 0xFF55FF55; // Green (Strings)
             } else if (token.startsWith("//") || token.startsWith("/*")) {
-                color = ChatFormatting.DARK_GRAY; // Comments
+                color = 0xFF555555; // Dark Gray (Comments)
             } else if (Character.isDigit(token.charAt(0))) {
-                color = ChatFormatting.BLUE; // Numbers
+                color = 0xFF5555FF; // Blue (Numbers)
             } else {
-                color = ChatFormatting.GOLD; // Keywords
+                color = 0xFFFFAA00; // Gold (Keywords)
             }
 
-            result.append(Component.literal(token).withStyle(color));
+            result.append(UIComponent.literal(token).setColor(color));
             lastEnd = matcher.end();
         }
 
         String tail = code.substring(lastEnd);
         if (!tail.isEmpty()) {
-            result.append(Component.literal(tail).withStyle(ChatFormatting.GRAY));
+            result.append(UIComponent.literal(tail).setColor(0xFFAAAAAA)); // Gray
         }
 
         return result;

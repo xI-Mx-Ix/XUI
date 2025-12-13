@@ -4,13 +4,12 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.impl.UIRenderImpl;
 
 /**
  * Represents a Blockquote in Markdown (>).
@@ -28,20 +27,22 @@ public class MarkdownQuote extends UIPanel {
      * @param text         The text inside the quote.
      * @param contentWidth The available width.
      */
-    public MarkdownQuote(Component text, float contentWidth) {
+    public MarkdownQuote(UIComponent text, float contentWidth) {
         float padding = 4;
         float barWidth = 2;
         float quoteX = 10;
-        int fontHeight = Minecraft.getInstance().font.lineHeight;
+        int fontHeight = UIRenderImpl.getInstance().getFontHeight();
 
-        // Create the text widget first to measure it
+        // Create the text widget first to measure it.
+        // We style it Gray and Italic to represent a quote.
         UIWrappedText textWidget = MarkdownUtils.createWrappingText(
-                text.copy().withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC),
+                text.copy().setColor(0xFFAAAAAA).setItalic(true),
                 quoteX + padding,
                 contentWidth
         );
 
         // We shift the widget UP by fontHeight to make the visible text start exactly at 'padding'.
+        // This compensates for the empty line inserted by creatingWrappingText.
         textWidget.setY(Constraints.pixel(padding - fontHeight));
         textWidget.layout();
 
@@ -58,7 +59,7 @@ public class MarkdownQuote extends UIPanel {
                 .set(Properties.BACKGROUND_COLOR, 0x40000000)
                 .set(Properties.BORDER_THICKNESS, 0f);
 
-        // The vertical bar
+        // The vertical bar on the left
         UIPanel bar = new UIPanel();
         bar.setX(Constraints.pixel(0))
                 .setY(Constraints.pixel(0))
@@ -73,6 +74,10 @@ public class MarkdownQuote extends UIPanel {
         this.renderHeight = panelHeight + 5;
     }
 
+    /**
+     * Returns the pre-calculated height of this component.
+     * @return The total vertical space this component occupies.
+     */
     public float getRenderHeight() {
         return renderHeight;
     }

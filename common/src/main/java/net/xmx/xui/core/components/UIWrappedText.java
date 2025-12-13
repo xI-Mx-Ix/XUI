@@ -4,13 +4,13 @@
  */
 package net.xmx.xui.core.components;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
+import net.xmx.xui.core.text.UIComponent;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
+import net.xmx.xui.impl.UIRenderImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ public class UIWrappedText extends UIWidget {
      * Internal container for a text line configuration.
      */
     private static class TextLine {
-        final Component content;
+        final UIComponent content;
         final boolean wrap;
 
         /**
@@ -38,7 +38,7 @@ public class UIWrappedText extends UIWidget {
          * @param wrap    True if this line should wrap within the widget's width;
          *                False to force it to render as a single line (potentially overflowing).
          */
-        TextLine(Component content, boolean wrap) {
+        TextLine(UIComponent content, boolean wrap) {
             this.content = content;
             this.wrap = wrap;
         }
@@ -63,7 +63,7 @@ public class UIWrappedText extends UIWidget {
      * @param text The component to add as a new line.
      * @return This widget instance for chaining.
      */
-    public UIWrappedText addText(Component text) {
+    public UIWrappedText addText(UIComponent text) {
         return addText(text, false);
     }
 
@@ -75,7 +75,7 @@ public class UIWrappedText extends UIWidget {
      *             If false, it extends as far as needed (potentially overflowing).
      * @return This widget instance for chaining.
      */
-    public UIWrappedText addText(Component text, boolean wrap) {
+    public UIWrappedText addText(UIComponent text, boolean wrap) {
         this.lines.add(new TextLine(text, wrap));
         return this;
     }
@@ -87,7 +87,7 @@ public class UIWrappedText extends UIWidget {
      * @return This widget instance for chaining.
      */
     public UIWrappedText setText(String text) {
-        return setText(Component.literal(text));
+        return setText(UIComponent.literal(text));
     }
 
     /**
@@ -96,7 +96,7 @@ public class UIWrappedText extends UIWidget {
      * @param text The new text component.
      * @return This widget instance for chaining.
      */
-    public UIWrappedText setText(Component text) {
+    public UIWrappedText setText(UIComponent text) {
         this.lines.clear();
         this.addText(text, false);
         return this;
@@ -141,16 +141,16 @@ public class UIWrappedText extends UIWidget {
         int maxLineWidth = 0;
         boolean anyLineWraps = false;
 
-        // 2. Calculate dimensions based on lines
+        // 2. Calculate dimensions based on lines using UIRenderImpl
         for (TextLine line : lines) {
             if (line.wrap) {
                 // For wrapping lines, height depends on the current resolved width
-                totalHeight += Minecraft.getInstance().font.wordWrapHeight(line.content, (int) this.width);
+                totalHeight += UIRenderImpl.getInstance().getWordWrapHeight(line.content, (int) this.width);
                 anyLineWraps = true;
             } else {
                 // For non-wrapping lines, standard height and width calculation
-                totalHeight += Minecraft.getInstance().font.lineHeight;
-                int lineWidth = Minecraft.getInstance().font.width(line.content);
+                totalHeight += UIRenderImpl.getInstance().getFontHeight();
+                int lineWidth = UIRenderImpl.getInstance().getTextWidth(line.content);
                 if (lineWidth > maxLineWidth) {
                     maxLineWidth = lineWidth;
                 }

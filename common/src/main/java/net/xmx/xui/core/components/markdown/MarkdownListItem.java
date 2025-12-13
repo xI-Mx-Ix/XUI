@@ -4,12 +4,12 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.minecraft.client.Minecraft;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.impl.UIRenderImpl;
 
 /**
  * Represents a List Item in Markdown (- or *).
@@ -34,14 +34,15 @@ public class MarkdownListItem extends UIPanel {
 
         float bulletWidth = 15;
 
-        // Bullet point doesn't need wrapping, simple creation
+        // Bullet point doesn't need wrapping, simple creation using UIText
         UIText bullet = new UIText();
         bullet.setText("•");
         bullet.setX(Constraints.pixel(5));
 
         // Determine Y offset.
-        // We align the bullet to the second line of the content widget (where text actually starts).
-        float fontHeight = Minecraft.getInstance().font.lineHeight;
+        // We align the bullet to the second line of the content widget (where text actually starts),
+        // because createWrappingText adds an empty line at the top.
+        float fontHeight = UIRenderImpl.getInstance().getFontHeight();
         bullet.setY(Constraints.pixel(fontHeight));
         
         this.add(bullet);
@@ -59,6 +60,11 @@ public class MarkdownListItem extends UIPanel {
         this.setHeight(Constraints.pixel(renderHeight));
     }
 
+    /**
+     * Returns the pre-calculated height of this component.
+     *
+     * @return The total vertical space this component occupies.
+     */
     public float getRenderHeight() {
         return renderHeight;
     }

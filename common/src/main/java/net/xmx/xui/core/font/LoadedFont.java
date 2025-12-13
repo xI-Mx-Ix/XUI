@@ -6,6 +6,8 @@ package net.xmx.xui.core.font;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL33;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.stb.STBTTPackContext;
 import org.lwjgl.stb.STBTTPackedchar;
@@ -32,7 +34,7 @@ class LoadedFont {
     private final float ascent;
     private final float descent;
     private final float lineGap;
-    
+
     // Configuration for the texture atlas
     private static final int BITMAP_W = 1024;
     private static final int BITMAP_H = 1024;
@@ -43,7 +45,7 @@ class LoadedFont {
      * Loads a TTF file from the classpath and generates an OpenGL texture.
      *
      * @param resourcePath The path to the .ttf file.
-     * @param size         The desired point size (higher = better quality but more memory).
+     * @param size         The desired point size.
      */
     public LoadedFont(String resourcePath, float size) {
         this.fontSize = size;
@@ -79,25 +81,33 @@ class LoadedFont {
 
         try (STBTTPackContext pc = STBTTPackContext.malloc()) {
             STBTruetype.stbtt_PackBegin(pc, bitmap, BITMAP_W, BITMAP_H, 0, 1, MemoryUtil.NULL);
-            
+
             // Use oversampling for sharper text on edges (2x horizontal, 2x vertical)
             STBTruetype.stbtt_PackSetOversampling(pc, 2, 2);
-            
+
             STBTruetype.stbtt_PackFontRange(pc, fontBuffer, 0, size, FIRST_CHAR, charData);
-            
+
             STBTruetype.stbtt_PackEnd(pc);
         }
 
-        // 4. Upload to OpenGL
+        // 4. Upload to OpenGL (Modern Core Profile)
         textureId = GL11.glGenTextures();
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-        
-        // Use Alpha format since STB generates a single-channel alpha mask
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_ALPHA, BITMAP_W, BITMAP_H, 0, GL11.GL_ALPHA, GL11.GL_UNSIGNED_BYTE, bitmap);
-        
-        // Linear filtering provides smoothness when scaling; Nearest would be pixelated
+
+        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1); // Ensure tight packing for single-byte pixels
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_R8, BITMAP_W, BITMAP_H, 0, GL11.GL_RED, GL11.GL_UNSIGNED_BYTE, bitmap);
+
+        // Texture Parameters
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
+
+        // We tell OpenGL to map the RED channel (where our data is) to the ALPHA channel when sampled.
+        // This ensures the shader code "texture(tex, uv).a" continues to work correctly.
+        // R, G, B become 1.0 (White), A becomes the Red value (Opacity).
+        int[] swizzle = {GL11.GL_ONE, GL11.GL_ONE, GL11.GL_ONE, GL11.GL_RED};
+        GL11.glTexParameteriv(GL11.GL_TEXTURE_2D, GL33.GL_TEXTURE_SWIZZLE_RGBA, swizzle);
     }
 
     public int getTextureId() {

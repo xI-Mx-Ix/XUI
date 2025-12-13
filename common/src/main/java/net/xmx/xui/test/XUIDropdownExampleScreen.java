@@ -15,6 +15,7 @@ import net.xmx.xui.core.components.UIDropdown;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.text.UIComponent;
 
 import java.util.Arrays;
 
@@ -85,10 +86,10 @@ public class XUIDropdownExampleScreen extends Screen {
 
         UIDropdown dropdown = new UIDropdown();
         dropdown.setOptions(Arrays.asList(
-                Component.literal("Survival Mode"),
-                Component.literal("Creative Mode"),
-                Component.literal("Spectator Mode"),
-                Component.literal("Adventure Mode")
+                UIComponent.literal("Survival Mode"),
+                UIComponent.literal("Creative Mode"),
+                UIComponent.literal("Spectator Mode"),
+                UIComponent.literal("Adventure Mode")
         ));
 
         dropdown.setX(Constraints.anchorEnd(10)) // Align right

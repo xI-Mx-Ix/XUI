@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.components;
 
-import net.minecraft.network.chat.Component;
+import net.xmx.xui.core.text.UIComponent;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.style.Properties;
@@ -23,14 +23,14 @@ import net.xmx.xui.core.style.UIState;
  */
 public class UIButton extends UIWidget {
 
-    private Component label;
+    private UIComponent label;
 
     /**
      * Constructs a button with default styles and an empty label.
-     * Content should be set using {@link #setLabel(Component)} or {@link #setLabel(String)}.
+     * Content should be set using {@link #setLabel(UIComponent)} or {@link #setLabel(String)}.
      */
     public UIButton() {
-        this.label = Component.empty();
+        this.label = UIComponent.empty();
         setupModernStyles();
     }
 
@@ -104,7 +104,7 @@ public class UIButton extends UIWidget {
      * @param label The new label component.
      * @return This button instance.
      */
-    public UIButton setLabel(Component label) {
+    public UIButton setLabel(UIComponent label) {
         this.label = label;
         return this;
     }
@@ -116,7 +116,7 @@ public class UIButton extends UIWidget {
      * @return This button instance.
      */
     public UIButton setLabel(String label) {
-        this.label = Component.literal(label);
+        this.label = UIComponent.literal(label);
         return this;
     }
 }

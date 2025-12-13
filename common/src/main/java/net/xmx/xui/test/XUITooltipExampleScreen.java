@@ -16,6 +16,7 @@ import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UITooltip;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.text.UIComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,13 +121,24 @@ public class XUITooltipExampleScreen extends Screen {
                 .setWidth(Constraints.pixel(200))
                 .setHeight(Constraints.pixel(30));
 
-        List<Component> richLines = new ArrayList<>();
-        richLines.add(Component.literal("Header Info").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        richLines.add(Component.literal("Rarity: Legendary").withStyle(ChatFormatting.LIGHT_PURPLE));
-        richLines.add(Component.empty());
-        richLines.add(Component.literal("Stats:").withStyle(ChatFormatting.GRAY));
-        richLines.add(Component.literal(" +50 Strength").withStyle(ChatFormatting.RED));
-        richLines.add(Component.literal(" +10 Speed").withStyle(ChatFormatting.BLUE));
+        // Use UIComponent list instead of Minecraft Component list
+        List<UIComponent> richLines = new ArrayList<>();
+
+        // Header: Gold + Bold
+        richLines.add(UIComponent.literal("Header Info").setColor(0xFFFFAA00).setBold(true));
+
+        // Rarity: Light Purple
+        richLines.add(UIComponent.literal("Rarity: Legendary").setColor(0xFFFF55FF));
+
+        // Spacer
+        richLines.add(UIComponent.empty());
+
+        // Stats Header: Gray
+        richLines.add(UIComponent.literal("Stats:").setColor(0xFFAAAAAA));
+
+        // Stats Values: Red and Blue
+        richLines.add(UIComponent.literal(" +50 Strength").setColor(0xFFFF5555));
+        richLines.add(UIComponent.literal(" +10 Speed").setColor(0xFF5555FF));
 
         UITooltip tipRich = new UITooltip();
         tipRich.setTarget(btnRich)

@@ -4,7 +4,6 @@
  */
 package net.xmx.xui.test;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,11 +14,17 @@ import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
+import net.xmx.xui.core.font.UIStandardFonts;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.text.UIComponent;
 
 /**
  * Example screen demonstrating the multi-line and wrapping capabilities of UIText via {@link UIContext}.
  * Shows how to mix single lines, styled components, and wrapped blocks within one widget.
+ * <p>
+ * This example explicitly uses {@link UIStandardFonts#getJetBrainsMono()} to demonstrate
+ * high-resolution TrueType font rendering mixed with standard UI elements.
+ * </p>
  *
  * @author xI-Mx-Ix
  */
@@ -33,6 +38,7 @@ public class XUITextExampleScreen extends Screen {
 
     @Override
     protected void init() {
+        // Update logical layout based on physical window size using integer scaling
         int wW = Minecraft.getInstance().getWindow().getWidth();
         int wH = Minecraft.getInstance().getWindow().getHeight();
         uiContext.updateLayout(wW, wH);
@@ -61,7 +67,13 @@ public class XUITextExampleScreen extends Screen {
 
         // --- WIDGET 1: Simple Header (Single Line, Centered) ---
         UIText header = new UIText();
-        header.setText(Component.literal("Update Changelog").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+
+        // Use UIComponent with Hex Color (Gold), Bold flag, and Custom TTF Font
+        header.setText(UIComponent.literal("Update Changelog")
+                .setColor(0xFFFFAA00)
+                .setBold(true)
+                .setFont(UIStandardFonts.getJetBrainsMono())); // Apply JetBrains Mono
+
         header.setCentered(true)
                 .setX(Constraints.center())
                 .setY(Constraints.pixel(20));
@@ -70,30 +82,43 @@ public class XUITextExampleScreen extends Screen {
         // UIWrappedText supports adding multiple vertical lines.
         UIWrappedText featureList = new UIWrappedText();
 
-        // Add the title line
-        featureList.setText(Component.literal("New Features:").withStyle(ChatFormatting.UNDERLINE));
+        // Add the title line (Underlined) - Keeps Vanilla font for contrast
+        featureList.setText(UIComponent.literal("New Features:").setUnderline(true));
 
         // Add subsequent lines. Passing 'false' for wrapping means they act as hard line breaks.
-        featureList.addText(Component.literal("• Added multi-line text support").withStyle(ChatFormatting.GREEN), false)
-                .addText(Component.literal("• Integrated Minecraft Components").withStyle(ChatFormatting.AQUA), false)
-                .addText(Component.literal("• Dynamic height calculation").withStyle(ChatFormatting.YELLOW), false);
+        // We apply the Custom Font here to make the list look cleaner/more technical.
+        featureList.addText(UIComponent.literal("• Added multi-line text support")
+                        .setColor(0xFF55FF55)
+                        .setFont(UIStandardFonts.getJetBrainsMono()), false)
+
+                .addText(UIComponent.literal("• Integrated Minecraft Components")
+                        .setColor(0xFF55FFFF)
+                        .setFont(UIStandardFonts.getJetBrainsMono()), false)
+
+                .addText(UIComponent.literal("• Dynamic height calculation")
+                        .setColor(0xFFFFFF55)
+                        .setFont(UIStandardFonts.getJetBrainsMono()), false);
 
         featureList.setX(Constraints.pixel(20))
                 .setY(Constraints.sibling(header, 30, true)); // Position below header
 
         // --- WIDGET 3: Mixed Wrapping (Introduction + Long Text) ---
         UIWrappedText description = new UIWrappedText();
-        description.setText(Component.literal("Technical Details:").withStyle(ChatFormatting.RED));
+        description.setText(UIComponent.literal("Technical Details:").setColor(0xFFFF5555)); // Red (Vanilla Font)
 
         // Add a long paragraph with wrapping enabled (true)
         String longLorem = "The UIWrappedText component now supports an internal list of lines. " +
                 "You can mix standard lines with auto-wrapping lines in the same widget. " +
                 "The height of the widget is recalculated automatically based on the font renderer.";
 
-        description.addText(Component.literal(longLorem).withStyle(ChatFormatting.GRAY), true);
+        // Color: Gray (AAAAAA), Font: JetBrains Mono
+        description.addText(UIComponent.literal(longLorem)
+                .setColor(0xFFAAAAAA)
+                .setFont(UIStandardFonts.getJetBrainsMono()), true);
 
         // Add another line without wrapping (might overflow if too long, but useful for signatures etc)
-        description.addText(Component.literal("End of report.").withStyle(ChatFormatting.ITALIC, ChatFormatting.DARK_GRAY), false);
+        // Style: Italic, Dark Gray (555555), Vanilla Font
+        description.addText(UIComponent.literal("End of report.").setItalic(true).setColor(0xFF555555), false);
 
         description.setX(Constraints.pixel(20))
                 .setY(Constraints.sibling(featureList, 20, true))
@@ -101,6 +126,8 @@ public class XUITextExampleScreen extends Screen {
 
         // --- Close Button ---
         UIButton closeBtn = new UIButton();
+        // setLabel now accepts String or UIComponent automatically
+        // We keep the button label Vanilla for consistent UI feel
         closeBtn.setLabel("Close");
         closeBtn.setX(Constraints.center())
                 .setY(Constraints.anchorEnd(20))

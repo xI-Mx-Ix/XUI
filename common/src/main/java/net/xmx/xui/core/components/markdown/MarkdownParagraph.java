@@ -4,14 +4,14 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.style.Properties;
+import net.xmx.xui.core.text.UIComponent;
+import net.xmx.xui.impl.UIRenderImpl;
 import net.xmx.xui.util.URLUtil;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.regex.Matcher;
@@ -44,7 +44,7 @@ public class MarkdownParagraph extends UIPanel {
 
         // After flow is built, set height
         // Add final line height to accommodate the last line (logic matches original)
-        this.renderHeight = currentLayoutY + Minecraft.getInstance().font.lineHeight;
+        this.renderHeight = currentLayoutY + UIRenderImpl.getInstance().getFontHeight();
         this.setHeight(Constraints.pixel(renderHeight));
     }
 
@@ -57,7 +57,7 @@ public class MarkdownParagraph extends UIPanel {
 
         // Current X position relative to the container for this paragraph flow
         float cursorX = 0;
-        float fontHeight = Minecraft.getInstance().font.lineHeight;
+        float fontHeight = UIRenderImpl.getInstance().getFontHeight();
 
         while (matcher.find()) {
             // 1. Text before the link
@@ -97,14 +97,14 @@ public class MarkdownParagraph extends UIPanel {
             // Skip empty tokens
             if (word.isEmpty()) continue;
 
-            // Parse styles (bold/italic/code)
-            Component wordComp = MarkdownUtils.parseInline(word);
+            // Parse styles (bold/italic/code) using MarkdownUtils
+            UIComponent wordComp = MarkdownUtils.parseInline(word);
             if (isLink) {
-                // Style links as Blue and Underlined
-                wordComp = wordComp.copy().withStyle(ChatFormatting.BLUE, ChatFormatting.UNDERLINE);
+                // Style links as Blue (0xFF5555FF) and Underlined
+                wordComp = wordComp.copy().setColor(0xFF5555FF).setUnderline(true);
             }
 
-            int wordWidth = Minecraft.getInstance().font.width(wordComp);
+            int wordWidth = UIRenderImpl.getInstance().getTextWidth(wordComp);
 
             // Check if we need to wrap
             if (currentX + wordWidth > contentWidth) {
@@ -123,7 +123,7 @@ public class MarkdownParagraph extends UIPanel {
     /**
      * Creates and adds a small text widget for a specific segment (word or link).
      */
-    private void addSegmentWidget(Component content, float x, float y, int w, float h, boolean isLink, String url) {
+    private void addSegmentWidget(UIComponent content, float x, float y, int w, float h, boolean isLink, String url) {
         UIText widget = new UIText();
         widget.setText(content);
 
@@ -137,7 +137,7 @@ public class MarkdownParagraph extends UIPanel {
             // Hover: Change cursor to Hand
             widget.setOnMouseEnter(wgt -> {
                 long window = Minecraft.getInstance().getWindow().getWindow();
-                // Create a standard hand cursor
+                // Create a standard hand cursor via GLFW
                 long cursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
                 GLFW.glfwSetCursor(window, cursor);
             });
@@ -149,7 +149,7 @@ public class MarkdownParagraph extends UIPanel {
                 GLFW.glfwSetCursor(window, cursor);
             });
 
-            // Click: Open URL
+            // Click: Open URL using utility class
             widget.setOnClick(wgt -> {
                 try {
                     URLUtil.openURL(url);
@@ -163,6 +163,10 @@ public class MarkdownParagraph extends UIPanel {
         this.add(widget);
     }
 
+    /**
+     * Returns the total calculated height of this paragraph.
+     * @return The height in pixels.
+     */
     public float getRenderHeight() {
         return renderHeight;
     }

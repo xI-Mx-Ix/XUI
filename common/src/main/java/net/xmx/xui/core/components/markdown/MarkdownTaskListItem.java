@@ -4,7 +4,6 @@
  */
 package net.xmx.xui.core.components.markdown;
 
-import net.minecraft.client.Minecraft;
 import net.xmx.xui.core.Constraints;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.UIWidget;
@@ -12,6 +11,7 @@ import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.UIState;
+import net.xmx.xui.impl.UIRenderImpl;
 
 /**
  * Represents a Task List Item in Markdown (- [ ] or - [x]).
@@ -37,7 +37,7 @@ public class MarkdownTaskListItem extends UIPanel {
         this.style().set(Properties.BACKGROUND_COLOR, 0x00000000);
         this.setWidth(Constraints.pixel(contentWidth));
 
-        int fontHeight = Minecraft.getInstance().font.lineHeight;
+        int fontHeight = UIRenderImpl.getInstance().getFontHeight();
         float boxSize = 10.0f;
 
         // Calculate Y offset:
@@ -73,6 +73,10 @@ public class MarkdownTaskListItem extends UIPanel {
         this.setHeight(Constraints.pixel(renderHeight));
     }
 
+    /**
+     * Returns the pre-calculated height of this component.
+     * @return The total vertical space this component occupies.
+     */
     public float getRenderHeight() {
         return renderHeight;
     }
@@ -99,8 +103,8 @@ public class MarkdownTaskListItem extends UIPanel {
 
         @Override
         protected void drawSelf(UIRenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, UIState state) {
-            // FIX: Nutze Helper-Methoden mit deltaTime statt style().getValue()
-            // Damit werden Hover-Effekte auch hier weich animiert.
+            // FIX: Use helper methods with deltaTime instead of style().getValue()
+            // so hover effects are animated smoothly.
             int bg = getColor(Properties.BACKGROUND_COLOR, state, deltaTime);
             int border = getColor(Properties.BORDER_COLOR, state, deltaTime);
             float radius = getFloat(Properties.BORDER_RADIUS, state, deltaTime);

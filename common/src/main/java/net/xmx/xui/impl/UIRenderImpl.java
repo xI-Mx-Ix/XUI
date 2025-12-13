@@ -6,24 +6,18 @@ package net.xmx.xui.impl;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.gl.UIRenderInterface;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.text.UIComponent;
 
 /**
- * Concrete implementation of the {@link UIRenderInterface} for Minecraft.
+ * Concrete implementation of the {@link UIRenderInterface}.
  * <p>
- * This class acts as a Singleton bridge between the library's rendering abstraction
- * and the specific Minecraft rendering systems. It delegates raw geometry operations
- * (rectangles, outlines) to the custom {@link UIRenderer} and handles text rendering
- * via an injected {@link GuiGraphics} instance.
- * </p>
- * <p>
- * <b>Pixel Snapping Implementation:</b><br>
- * Since the UI uses floating-point scaling factors, logical coordinates often result
- * in sub-pixel positions (e.g., 10.5px). This implementation forces coordinates to
- * snap to the nearest physical monitor pixel using the {@link #alignX(float)} and {@link #alignY(float)}
- * methods before rendering. This prevents visual artifacts like blurry fonts or uneven border thicknesses.
+ * This class acts as the bridge between the high-level UI component system
+ * and the low-level rendering logic (Minecraft or OpenGL). It handles
+ * coordinate alignment (pixel snapping), global offsets, and delegates text
+ * rendering to the appropriate {@link UIFont} implementation.
  * </p>
  *
  * @author xI-Mx-Ix
@@ -32,40 +26,17 @@ public class UIRenderImpl implements UIRenderInterface {
 
     private static UIRenderImpl instance;
 
-    /**
-     * The active GuiGraphics instance used for rendering text.
-     * <p>
-     * This is injected by the {@code UIContext} at the start of every render frame.
-     * It contains the necessary PoseStack transformations (scaling) to ensure text
-     * aligns with the custom geometry projection.
-     * </p>
-     */
     private GuiGraphics guiGraphics;
-
-    /**
-     * The scale factor currently used for geometry projection.
-     * Defaults to 1.0 but is overridden by {@link #setScale(double)}.
-     */
     private double currentScale = 1.0;
-
-    /**
-     * Global translation offsets for the current render batch.
-     * Used for scrolling and container offsets without modifying widget coordinates.
-     */
     private float globalOffsetX = 0.0f;
     private float globalOffsetY = 0.0f;
 
-    /**
-     * Private constructor for Singleton pattern.
-     */
     private UIRenderImpl() {
-        // Prevent external instantiation
     }
 
     /**
-     * Retrieves the global singleton instance of the render interface implementation.
-     *
-     * @return The UIRenderImpl singleton.
+     * Retrieves the singleton instance.
+     * @return The renderer implementation.
      */
     public static UIRenderImpl getInstance() {
         if (instance == null) {
@@ -74,258 +45,144 @@ public class UIRenderImpl implements UIRenderInterface {
         return instance;
     }
 
-    /**
-     * Updates the scale factor used for rendering calculations.
-     * This is typically called by the {@code UIContext} before rendering a frame.
-     *
-     * @param scale The new scale factor (logical pixels to physical pixels).
-     */
+    // --- State Management ---
+
     public void setScale(double scale) {
         this.currentScale = scale;
     }
 
-    /**
-     * Sets the active {@link GuiGraphics} instance for the current render pass.
-     * <p>
-     * This is crucial for text rendering, as the standard Minecraft font renderer
-     * relies on the {@code PoseStack} within GuiGraphics.
-     * </p>
-     *
-     * @param guiGraphics The graphics instance for the current frame.
-     */
     public void setGuiGraphics(GuiGraphics guiGraphics) {
         this.guiGraphics = guiGraphics;
-        // Reset offsets at start of frame
         this.globalOffsetX = 0;
         this.globalOffsetY = 0;
     }
 
     /**
-     * Aligns a logical X coordinate to the nearest physical screen pixel,
-     * taking into account the global offset.
-     *
-     * @param logicalX The coordinate in the UI system.
-     * @return The coordinate adjusted to start exactly on a monitor pixel.
+     * Exposes the current GuiGraphics for Vanilla font rendering.
+     * @return The active GuiGraphics instance.
      */
+    public GuiGraphics getGuiGraphics() {
+        return guiGraphics;
+    }
+
+    public double getCurrentScale() {
+        return currentScale;
+    }
+
+    // --- Pixel Snapping ---
+
     private float alignX(float logicalX) {
-        float val = logicalX + globalOffsetX;
-        if (currentScale == 0) return val;
-        return (float) (Math.round(val * currentScale) / currentScale);
+        return logicalX + globalOffsetX;
     }
 
-    /**
-     * Aligns a logical Y coordinate to the nearest physical screen pixel,
-     * taking into account the global offset.
-     *
-     * @param logicalY The coordinate in the UI system.
-     * @return The coordinate adjusted to start exactly on a monitor pixel.
-     */
     private float alignY(float logicalY) {
-        float val = logicalY + globalOffsetY;
-        if (currentScale == 0) return val;
-        return (float) (Math.round(val * currentScale) / currentScale);
+        return logicalY + globalOffsetY;
     }
 
-    /**
-     * Aligns a dimension (width/height) to match integer physical pixels.
-     * <p>
-     * This method ensures that a non-zero logical size never rounds down to zero physical pixels.
-     * If a border is 1px logical, but the scale makes it 0.4px physical, this forces it to be
-     * at least 1 physical pixel wide to remain visible.
-     * </p>
-     *
-     * @param logicalSize The width or height in logical pixels.
-     * @return The aligned size, guaranteed to be at least 1 physical pixel if logicalSize > 0.
-     */
     private float alignDim(float logicalSize) {
-        if (logicalSize <= 0) return 0;
-        // Dimension scaling does not use offsets, just the raw size
-        float aligned = (float) (Math.round(logicalSize * currentScale) / currentScale);
-
-        // If the size is positive but rounds to 0 (very thin line on low scale), force 1 physical pixel.
-        if (aligned == 0 && logicalSize > 0) {
-            return (float) (1.0 / currentScale);
-        }
-        return aligned;
+        return logicalSize;
     }
 
-    // --- Geometry & Effects (Delegated to UIRenderer) ---
+    // --- Geometry Rendering (Delegation) ---
 
     @Override
     public void drawRect(float x, float y, float width, float height, int color, float radius) {
-        // Snap position and dimensions to the pixel grid
-        float ax = alignX(x);
-        float ay = alignY(y);
-        float aw = alignDim(width);
-        float ah = alignDim(height);
-
-        UIRenderer.getInstance().drawRect(ax, ay, aw, ah, color, radius, radius, radius, radius, currentScale);
+        UIRenderer.getInstance().drawRect(alignX(x), alignY(y), alignDim(width), alignDim(height), color, radius, radius, radius, radius, currentScale);
     }
 
     @Override
     public void drawRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL) {
-        float ax = alignX(x);
-        float ay = alignY(y);
-        float aw = alignDim(width);
-        float ah = alignDim(height);
-
-        UIRenderer.getInstance().drawRect(ax, ay, aw, ah, color, rTL, rTR, rBR, rBL, currentScale);
+        UIRenderer.getInstance().drawRect(alignX(x), alignY(y), alignDim(width), alignDim(height), color, rTL, rTR, rBR, rBL, currentScale);
     }
 
     @Override
     public void drawOutline(float x, float y, float width, float height, int color, float radius, float thickness) {
-        float ax = alignX(x);
-        float ay = alignY(y);
-        float aw = alignDim(width);
-        float ah = alignDim(height);
-
-        // Calculate minimal thickness to prevent borders from disappearing
-        float snappedThickness = Math.max((float)(1.0/currentScale), alignDim(thickness));
-
-        UIRenderer.getInstance().drawOutline(ax, ay, aw, ah, color, snappedThickness, radius, radius, radius, radius, currentScale);
+        UIRenderer.getInstance().drawOutline(alignX(x), alignY(y), alignDim(width), alignDim(height), color, thickness, radius, radius, radius, radius, currentScale);
     }
 
     @Override
     public void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL) {
-        float ax = alignX(x);
-        float ay = alignY(y);
-        float aw = alignDim(width);
-        float ah = alignDim(height);
-
-        float snappedThickness = Math.max((float)(1.0/currentScale), alignDim(thickness));
-
-        UIRenderer.getInstance().drawOutline(ax, ay, aw, ah, color, snappedThickness, rTL, rTR, rBR, rBL, currentScale);
+        UIRenderer.getInstance().drawOutline(alignX(x), alignY(y), alignDim(width), alignDim(height), color, thickness, rTL, rTR, rBR, rBL, currentScale);
     }
 
-    // --- Scissor Logic & Batch Flushing ---
+    // --- Text Rendering (Delegation to Font Abstraction) ---
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * <b>Implementation Note:</b> This method flushes the Minecraft render buffer to ensure
-     * text is drawn before the clip rect changes. It calculates the exact physical pixel
-     * coordinates to prevent rounding errors (e.g., a 10.5px logical position becoming 21px physical).
-     * </p>
-     * <p>
-     * To ensure compatibility with the {@link UIRenderer} which expects integers, this method
-     * pre-calculates the physical coordinates and passes a scale of 1.0. This bypasses
-     * any potential loss of precision if we were to cast logical coordinates to integers directly.
-     * </p>
-     */
     @Override
-    public void enableScissor(float x, float y, float width, float height) {
-        // Flush any pending rendering commands (especially text) before changing state.
-        Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
+    public void drawText(UIComponent text, float x, float y, int color, boolean shadow) {
+        if (guiGraphics == null || text == null || text.getFont() == null) return;
 
-        // 1. Align logical coordinates to the pixel grid (e.g., 10.5 -> 10.5), including offsets
+        float ax = alignX(x);
+        float ay = alignY(y);
+
+        text.getFont().draw(this, text, ax, ay, color, shadow);
+    }
+
+    @Override
+    public void drawWrappedText(UIComponent text, float x, float y, float width, int color, boolean shadow) {
+        if (guiGraphics == null || text == null || text.getFont() == null) return;
+
         float ax = alignX(x);
         float ay = alignY(y);
         float aw = alignDim(width);
-        float ah = alignDim(height);
 
-        // 2. Convert to physical pixels (e.g., 10.5 * 2.0 = 21)
-        int physX = (int) (ax * currentScale);
-        int physY = (int) (ay * currentScale);
-        int physW = (int) (aw * currentScale);
-        int physH = (int) (ah * currentScale);
+        text.getFont().drawWrapped(this, text, ax, ay, aw, color, shadow);
+    }
 
-        // 3. Delegate to the ScissorManager within UIRenderer.
-        // We pass 1.0 as the scale because we have already manually calculated the physical pixels above.
+    @Override
+    public int getTextWidth(UIComponent text) {
+        if (text == null || text.getFont() == null) return 0;
+        return (int) Math.ceil(text.getFont().getWidth(text));
+    }
+
+    @Override
+    public int getFontHeight() {
+        // Returns Vanilla height by default as a generic metric,
+        // components needing specific font height should call text.getFont().getLineHeight()
+        return Minecraft.getInstance().font.lineHeight;
+    }
+
+    @Override
+    public int getWordWrapHeight(UIComponent text, int maxWidth) {
+        if (text == null || text.getFont() == null) return 0;
+        return (int) Math.ceil(text.getFont().getWordWrapHeight(text, maxWidth));
+    }
+
+    // --- Scissor & Transforms ---
+
+    @Override
+    public void enableScissor(float x, float y, float width, float height) {
+        Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
+        int physX = (int) (alignX(x) * currentScale);
+        int physY = (int) (alignY(y) * currentScale);
+        int physW = (int) (alignDim(width) * currentScale);
+        int physH = (int) (alignDim(height) * currentScale);
         UIRenderer.getInstance().getScissor().pushScissor(physX, physY, physW, physH, 1.0);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void disableScissor() {
-        // Flush any pending rendering commands inside the scissor region.
         Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
-
-        // Delegate to the ScissorManager to pop the last state.
-        // We pass 1.0 to match the pushScissor logic.
         UIRenderer.getInstance().getScissor().popScissor(1.0);
     }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This retrieves the raw physical scissor rectangle from the renderer and converts it back
-     * to logical coordinates so that {@link net.xmx.xui.core.effect.UIScissorsEffect} can
-     * compute intersections correctly.
-     * </p>
-     */
-    @Override
-    public float[] getCurrentScissor() {
-        // Access via getScissor() manager
-        int[] physScissor = UIRenderer.getInstance().getScissor().getCurrentScissor();
-
-        if (physScissor == null) return null;
-
-        if (currentScale == 0) return new float[4];
-
-        // Convert physical pixels back to logical pixels for the UI system
-        return new float[]{
-                (float) (physScissor[0] / currentScale),
-                (float) (physScissor[1] / currentScale),
-                (float) (physScissor[2] / currentScale),
-                (float) (physScissor[3] / currentScale)
-        };
-    }
-
-    // --- Translation ---
 
     @Override
     public void translate(float x, float y, float z) {
         this.globalOffsetX += x;
         this.globalOffsetY += y;
-
-        // Z translation is handled via PoseStack to properly layer text/items
         if (z != 0 && guiGraphics != null) {
             guiGraphics.pose().translate(0, 0, z);
         }
     }
 
-    // --- Text Rendering (Minecraft Specific) ---
-
     @Override
-    public void drawText(Component text, float x, float y, int color, boolean shadow) {
-        if (guiGraphics == null) return;
-
-        // Snap text position to the pixel grid.
-        float ax = alignX(x);
-        float ay = alignY(y);
-
-        guiGraphics.pose().pushPose();
-        // Translate slightly on Z to render over geometry
-        guiGraphics.pose().translate(0, 0, 0.1f);
-        guiGraphics.drawString(Minecraft.getInstance().font, text, (int) ax, (int) ay, color, shadow);
-        guiGraphics.pose().popPose();
-    }
-
-    @Override
-    public void drawWrappedText(Component text, float x, float y, float width, int color, boolean shadow) {
-        if (guiGraphics == null) return;
-
-        float ax = alignX(x);
-        float ay = alignY(y);
-        int aw = (int) alignDim(width);
-
-        guiGraphics.drawWordWrap(Minecraft.getInstance().font, text, (int) ax, (int) ay, aw, color);
-    }
-
-    @Override
-    public int getTextWidth(Component text) {
-        return Minecraft.getInstance().font.width(text);
-    }
-
-    @Override
-    public int getFontHeight() {
-        return Minecraft.getInstance().font.lineHeight;
-    }
-
-    @Override
-    public int getWordWrapHeight(Component text, int maxWidth) {
-        return Minecraft.getInstance().font.wordWrapHeight(text, maxWidth);
+    public float[] getCurrentScissor() {
+        int[] phys = UIRenderer.getInstance().getScissor().getCurrentScissor();
+        if (phys == null || currentScale == 0) return null;
+        return new float[]{
+                (float) (phys[0] / currentScale),
+                (float) (phys[1] / currentScale),
+                (float) (phys[2] / currentScale),
+                (float) (phys[3] / currentScale)
+        };
     }
 }

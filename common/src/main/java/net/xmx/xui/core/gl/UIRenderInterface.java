@@ -4,12 +4,13 @@
  */
 package net.xmx.xui.core.gl;
 
-import net.minecraft.network.chat.Component;
+import net.xmx.xui.core.text.UIComponent;
 
 /**
  * Abstract interface for UI rendering operations.
  * This abstraction allows the core library to remain independent of specific game engine classes.
- * Updated to support Minecraft's Component system for rich text and multi-line rendering.
+ * Updated to support the internal UIComponent system for rich text and multi-line rendering
+ * (supporting both Vanilla and Custom fonts).
  *
  * @author xI-Mx-Ix
  */
@@ -82,7 +83,7 @@ public interface UIRenderInterface {
      * @param color  The ARGB color value (may be overridden by Component styles).
      * @param shadow Whether to render a drop shadow behind the text.
      */
-    void drawText(Component text, float x, float y, int color, boolean shadow);
+    void drawText(UIComponent text, float x, float y, int color, boolean shadow);
 
     /**
      * Draws text that automatically wraps to the next line if it exceeds the specified width.
@@ -94,7 +95,7 @@ public interface UIRenderInterface {
      * @param color  The ARGB color value.
      * @param shadow Whether to render a drop shadow.
      */
-    void drawWrappedText(Component text, float x, float y, float width, int color, boolean shadow);
+    void drawWrappedText(UIComponent text, float x, float y, float width, int color, boolean shadow);
 
     /**
      * Calculates the width of the given text component in pixels.
@@ -102,7 +103,7 @@ public interface UIRenderInterface {
      * @param text The text to measure.
      * @return The width in pixels.
      */
-    int getTextWidth(Component text);
+    int getTextWidth(UIComponent text);
 
     /**
      * Returns the height of the standard font line.
@@ -118,7 +119,7 @@ public interface UIRenderInterface {
      * @param maxWidth The wrapping width.
      * @return The total height in pixels.
      */
-    int getWordWrapHeight(Component text, int maxWidth);
+    int getWordWrapHeight(UIComponent text, int maxWidth);
 
     /**
      * Enables a scissor test to clip rendering to a specific screen region.
