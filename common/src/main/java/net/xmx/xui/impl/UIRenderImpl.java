@@ -8,7 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.gl.UIRenderInterface;
-import net.xmx.xui.core.gl.UIRenderer;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 
 /**
  * Concrete implementation of the {@link UIRenderInterface} for Minecraft.
@@ -229,9 +229,9 @@ public class UIRenderImpl implements UIRenderInterface {
         int physW = (int) (aw * currentScale);
         int physH = (int) (ah * currentScale);
 
-        // 3. Delegate to renderer with scale 1.0, as we have already performed the scaling.
-        // This ensures the scissor rect exactly matches the pixels drawn by drawRect/drawOutline.
-        UIRenderer.getInstance().enableScissor(physX, physY, physW, physH, 1.0);
+        // 3. Delegate to the ScissorManager within UIRenderer.
+        // We pass 1.0 as the scale because we have already manually calculated the physical pixels above.
+        UIRenderer.getInstance().getScissor().pushScissor(physX, physY, physW, physH, 1.0);
     }
 
     /**
@@ -242,9 +242,9 @@ public class UIRenderImpl implements UIRenderInterface {
         // Flush any pending rendering commands inside the scissor region.
         Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
 
-        // Disable the GL Scissor test.
-        // We pass 1.0 here because enableScissor used the 1.0 scale trick.
-        UIRenderer.getInstance().disableScissor(1.0);
+        // Delegate to the ScissorManager to pop the last state.
+        // We pass 1.0 to match the pushScissor logic.
+        UIRenderer.getInstance().getScissor().popScissor(1.0);
     }
 
     /**
@@ -257,7 +257,9 @@ public class UIRenderImpl implements UIRenderInterface {
      */
     @Override
     public float[] getCurrentScissor() {
-        int[] physScissor = UIRenderer.getInstance().getCurrentScissor();
+        // Access via getScissor() manager
+        int[] physScissor = UIRenderer.getInstance().getScissor().getCurrentScissor();
+
         if (physScissor == null) return null;
 
         if (currentScale == 0) return new float[4];
