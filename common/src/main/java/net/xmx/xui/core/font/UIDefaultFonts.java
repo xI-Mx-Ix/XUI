@@ -40,18 +40,18 @@ public final class UIDefaultFonts {
             vanilla = new UIVanillaFont();
 
             // Initialize JetBrains Mono (MSDF)
-            // The paths include the subdirectory "jetbrains-mono/" to match your assets structure.
+            // The paths include the subdirectory "jetbrains-mono/".
             jetBrainsMono = new UICustomFont();
-            jetBrainsMono.setRegular("jetbrains-mono/JetBrainsMono-Regular")
-                    .setBold("jetbrains-mono/JetBrainsMono-Bold")
-                    .setItalic("jetbrains-mono/JetBrainsMono-Italic");
+            jetBrainsMono.setRegular(XuiMainClass.MODID, "jetbrains-mono/JetBrainsMono-Regular")
+                    .setBold(XuiMainClass.MODID, "jetbrains-mono/JetBrainsMono-Bold")
+                    .setItalic(XuiMainClass.MODID, "jetbrains-mono/JetBrainsMono-Italic");
 
             // Initialize Roboto (MSDF)
-            // The paths include the subdirectory "roboto/" to match your assets structure.
+            // The paths include the subdirectory "roboto/".
             roboto = new UICustomFont();
-            roboto.setRegular("roboto/Roboto-Regular")
-                    .setBold("roboto/Roboto-Bold")
-                    .setItalic("roboto/Roboto-Italic");
+            roboto.setRegular(XuiMainClass.MODID, "roboto/Roboto-Regular")
+                    .setBold(XuiMainClass.MODID, "roboto/Roboto-Bold")
+                    .setItalic(XuiMainClass.MODID, "roboto/Roboto-Italic");
 
             initialized = true;
         } catch (Exception e) {

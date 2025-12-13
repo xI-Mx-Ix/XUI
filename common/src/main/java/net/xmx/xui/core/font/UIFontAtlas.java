@@ -56,16 +56,17 @@ public class UIFontAtlas {
      * <p>
      * The method expects two files to exist in the resources folder:
      * <ul>
-     *     <li><code>assets/xui/fonts/{name}.json</code></li>
-     *     <li><code>assets/xui/fonts/{name}.png</code></li>
+     *     <li><code>/assets/{namespace}/fonts/{path}.json</code></li>
+     *     <li><code>/assets/{namespace}/fonts/{path}.png</code></li>
      * </ul>
      * </p>
      *
-     * @param name The base name of the font file (e.g., "JetBrainsMono-Regular").
+     * @param namespace The resource namespace (e.g., "xui" or another mod's ID).
+     * @param path The relative path and name of the font file (e.g., "jetbrains-mono/JetBrainsMono-Regular").
      * @throws RuntimeException If the JSON or PNG files cannot be found or parsed.
      */
-    public UIFontAtlas(String name) {
-        String basePath = "/assets/xui/fonts/" + name;
+    public UIFontAtlas(String namespace, String path) {
+        String basePath = "/assets/" + namespace + "/fonts/" + path;
 
         // -------------------------------------------------------------------------
         // 1. Load and Parse JSON Metadata
@@ -96,7 +97,7 @@ public class UIFontAtlas {
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse font JSON metadata for: " + name, e);
+            throw new RuntimeException("Failed to parse font JSON metadata for: " + path, e);
         }
 
         // -------------------------------------------------------------------------
@@ -150,7 +151,7 @@ public class UIFontAtlas {
             STBImage.stbi_image_free(image);
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load font texture atlas for: " + name, e);
+            throw new RuntimeException("Failed to load font texture atlas for: " + path, e);
         }
     }
 

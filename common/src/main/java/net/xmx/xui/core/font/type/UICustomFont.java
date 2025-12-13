@@ -65,33 +65,36 @@ public class UICustomFont extends UIFont {
     /**
      * Sets the font used for standard text.
      *
-     * @param name The asset name of the font.
+     * @param namespace The resource namespace (e.g., "mymod").
+     * @param path      The relative path to the font asset (e.g., "font/MyFont-Regular").
      * @return This instance for chaining.
      */
-    public UICustomFont setRegular(String name) {
-        this.regular = new UIFontAtlas(name);
+    public UICustomFont setRegular(String namespace, String path) {
+        this.regular = new UIFontAtlas(namespace, path);
         return this;
     }
 
     /**
      * Sets the font used when the Bold style is active.
      *
-     * @param name The asset name of the font.
+     * @param namespace The resource namespace (e.g., "mymod").
+     * @param path      The relative path to the font asset (e.g., "font/MyFont-Bold").
      * @return This instance for chaining.
      */
-    public UICustomFont setBold(String name) {
-        this.bold = new UIFontAtlas(name);
+    public UICustomFont setBold(String namespace, String path) {
+        this.bold = new UIFontAtlas(namespace, path);
         return this;
     }
 
     /**
      * Sets the font used when the Italic style is active.
      *
-     * @param name The asset name of the font.
+     * @param namespace The resource namespace (e.g., "mymod").
+     * @param path      The relative path to the font asset (e.g., "font/MyFont-Italic").
      * @return This instance for chaining.
      */
-    public UICustomFont setItalic(String name) {
-        this.italic = new UIFontAtlas(name);
+    public UICustomFont setItalic(String namespace, String path) {
+        this.italic = new UIFontAtlas(namespace, path);
         return this;
     }
 
