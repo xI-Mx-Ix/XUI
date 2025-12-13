@@ -44,12 +44,14 @@ public class UITextRenderer {
 
     /**
      * Initializes the rendering state for a batch of text.
-     * Sets up the projection matrix and configures shader uniforms based on the font atlas.
+     * Sets up the projection matrix and configures shader uniforms based on the font atlas
+     * and the current model-view transformation.
      *
-     * @param guiScale  The current GUI scale factor.
-     * @param atlasInfo The metadata of the font atlas currently being rendered.
+     * @param guiScale        The current GUI scale factor.
+     * @param atlasInfo       The metadata of the font atlas currently being rendered.
+     * @param modelViewMatrix The current transformation matrix.
      */
-    public void begin(double guiScale, MSDFData.AtlasInfo atlasInfo) {
+    public void begin(double guiScale, MSDFData.AtlasInfo atlasInfo, Matrix4f modelViewMatrix) {
         int[] viewport = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
 
@@ -59,6 +61,7 @@ public class UITextRenderer {
 
         shader.bind();
         shader.uploadProjection(projectionMatrix);
+        shader.uploadModelView(modelViewMatrix);
         shader.uploadTextureUnit(0);
 
         if (atlasInfo != null) {

@@ -5,12 +5,16 @@
 package net.xmx.xui.core;
 
 import net.xmx.xui.core.anim.AnimationManager;
+import net.xmx.xui.core.anim.UIAnimationBuilder;
 import net.xmx.xui.core.effect.UIEffect;
 import net.xmx.xui.core.effect.UIScissorsEffect;
 import net.xmx.xui.core.gl.UIRenderInterface;
+import net.xmx.xui.core.style.Properties;
 import net.xmx.xui.core.style.StyleSheet;
 import net.xmx.xui.core.style.UIProperty;
 import net.xmx.xui.core.style.UIState;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,6 +122,25 @@ public abstract class UIWidget {
     }
 
     /**
+     * Creates a new animation builder for this widget.
+     * Allows fluent configuration of keyframe animations.
+     *
+     * @return A new UIAnimationBuilder instance.
+     */
+    public UIAnimationBuilder animate() {
+        return new UIAnimationBuilder(this);
+    }
+
+    /**
+     * Retrieves the animation manager for this widget.
+     *
+     * @return The internal AnimationManager instance.
+     */
+    public AnimationManager getAnimationManager() {
+        return animManager;
+    }
+
+    /**
      * Calculates the layout of this widget and recursively its children.
      * Should be called before the render loop if dimensions change.
      */
@@ -143,20 +166,39 @@ public abstract class UIWidget {
 
     /**
      * The main rendering method.
-     * Handles state determination, effect application, animation updates, and child rendering.
+     * Handles state determination, effect application, animation updates, 3D TRANSFORMS, and child rendering.
      *
      * @param renderer     The render interface.
      * @param mouseX       Current mouse X position.
      * @param mouseY       Current mouse Y position.
-     * @param partialTick  The normalized progress between two game ticks (0.0 - 1.0). Used for smoothing movement/rendering.
-     * @param deltaTime    The time elapsed since the last frame in seconds. Used for animation logic.
+     * @param partialTick  The normalized progress between two game ticks.
+     * @param deltaTime    The time elapsed since the last frame in seconds.
      */
     public void render(UIRenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
         if (!isVisible) return;
 
-        updateHoverState(mouseX, mouseY);
+        // 1. Update Animation State
+        // This advances timelines and updates style properties
+        animManager.update(deltaTime);
 
-        // Determine current style state
+        // 2. Retrieve 3D Transformation Values from Style
+        // We generally use the DEFAULT state as the source for structural transforms.
+        float rotX = styleSheet.getValue(UIState.DEFAULT, Properties.ROTATION_X);
+        float rotY = styleSheet.getValue(UIState.DEFAULT, Properties.ROTATION_Y);
+        float rotZ = styleSheet.getValue(UIState.DEFAULT, Properties.ROTATION_Z);
+
+        float scaleX = styleSheet.getValue(UIState.DEFAULT, Properties.SCALE_X);
+        float scaleY = styleSheet.getValue(UIState.DEFAULT, Properties.SCALE_Y);
+        float scaleZ = styleSheet.getValue(UIState.DEFAULT, Properties.SCALE_Z);
+
+        float transX = styleSheet.getValue(UIState.DEFAULT, Properties.TRANSLATE_X);
+        float transY = styleSheet.getValue(UIState.DEFAULT, Properties.TRANSLATE_Y);
+        float transZ = styleSheet.getValue(UIState.DEFAULT, Properties.TRANSLATE_Z);
+
+        // 3. Update Hitbox Logic (Inverse Matrix Calculation)
+        // Checks if the mouse is hovering the widget considering its 3D position/rotation.
+        updateHoverState(mouseX, mouseY, rotX, rotY, rotZ, scaleX, scaleY, scaleZ, transX, transY, transZ);
+
         UIState state = UIState.DEFAULT;
         if (isFocused) {
             state = UIState.ACTIVE;
@@ -164,23 +206,114 @@ public abstract class UIWidget {
             state = UIState.HOVER;
         }
 
-        // Apply visual effects (Stencil, Scissors, Shaders)
+        // 4. Apply 3D Transforms to the Renderer
+        renderer.pushMatrix();
+
+        // Calculate Pivot Point (Center of the widget)
+        float centerX = x + width / 2.0f;
+        float centerY = y + height / 2.0f;
+        float centerZ = 0.0f; // Standard UI plane is at Z=0 locally
+
+        // Transform Sequence:
+        // 1. Move origin to Pivot point (Center)
+        // 2. Apply Translation (Offset)
+        // 3. Apply Rotations (Euler)
+        // 4. Apply Scale
+        // 5. Move origin back to top-left (invert Pivot)
+
+        renderer.translate(centerX + transX, centerY + transY, centerZ + transZ);
+
+        // Apply Rotations (X, then Y, then Z - Standard Euler order)
+        if (rotX != 0) renderer.rotate(rotX, 1, 0, 0); // Pitch
+        if (rotY != 0) renderer.rotate(rotY, 0, 1, 0); // Yaw
+        if (rotZ != 0) renderer.rotate(rotZ, 0, 0, 1); // Roll (2D)
+
+        renderer.scale(scaleX, scaleY, scaleZ);
+
+        // Move back from pivot
+        renderer.translate(-centerX, -centerY, -centerZ);
+
+        // 5. Apply Effects & Render Content
         for (UIEffect effect : effects) {
             effect.apply(renderer, this);
         }
 
-        // Render Widget Content
-        // We pass both time values: partialTick for rendering interpolation, deltaTime for animation updates.
         drawSelf(renderer, mouseX, mouseY, partialTick, deltaTime, state);
 
-        // Render Children
         for (UIWidget child : children) {
             child.render(renderer, mouseX, mouseY, partialTick, deltaTime);
         }
 
-        // Revert visual effects (in reverse order to properly unwind stack-based effects)
+        // Revert effects
         for (int i = effects.size() - 1; i >= 0; i--) {
             effects.get(i).revert(renderer, this);
+        }
+
+        // Restore Matrix
+        renderer.popMatrix();
+    }
+
+    /**
+     * Performs a 3D Unproject/Inverse-Transform to check if the mouse cursor (in screen space)
+     * intersects with the widget's local bounds, accounting for 3D rotations and scaling.
+     *
+     * @param mouseX Global mouse X.
+     * @param mouseY Global mouse Y.
+     * @param rX     Rotation X (deg).
+     * @param rY     Rotation Y (deg).
+     * @param rZ     Rotation Z (deg).
+     * @param sX     Scale X.
+     * @param sY     Scale Y.
+     * @param sZ     Scale Z.
+     * @param tX     Translate X.
+     * @param tY     Translate Y.
+     * @param tZ     Translate Z.
+     */
+    protected void updateHoverState(int mouseX, int mouseY,
+                                    float rX, float rY, float rZ,
+                                    float sX, float sY, float sZ,
+                                    float tX, float tY, float tZ) {
+
+        // 1. Pivot Calculation
+        float cX = x + width / 2.0f;
+        float cY = y + height / 2.0f;
+
+        // 2. Construct Model Matrix
+        // This must EXACTLY match the transformation sequence in render()
+        Matrix4f model = new Matrix4f()
+                .translate(cX + tX, cY + tY, tZ)
+                .rotate((float) Math.toRadians(rX), 1, 0, 0)
+                .rotate((float) Math.toRadians(rY), 0, 1, 0)
+                .rotate((float) Math.toRadians(rZ), 0, 0, 1)
+                .scale(sX, sY, sZ)
+                .translate(-cX, -cY, 0);
+
+        // 3. Invert Matrix (Global -> Local Space)
+        // If the matrix is singular (e.g. Scale=0), invert() might fail, so we catch issues implicitly or check determinant
+        Matrix4f inv = new Matrix4f(model).invert();
+
+        // 4. Transform Mouse Point
+        // We assume the mouse is on the screen plane (Z=0).
+        Vector4f vec = new Vector4f((float) mouseX, (float) mouseY, 0.0f, 1.0f);
+        vec.mul(inv);
+
+        // 5. Hit Test in Local AABB
+        // Since we transformed the mouse INTO the widget's coordinate system,
+        // we can just check against the widget's original un-rotated bounds (x, y, width, height).
+        boolean hit = vec.x >= x && vec.x <= x + width &&
+                vec.y >= y && vec.y <= y + height;
+
+        // 6. Apply standard blocking logic (Clipping, Obstructors)
+        if (hit && !isClippedByParent(mouseX, mouseY) && !isGlobalObstructed(mouseX, mouseY)) {
+            if (!isHovered) {
+                isHovered = true;
+                if (onMouseEnter != null) onMouseEnter.accept(this);
+            }
+        } else {
+            if (isHovered) {
+                isHovered = false;
+                if (onMouseExit != null) onMouseExit.accept(this);
+            }
         }
     }
 

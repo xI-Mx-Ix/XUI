@@ -13,16 +13,17 @@ import java.nio.FloatBuffer;
 
 /**
  * Shader program wrapper for the MSDF text rendering pipeline.
- * Manages uniform uploads for projection matrices and font rendering parameters.
+ * Manages uniform uploads for projection matrices, model-view matrices and font rendering parameters.
  *
  * @author xI-Mx-Ix
  */
 public class UIMSDFShader extends UIShader {
 
     private int locProjMat;
+    private int locModelViewMat;
     private int locFontTexture;
     private int locPxRange;
-    
+
     private final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
 
     /**
@@ -42,6 +43,7 @@ public class UIMSDFShader extends UIShader {
     @Override
     protected void registerUniforms() {
         locProjMat = super.getUniformLocation("projMat");
+        locModelViewMat = super.getUniformLocation("modelViewMat");
         locFontTexture = super.getUniformLocation("fontTexture");
         locPxRange = super.getUniformLocation("pxRange");
     }
@@ -54,6 +56,16 @@ public class UIMSDFShader extends UIShader {
     public void uploadProjection(Matrix4f matrix) {
         matrix.get(matrixBuffer);
         GL20.glUniformMatrix4fv(locProjMat, false, matrixBuffer);
+    }
+
+    /**
+     * Uploads the model-view transformation matrix to the GPU.
+     *
+     * @param matrix The 4x4 model-view matrix.
+     */
+    public void uploadModelView(Matrix4f matrix) {
+        matrix.get(matrixBuffer);
+        GL20.glUniformMatrix4fv(locModelViewMat, false, matrixBuffer);
     }
 
     /**

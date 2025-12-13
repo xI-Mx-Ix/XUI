@@ -6,7 +6,10 @@ package net.xmx.xui.core.anim;
 
 import net.xmx.xui.core.style.UIProperty;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Manages value interpolation for UI properties.
@@ -17,6 +20,34 @@ import java.util.Map;
 public class AnimationManager {
 
     private final Map<UIProperty<?>, Object> currentValues = new HashMap<>();
+
+    // Thread-safe list to hold active complex animations (New)
+    private final List<UIAnimationInstance> activeAnimations = new CopyOnWriteArrayList<>();
+
+    /**
+     * Registers a new animation instance to be updated by this manager.
+     *
+     * @param animation The animation to start.
+     */
+    public void startAnimation(UIAnimationInstance animation) {
+        activeAnimations.add(animation);
+    }
+
+    /**
+     * Updates all active animations. Should be called once per frame.
+     *
+     * @param dt Delta time in seconds.
+     */
+    public void update(float dt) {
+        Iterator<UIAnimationInstance> it = activeAnimations.iterator();
+        while (it.hasNext()) {
+            UIAnimationInstance anim = it.next();
+            boolean finished = anim.update(dt);
+            if (finished) {
+                activeAnimations.remove(anim);
+            }
+        }
+    }
 
     /**
      * Gets or updates the animated float value.

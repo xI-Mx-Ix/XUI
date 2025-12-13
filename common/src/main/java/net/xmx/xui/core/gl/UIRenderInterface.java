@@ -119,17 +119,6 @@ public interface UIRenderInterface {
     void disableScissor();
 
     /**
-     * Translates the rendering origin by the specified amount.
-     * This affects all subsequent drawing operations until reversed.
-     * Useful for scroll containers or moving groups of widgets.
-     *
-     * @param x The offset on the X-axis in logical pixels.
-     * @param y The offset on the Y-axis in logical pixels.
-     * @param z The offset on the Z-axis (depth).
-     */
-    void translate(float x, float y, float z);
-
-    /**
      * Retrieves the current scissor rectangle active in the renderer.
      * <p>
      * This is essential for nested clipping regions (e.g., a scroll panel inside another scroll panel).
@@ -141,4 +130,44 @@ public interface UIRenderInterface {
      *         or {@code null} if no scissor test is currently enabled.
      */
     float[] getCurrentScissor();
+
+    // --- Matrix Transformations (New) ---
+
+    /**
+     * Pushes the current matrix onto the stack.
+     */
+    void pushMatrix();
+
+    /**
+     * Pops the current matrix from the stack.
+     */
+    void popMatrix();
+
+    /**
+     * Translates the coordinate system.
+     *
+     * @param x X offset.
+     * @param y Y offset.
+     * @param z Z offset.
+     */
+    void translate(float x, float y, float z);
+
+    /**
+     * Rotates the coordinate system around a specific 3D axis.
+     *
+     * @param degrees Angle in degrees.
+     * @param x The X component of the axis vector.
+     * @param y The Y component of the axis vector.
+     * @param z The Z component of the axis vector.
+     */
+    void rotate(float degrees, float x, float y, float z);
+
+    /**
+     * Scales the coordinate system.
+     *
+     * @param x X scale.
+     * @param y Y scale.
+     * @param z Z scale.
+     */
+    void scale(float x, float y, float z);
 }

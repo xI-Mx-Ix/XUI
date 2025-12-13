@@ -41,11 +41,13 @@ public class UIGeometryRenderer {
      * <p>
      * This method binds the shader, calculates the orthographic projection matrix based on
      * the current viewport and GUI scale, and uploads it to the GPU.
+     * It also uploads the current ModelView matrix to handle custom widget transformations.
      * </p>
      *
-     * @param guiScale The current GUI scale factor (logical to physical pixels).
+     * @param guiScale        The current GUI scale factor (logical to physical pixels).
+     * @param modelViewMatrix The current transformation matrix for widgets.
      */
-    public void begin(double guiScale) {
+    public void begin(double guiScale, Matrix4f modelViewMatrix) {
         // Retrieve current viewport dimensions to setup projection
         int[] viewport = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
@@ -56,6 +58,7 @@ public class UIGeometryRenderer {
 
         shader.bind();
         shader.uploadProjection(projectionMatrix);
+        shader.uploadModelView(modelViewMatrix);
     }
 
     /**

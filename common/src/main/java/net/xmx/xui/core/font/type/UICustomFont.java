@@ -44,7 +44,7 @@ public class UICustomFont extends UIFont {
     public static final float FONT_SIZE = 9.0f;
 
     private final TextLayoutEngine layoutEngine;
-    
+
     /**
      * Temporary list to hold decoration requests (lines) during the text render pass.
      * Flushed immediately after text rendering to ensure correct Z-ordering relative to the batch.
@@ -122,7 +122,7 @@ public class UICustomFont extends UIFont {
     @Override
     public void drawWrapped(UIRenderImpl context, UITextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
         List<TextLine> lines = layoutEngine.computeWrappedLayout(component, maxWidth);
-        
+
         renderTextBatch(context, x, y, () -> {
             float currentY = y;
             float lineHeight = getLineHeight();
@@ -151,32 +151,32 @@ public class UICustomFont extends UIFont {
         if (regular == null) return;
 
         UIRenderer renderer = UIRenderer.getInstance();
-        
+
         // 1. Capture State
         renderer.getStateManager().capture();
         renderer.getStateManager().setupForUI();
 
         try {
             // 2. Pass 1: Render Text Glyphs (MSDF Shader)
-            renderer.getText().begin(context.getCurrentScale(), regular.getData().atlas);
-            
-            // Execute the recursive drawing logic. 
+            renderer.getText().begin(context.getCurrentScale(), regular.getData().atlas, context.getCurrentMatrix());
+
+            // Execute the recursive drawing logic.
             // This populates the mesh AND fills pendingDecorations.
             renderAction.run();
-            
+
             renderer.getText().end();
 
             // 3. Pass 2: Render Decorations (Geometry Shader)
             if (!pendingDecorations.isEmpty()) {
-                renderer.getGeometry().begin(context.getCurrentScale());
-                
+                renderer.getGeometry().begin(context.getCurrentScale(), context.getCurrentMatrix());
+
                 for (Decoration deco : pendingDecorations) {
                     renderer.getGeometry().drawRect(
-                            deco.x, deco.y, deco.w, deco.h, 
+                            deco.x, deco.y, deco.w, deco.h,
                             deco.color, 0, 0, 0, 0 // No corner radius for lines
                     );
                 }
-                
+
                 renderer.getGeometry().end();
                 pendingDecorations.clear();
             }
