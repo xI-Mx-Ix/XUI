@@ -5,6 +5,8 @@
 package net.xmx.xui.core.components;
 
 import net.minecraft.client.Minecraft;
+import net.xmx.xui.core.font.DefaultFonts;
+import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
@@ -44,6 +46,12 @@ public class UIEditBox extends UIWidget {
      * Property for the color of the hint text (placeholder).
      */
     public static final StyleKey<Integer> HINT_COLOR = new StyleKey<>("hint_color", 0xFF888888);
+
+    /**
+     * The font instance used to render text within this EditBox.
+     * Defaults to the standard Vanilla font.
+     */
+    private Font font = DefaultFonts.getVanilla();
 
     private String hintText = "";
     private String text = "";
@@ -118,6 +126,26 @@ public class UIEditBox extends UIWidget {
     }
 
     /**
+     * Sets the font used by this text box.
+     *
+     * @param font The font instance.
+     * @return This widget instance for chaining.
+     */
+    public UIEditBox setFont(Font font) {
+        this.font = font;
+        return this;
+    }
+
+    /**
+     * Gets the currently active font.
+     *
+     * @return The font instance.
+     */
+    public Font getFont() {
+        return font;
+    }
+
+    /**
      * Sets the current text.
      *
      * @param text The new text.
@@ -146,7 +174,7 @@ public class UIEditBox extends UIWidget {
         int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
         int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
         int textColor = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);
-        int hintColor = getColor(HINT_COLOR, state, deltaTime); // Retrieve hint color
+        int hintColor = getColor(HINT_COLOR, state, deltaTime);
         int cursorColor = getColor(CURSOR_COLOR, state, deltaTime);
         int selectionColor = getColor(SELECTION_COLOR, state, deltaTime);
 
@@ -159,7 +187,8 @@ public class UIEditBox extends UIWidget {
             renderer.drawOutline(x, y, width, height, borderColor, radius, borderThick);
         }
 
-        int fontHeight = TextComponent.getFontHeight();
+        // Use the instance font height instead of static global height
+        int fontHeight = (int) font.getLineHeight();
         float contentX = x + padding;
 
         // Recalculate scroll offsets based on text content and dimensions
@@ -187,20 +216,21 @@ public class UIEditBox extends UIWidget {
             if (isMultiline) {
                 String[] lines = hintText.split("\n", -1);
                 for (int i = 0; i < lines.length; i++) {
-                    renderer.drawText(TextComponent.literal(lines[i]), drawX, drawY + (i * fontHeight), hintColor, true);
+                    // Create component with the specific font
+                    renderer.drawText(TextComponent.literal(lines[i]).setFont(font), drawX, drawY + (i * fontHeight), hintColor, true);
                 }
             } else {
-                renderer.drawText(TextComponent.literal(hintText), drawX, drawY, hintColor, true);
+                renderer.drawText(TextComponent.literal(hintText).setFont(font), drawX, drawY, hintColor, true);
             }
         } else {
             // Otherwise, render the actual text content
             if (isMultiline) {
                 String[] lines = text.split("\n", -1);
                 for (int i = 0; i < lines.length; i++) {
-                    renderer.drawText(TextComponent.literal(lines[i]), drawX, drawY + (i * fontHeight), textColor, true);
+                    renderer.drawText(TextComponent.literal(lines[i]).setFont(font), drawX, drawY + (i * fontHeight), textColor, true);
                 }
             } else {
-                renderer.drawText(TextComponent.literal(text), drawX, drawY, textColor, true);
+                renderer.drawText(TextComponent.literal(text).setFont(font), drawX, drawY, textColor, true);
             }
         }
 
@@ -211,14 +241,14 @@ public class UIEditBox extends UIWidget {
     }
 
     private void renderCursor(RenderInterface renderer, float baseX, float baseY, int fontHeight, int color) {
-        // Smooth blink
+        // Smooth blink logic
         double time = System.currentTimeMillis() / 250.0;
         float alphaFactor = (float) (0.5 + 0.5 * Math.sin(time));
         int baseAlpha = (color >> 24) & 0xFF;
         int finalAlpha = (int) (baseAlpha * alphaFactor);
         int blinkingColor = (color & 0x00FFFFFF) | (finalAlpha << 24);
 
-        int cx, cy;
+        float cx, cy;
         if (isMultiline) {
             int pos = 0;
             int lineIndex = 0;
@@ -241,23 +271,26 @@ public class UIEditBox extends UIWidget {
             }
 
             String subLine = lines[lineIndex].substring(0, colIndex);
-            cx = TextComponent.getTextWidth(TextComponent.literal(subLine));
+            // Calculate width using the instance font
+            cx = font.getWidth(TextComponent.literal(subLine).setFont(font));
             cy = lineIndex * fontHeight;
         } else {
             String sub = text.substring(0, cursorPosition);
-            cx = TextComponent.getTextWidth(TextComponent.literal(sub));
+            cx = font.getWidth(TextComponent.literal(sub).setFont(font));
             cy = 0;
         }
 
         float cursorX = baseX + cx;
         float cursorY = baseY + cy;
+
+        // Draw the cursor line
         renderer.drawRect(cursorX, cursorY - 1, 1, fontHeight + 2, blinkingColor, 0);
     }
 
     private void renderSelection(RenderInterface renderer, float baseX, float baseY, int color) {
         int start = Math.min(cursorPosition, selectionEnd);
         int end = Math.max(cursorPosition, selectionEnd);
-        int fontHeight = TextComponent.getFontHeight();
+        int fontHeight = (int) font.getLineHeight();
 
         if (isMultiline) {
             int pos = 0;
@@ -273,17 +306,20 @@ public class UIEditBox extends UIWidget {
                     int e = Math.min(end, lineEnd) - lineStart;
 
                     if (s < e || (s == e && lineStart >= start && lineEnd <= end)) {
-                        int x1 = TextComponent.getTextWidth(TextComponent.literal(lines[i].substring(0, s)));
-                        int x2 = TextComponent.getTextWidth(TextComponent.literal(lines[i].substring(0, e)));
-                        if (end > lineEnd) x2 += 4;
+                        // Measure segments using the instance font
+                        float x1 = font.getWidth(TextComponent.literal(lines[i].substring(0, s)).setFont(font));
+                        float x2 = font.getWidth(TextComponent.literal(lines[i].substring(0, e)).setFont(font));
+
+                        if (end > lineEnd) x2 += 4; // Visual padding for newline selection
+
                         renderer.drawRect(baseX + x1, baseY + (i * fontHeight), x2 - x1, fontHeight, color, 0);
                     }
                 }
                 pos += lineLen + 1;
             }
         } else {
-            int x1 = TextComponent.getTextWidth(TextComponent.literal(text.substring(0, start)));
-            int x2 = TextComponent.getTextWidth(TextComponent.literal(text.substring(0, end)));
+            float x1 = font.getWidth(TextComponent.literal(text.substring(0, start)).setFont(font));
+            float x2 = font.getWidth(TextComponent.literal(text.substring(0, end)).setFont(font));
             renderer.drawRect(baseX + x1, baseY, x2 - x1, fontHeight, color, 0);
         }
     }
@@ -540,7 +576,7 @@ public class UIEditBox extends UIWidget {
     private int getIndexAtPosition(double mouseX, double mouseY) {
         float relativeX = (float) mouseX - (x + padding) + scrollX;
         float relativeY = (float) mouseY - (y + padding) + (isMultiline ? scrollY : 0);
-        int fontHeight = Minecraft.getInstance().font.lineHeight;
+        float fontHeight = font.getLineHeight();
 
         if (isMultiline) {
             String[] lines = text.split("\n", -1);
@@ -559,18 +595,30 @@ public class UIEditBox extends UIWidget {
 
     /**
      * Helper to find the index within a single line string for a specific visual X coordinate.
+     * Iteratively measures substrings using the specific {@link #font} instance to account
+     * for kerning and variable widths of custom fonts.
      */
     private int getIndexInLine(String line, float targetX) {
         if (line.isEmpty()) return 0;
-        int widthSoFar = 0;
+
+        // Iterate through the string to find the closest character split
         for (int i = 0; i < line.length(); i++) {
-            // Measure width of character at i
-            int charW = Minecraft.getInstance().font.width(String.valueOf(line.charAt(i)));
-            // If we are halfway through the char, count it
-            if (widthSoFar + (charW / 2) > targetX) {
-                return i;
+            String sub = line.substring(0, i + 1);
+            float width = font.getWidth(TextComponent.literal(sub).setFont(font));
+
+            if (width > targetX) {
+                // Determine if we are closer to the previous character or this one
+                String prevSub = line.substring(0, i);
+                float prevWidth = font.getWidth(TextComponent.literal(prevSub).setFont(font));
+
+                // If target is closer to prevWidth than width, return i (before current char)
+                // Otherwise return i + 1 (after current char)
+                if (targetX - prevWidth < width - targetX) {
+                    return i;
+                } else {
+                    return i + 1;
+                }
             }
-            widthSoFar += charW;
         }
         return line.length();
     }
@@ -578,11 +626,12 @@ public class UIEditBox extends UIWidget {
     private void updateScrolling(RenderInterface renderer) {
         float visibleWidth = width - (padding * 2);
         float visibleHeight = height - (padding * 2);
+        int fontHeight = (int) font.getLineHeight();
 
         if (isMultiline) {
             String[] lines = text.split("\n", -1);
             int totalLines = lines.length;
-            int totalHeight = totalLines * TextComponent.getFontHeight();
+            int totalHeight = totalLines * fontHeight;
             maxScrollY = Math.max(0, totalHeight - visibleHeight);
 
             // Identify current line and position within that line
@@ -604,12 +653,12 @@ public class UIEditBox extends UIWidget {
             }
 
             // --- Vertical Scroll Update (Y) ---
-            float cursorY = currentLineIndex * TextComponent.getFontHeight();
+            float cursorY = currentLineIndex * fontHeight;
 
             if (cursorY < scrollY) {
                 scrollY = cursorY;
-            } else if (cursorY + TextComponent.getFontHeight() > scrollY + visibleHeight) {
-                scrollY = cursorY + TextComponent.getFontHeight() - visibleHeight;
+            } else if (cursorY + fontHeight > scrollY + visibleHeight) {
+                scrollY = cursorY + fontHeight - visibleHeight;
             }
             scrollY = Math.max(0, Math.min(scrollY, maxScrollY));
 
@@ -618,7 +667,7 @@ public class UIEditBox extends UIWidget {
             int localCursorIndex = Math.max(0, Math.min(currentLineText.length(), cursorPosition - lineStartPos));
             String subLine = currentLineText.substring(0, localCursorIndex);
 
-            int cursorX = TextComponent.getTextWidth(TextComponent.literal(subLine));
+            int cursorX = (int) font.getWidth(TextComponent.literal(subLine).setFont(font));
 
             if (cursorX < scrollX) {
                 scrollX = cursorX;
@@ -627,14 +676,14 @@ public class UIEditBox extends UIWidget {
             }
 
             // Calculate max X scroll for the current line to prevent empty space
-            int lineWidth = TextComponent.getTextWidth(TextComponent.literal(currentLineText));
+            int lineWidth = (int) font.getWidth(TextComponent.literal(currentLineText).setFont(font));
             maxScrollX = Math.max(0, lineWidth - visibleWidth + 8);
             scrollX = Math.max(0, Math.min(scrollX, maxScrollX));
 
         } else {
             // Single-line logic: Only X scrolling is relevant
             String sub = text.substring(0, cursorPosition);
-            int cursorX = TextComponent.getTextWidth(TextComponent.literal(sub));
+            int cursorX = (int) font.getWidth(TextComponent.literal(sub).setFont(font));
 
             if (cursorX < scrollX) {
                 scrollX = cursorX;
@@ -642,7 +691,7 @@ public class UIEditBox extends UIWidget {
                 scrollX = cursorX - visibleWidth + 4;
             }
 
-            int textWidth = TextComponent.getTextWidth(TextComponent.literal(text));
+            int textWidth = (int) font.getWidth(TextComponent.literal(text).setFont(font));
             maxScrollX = Math.max(0, textWidth - visibleWidth + 8);
             scrollX = Math.max(0, Math.min(scrollX, maxScrollX));
 
