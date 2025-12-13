@@ -49,6 +49,7 @@ public class TextLayoutEngine {
 
     /**
      * Measures a single component's text string.
+     * Ignores legacy formatting codes (§ + char) to ensure visual width matches logical width.
      */
     private float getSingleComponentWidth(UITextComponent component) {
         String text = component.getText();
@@ -58,7 +59,17 @@ public class TextLayoutEngine {
         if (font == null) return 0;
 
         float width = 0;
-        for (char c : text.toCharArray()) {
+        char[] chars = text.toCharArray();
+
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+
+            // Skip formatting codes (e.g. §l for Bold) so they don't add invisible width
+            if (c == '§' && i + 1 < chars.length) {
+                i++;
+                continue;
+            }
+
             MSDFData.Glyph glyph = font.getGlyph(c);
             if (glyph != null) {
                 width += glyph.advance * fontSize;
@@ -103,9 +114,16 @@ public class TextLayoutEngine {
                     continue;
                 }
 
-                // Measure the word
+                // Measure the word, ignoring formatting codes
                 float wordWidth = 0;
-                for (char c : word.toCharArray()) {
+                char[] wChars = word.toCharArray();
+                for (int k = 0; k < wChars.length; k++) {
+                    char c = wChars[k];
+                    if (c == '§' && k + 1 < wChars.length) {
+                        k++;
+                        continue;
+                    }
+
                     MSDFData.Glyph g = font.getGlyph(c);
                     if (g != null) wordWidth += g.advance * fontSize;
                 }
@@ -123,12 +141,12 @@ public class TextLayoutEngine {
                 }
             }
         }
-        
+
         // Add the final line if it has content
         if (!currentLine.getSegments().isEmpty()) {
             lines.add(currentLine);
         }
-        
+
         return lines;
     }
 
