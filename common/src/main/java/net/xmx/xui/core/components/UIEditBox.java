@@ -460,9 +460,21 @@ public class UIEditBox extends UIWidget {
         }
     }
 
+    /**
+     * Handles mouse clicks to position the text cursor.
+     * Requires the Left Mouse Button (ID 0) to set the caret position.
+     *
+     * @param mouseX The absolute X coordinate.
+     * @param mouseY The absolute Y coordinate.
+     * @param button The button index (0 = Left Click).
+     * @return {@code true} if the event was handled.
+     */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
+
+        // If the widget is focused and the user Left Clicks inside, update the cursor position.
+        // Also checks for Shift key to handle text selection initialization.
         if (isFocused && button == 0) {
             boolean shift = (GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS) ||
                     (GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS);
@@ -473,10 +485,23 @@ public class UIEditBox extends UIWidget {
         return handled;
     }
 
+    /**
+     * Handles text selection via mouse dragging.
+     * Active only when the Left Mouse Button (ID 0) is held down.
+     *
+     * @param mouseX The absolute X coordinate.
+     * @param mouseY The absolute Y coordinate.
+     * @param button The button currently held down (0 = Left Click).
+     * @param dragX  The horizontal drag delta.
+     * @param dragY  The vertical drag delta.
+     * @return {@code true} if the event was handled.
+     */
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        // Only allow text selection dragging with the primary mouse button.
         if (isFocused && button == 0) {
             int index = getIndexAtPosition(mouseX, mouseY);
+            // Update cursor position while maintaining the selection anchor
             setCursorPos(index, true);
             return true;
         }

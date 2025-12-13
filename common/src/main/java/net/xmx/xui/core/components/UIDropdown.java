@@ -242,11 +242,28 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         }
     }
 
+    /**
+     * Handles mouse clicks for the dropdown.
+     * Validates interaction against the Left Mouse Button (ID 0).
+     * <p>
+     * If the dropdown is open, it checks for clicks within the overlay list.
+     * If closed, it checks for clicks on the header to toggle the state.
+     * </p>
+     *
+     * @param mouseX The absolute X coordinate.
+     * @param mouseY The absolute Y coordinate.
+     * @param button The mouse button used (0 = Left Click).
+     * @return {@code true} if the dropdown consumed the event.
+     */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isVisible) return false;
 
+        // Ensure that only Left Click triggers dropdown actions.
+        if (button != 0) return false;
+
         if (isOpen) {
+            // Check if the click is within the expanded option list overlay
             if (mouseX >= x && mouseX <= x + width && mouseY >= overlayY && mouseY <= overlayY + overlayHeight) {
                 int clickedIndex = (int) ((mouseY - overlayY) / optionHeight);
 
@@ -260,12 +277,14 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 }
             }
 
+            // If click is outside the dropdown completely, close it
             if (!isMouseOver(mouseX, mouseY)) {
                 closeDropdown();
                 return true;
             }
         }
 
+        // Toggle the dropdown if the header is clicked
         if (isMouseOver(mouseX, mouseY)) {
             if (active) {
                 if (isOpen) closeDropdown();

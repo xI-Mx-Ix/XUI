@@ -448,23 +448,21 @@ public abstract class UIWidget {
     /**
      * Called when a mouse button is pressed.
      * <p>
-     * This method propagates the event to children in reverse order (Z-order),
-     * ensuring that widgets rendered on top receive the click first.
-     * It also handles focus management: setting focus to the clicked widget
-     * and clearing focus from others.
+     * This method propagates the event to children in reverse order (Z-order).
+     * If no child consumes the event, the widget checks if it should handle the interaction itself.
+     * Interaction is strictly limited to the Left Mouse Button (ID 0).
      * </p>
      *
      * @param mouseX The absolute X coordinate of the mouse.
      * @param mouseY The absolute Y coordinate of the mouse.
-     * @param button The mouse button index (0 = Left, 1 = Right, 2 = Middle).
+     * @param button The mouse button index. 0 represents the Left Mouse Button.
      * @return {@code true} if the event was consumed by this widget or a child; {@code false} otherwise.
      */
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // If the widget is hidden, it cannot receive input.
         if (!isVisible) return false;
 
-        // If the widget is visually clipped by a parent (e.g., inside a scroll pane
-        // but currently scrolled out of view), ignore the input.
+        // If the widget is visually clipped by a parent, ignore the input.
         if (isClippedByParent(mouseX, mouseY)) return false;
 
         // Propagate the event to children.
@@ -482,21 +480,20 @@ public abstract class UIWidget {
         }
 
         // Check if an overlay (like an open dropdown) is blocking this area.
-        // This prevents clicking through modals.
         if (isGlobalObstructed(mouseX, mouseY)) return false;
 
         // If no child handled it, check if we handled it ourselves.
-        if (isHovered) {
+        // We explicitly check for 'button == 0' to ensure only Left Click triggers the interaction.
+        if (isHovered && button == 0) {
             isFocused = true;
-            // If the container itself is clicked, remove focus from its children
-            // (e.g., clicking the panel background unfocuses a text box).
+            // If the container itself is clicked, remove focus from its children.
             for (UIWidget child : children) child.unfocus();
 
             // Trigger the OnClick callback if defined.
             if (onClick != null) onClick.accept(this);
             return true;
         } else {
-            // Click occurred outside this widget, so we lose focus.
+            // Click occurred outside this widget or with a non-primary button.
             isFocused = false;
         }
 
