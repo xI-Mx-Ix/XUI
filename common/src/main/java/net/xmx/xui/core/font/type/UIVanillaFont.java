@@ -2,7 +2,7 @@
  * This file is part of XUI.
  * Licensed under MIT license.
  */
-package net.xmx.xui.core.font;
+package net.xmx.xui.core.font.type;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import net.xmx.xui.core.font.UIFont;
 import net.xmx.xui.core.text.UIComponent;
 import net.xmx.xui.impl.UIRenderImpl;
 

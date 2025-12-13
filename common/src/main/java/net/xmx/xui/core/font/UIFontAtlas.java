@@ -39,7 +39,7 @@ import java.util.HashMap;
  *
  * @author xI-Mx-Ix
  */
-public class UILoadedFont {
+public class UIFontAtlas {
 
     /**
      * The parsed metadata containing metrics and glyph bounds.
@@ -64,7 +64,7 @@ public class UILoadedFont {
      * @param name The base name of the font file (e.g., "JetBrainsMono-Regular").
      * @throws RuntimeException If the JSON or PNG files cannot be found or parsed.
      */
-    public UILoadedFont(String name) {
+    public UIFontAtlas(String name) {
         String basePath = "/assets/xui/fonts/" + name;
 
         // -------------------------------------------------------------------------

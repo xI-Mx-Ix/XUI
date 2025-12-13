@@ -5,6 +5,8 @@
 package net.xmx.xui.core.font;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.xmx.xui.core.font.type.UICustomFont;
+import net.xmx.xui.core.font.type.UIVanillaFont;
 import net.xmx.xui.init.XuiMainClass;
 
 /**

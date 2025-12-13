@@ -53,6 +53,10 @@ public class UIRenderer {
         return textRenderer;
     }
 
+    public UIGeometryRenderer getGeometry() {
+        return geometryRenderer;
+    }
+
     // --- High-Level Geometry API ---
 
     /**
