@@ -45,8 +45,8 @@ public class MarkdownTaskListItem extends UIPanel {
         // Calculate Y offset:
         // 1. Start at 'fontHeight' (skipping the empty line from createWrappingText).
         // 2. Center vertically relative to line height: (fontHeight - boxSize) / 2.
-        // 3. Apply manual correction (-2.0f) to move it UP, as it rendered too low visually.
-        float centeredY = fontHeight + (fontHeight - boxSize) / 2.0f - 2.0f;
+        // 3. Apply manual correction (-1.0f) based on offset regression analysis.
+        float centeredY = fontHeight + (fontHeight - boxSize) / 2.0f - 1.0f;
 
         // --- 1. The Checkbox Widget ---
         CheckboxWidget checkbox = new CheckboxWidget(isChecked);

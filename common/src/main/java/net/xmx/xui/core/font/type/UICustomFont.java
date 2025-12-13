@@ -94,8 +94,9 @@ public class UICustomFont extends UIFont {
 
     @Override
     public float getLineHeight() {
-        if (regular == null) return FONT_SIZE;
-        return regular.getData().metrics.lineHeight * FONT_SIZE;
+        // Enforce strict Vanilla metrics (9px height) to ensure unified scaling
+        // across all widgets (Buttons, EditBoxes, etc.) regardless of the active font.
+        return 9.0f;
     }
 
     @Override
@@ -239,10 +240,10 @@ public class UICustomFont extends UIFont {
 
         float cursorX = x;
 
-        // Calculate baseline using purely the font metrics (Ascender * FontSize)
-        // No manual offset applied.
-        float baselineOffset = currentFont.getData().metrics.ascender * FONT_SIZE;
-        float cursorY = y + baselineOffset;
+        // Instead of calculating the baseline from the font's specific ascender (which varies per font),
+        // we enforce a strict 7.0f offset from the top (y). This matches Minecraft's Vanilla behavior
+        // (9px height, ~7px baseline) ensuring that custom fonts align perfectly with vanilla fonts.
+        float cursorY = y + 7.0f;
 
         char[] chars = text.toCharArray();
 
@@ -322,9 +323,8 @@ public class UICustomFont extends UIFont {
                             // Update current font reference for subsequent characters
                             currentFont = targetFont;
 
-                            // Recalculate baseline offset as fonts might have slight metric differences.
-                            baselineOffset = currentFont.getData().metrics.ascender * FONT_SIZE;
-                            cursorY = y + baselineOffset;
+                            // Note: We do NOT recalculate cursorY here because we are enforcing
+                            // a unified baseline (y + 7.0f) for all fonts.
                         }
                     }
                 }
