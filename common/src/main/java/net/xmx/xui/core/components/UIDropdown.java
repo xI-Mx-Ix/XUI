@@ -58,6 +58,21 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      */
     public static final StyleKey<Integer> ARROW_COLOR = new StyleKey<>("dropdown_arrow_color", 0xFFAAAAAA);
 
+    /**
+     * Background color of the expanded overlay list.
+     */
+    public static final StyleKey<Integer> OVERLAY_BACKGROUND_COLOR = new StyleKey<>("dropdown_overlay_bg", 0xFF181818);
+
+    /**
+     * Border color of the expanded overlay list.
+     */
+    public static final StyleKey<Integer> OVERLAY_BORDER_COLOR = new StyleKey<>("dropdown_overlay_border", 0xFF404040);
+
+    /**
+     * Border radius of the expanded overlay list.
+     */
+    public static final StyleKey<Float> OVERLAY_BORDER_RADIUS = new StyleKey<>("dropdown_overlay_radius", 6.0f);
+
     // List Logic
     private final List<TextComponent> options = new ArrayList<>();
     private int selectedIndex = -1;
@@ -91,12 +106,13 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
     /**
      * Configures the visual theme properties.
+     * Sets separate styles for the header button and the floating overlay.
      */
     private void setupModernStyles() {
         this.style()
                 .setTransitionSpeed(10.0f)
 
-                // Header - Default
+                // --- Header (Widget) Styles ---
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF404040)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 6.0f)
@@ -104,15 +120,20 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)
                 .set(InteractionState.DEFAULT, ARROW_COLOR, 0xFF909090)
 
+                // --- Overlay (List) Styles ---
+                .set(InteractionState.DEFAULT, OVERLAY_BACKGROUND_COLOR, 0xFF181818)
+                .set(InteractionState.DEFAULT, OVERLAY_BORDER_COLOR, 0xFF404040)
+                .set(InteractionState.DEFAULT, OVERLAY_BORDER_RADIUS, 6.0f)
+
+                // --- Item Styles ---
                 // Hover overlay for items (lighter white)
                 .set(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR, 0x1AFFFFFF)
 
-                // Header - Hover
+                // --- Header Interaction States ---
                 .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xFF303030)
                 .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, 0xFF606060)
                 .set(InteractionState.HOVER, ARROW_COLOR, 0xFFFFFFFF)
 
-                // Header - Active/Open
                 .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, 0xFF181818);
     }
 
@@ -164,21 +185,21 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
             this.openProgress = targetProgress;
         }
 
-        // 2. Resolve Styles
+        // 2. Resolve Styles for the Header (The Button)
         // Force hover state if open to give visual feedback on the header
         InteractionState headerState = isOpen ? InteractionState.HOVER : state;
 
         int headerBg = getColor(ThemeProperties.BACKGROUND_COLOR, headerState, deltaTime);
-        int borderColor = getColor(ThemeProperties.BORDER_COLOR, headerState, deltaTime);
+        int headerBorder = getColor(ThemeProperties.BORDER_COLOR, headerState, deltaTime);
         int textColor = getColor(ThemeProperties.TEXT_COLOR, headerState, deltaTime);
         int arrowColor = getColor(ARROW_COLOR, headerState, deltaTime);
-        float radius = getFloat(ThemeProperties.BORDER_RADIUS, headerState, deltaTime);
+        float headerRadius = getFloat(ThemeProperties.BORDER_RADIUS, headerState, deltaTime);
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, headerState, deltaTime);
 
-        // 3. Draw Header (The Button)
-        renderer.getGeometry().renderRect(x, y, width, height, headerBg, radius);
+        // 3. Draw Header
+        renderer.getGeometry().renderRect(x, y, width, height, headerBg, headerRadius);
         if (borderThick > 0) {
-            renderer.getGeometry().renderOutline(x, y, width, height, borderColor, radius, borderThick);
+            renderer.getGeometry().renderOutline(x, y, width, height, headerBorder, headerRadius, borderThick);
         }
 
         // Draw Selected Text
@@ -195,11 +216,16 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         if (openProgress > 0.01f) {
             updateOverlayGeometry();
 
+            // Resolve Styles for the Overlay (List)
+            // We use the DEFAULT state for the list container itself to ensure stability
+            int listBg = getColor(OVERLAY_BACKGROUND_COLOR, InteractionState.DEFAULT, deltaTime);
+            int listBorder = getColor(OVERLAY_BORDER_COLOR, InteractionState.DEFAULT, deltaTime);
+            float listRadius = getFloat(OVERLAY_BORDER_RADIUS, InteractionState.DEFAULT, deltaTime);
+
             renderer.translate(0, 0, 50);
 
-            // We use the same border/radius style for consistency, but a solid background
-            int listBg = 0xFF181818; // Very dark grey, opaque
-            renderOverlay(renderer, mouseX, mouseY, listBg, borderColor, textColor, radius, borderThick);
+            // Pass the distinct list styles to the render method
+            renderOverlay(renderer, mouseX, mouseY, listBg, listBorder, textColor, listRadius, borderThick);
 
             renderer.translate(0, 0, -50);
         }
