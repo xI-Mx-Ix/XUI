@@ -6,7 +6,7 @@ package net.xmx.xui.init;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.xmx.xui.core.gl.RenderProvider;
+import net.xmx.xui.core.platform.PlatformRenderProvider;
 import net.xmx.xui.impl.RenderImpl;
 import net.xmx.xui.init.registry.ModRegistries;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +31,6 @@ public class XuiMainClass {
      */
     @Environment(EnvType.CLIENT)
     public static void onClientInit() {
-        RenderProvider.register(RenderImpl.getInstance());
+        PlatformRenderProvider.register(RenderImpl.getInstance());
     }
 }

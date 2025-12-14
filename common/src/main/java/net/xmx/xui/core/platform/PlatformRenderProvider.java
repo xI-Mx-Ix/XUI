@@ -2,7 +2,7 @@
  * This file is part of XUI.
  * Licensed under MIT license.
  */
-package net.xmx.xui.core.gl;
+package net.xmx.xui.core.platform;
 
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 
@@ -16,9 +16,9 @@ import net.xmx.xui.core.gl.renderer.UIRenderer;
  *
  * @author xI-Mx-Ix
  */
-public final class RenderProvider {
+public final class PlatformRenderProvider {
 
-    private RenderProvider() {
+    private PlatformRenderProvider() {
         // Prevent instantiation
     }
 
@@ -29,9 +29,9 @@ public final class RenderProvider {
      * of the mod (e.g., ClientModInitializer).
      * </p>
      *
-     * @param backend The concrete implementation of {@link PlatformRenderBackend}.
+     * @param backend The concrete implementation of {@link PlatformRenderInterface}.
      */
-    public static void register(PlatformRenderBackend backend) {
-        UIRenderer.getInstance().setBackend(backend);
+    public static void register(PlatformRenderInterface backend) {
+        UIRenderer.getInstance().setPlatform(backend);
     }
 }

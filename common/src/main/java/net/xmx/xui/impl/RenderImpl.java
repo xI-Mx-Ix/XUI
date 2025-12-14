@@ -10,12 +10,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.xmx.xui.core.gl.PlatformRenderBackend;
+import net.xmx.xui.core.platform.PlatformRenderInterface;
 import net.xmx.xui.core.text.TextComponent;
 import org.joml.Matrix4f;
 
 /**
- * Concrete implementation of the {@link PlatformRenderBackend} for the Minecraft environment.
+ * Concrete implementation of the {@link PlatformRenderInterface} for the Minecraft environment.
  * <p>
  * This class serves as the raw adapter to Minecraft's rendering systems ({@code GuiGraphics},
  * {@code FontRenderer}, {@code PoseStack}). It is strictly an execution layer and does
@@ -24,7 +24,7 @@ import org.joml.Matrix4f;
  *
  * @author xI-Mx-Ix
  */
-public class RenderImpl implements PlatformRenderBackend {
+public class RenderImpl implements PlatformRenderInterface {
 
     private static RenderImpl instance;
 
@@ -103,22 +103,6 @@ public class RenderImpl implements PlatformRenderBackend {
     @Override
     public double getScaleFactor() {
         return Minecraft.getInstance().getWindow().getGuiScale();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getWindowWidth() {
-        return Minecraft.getInstance().getWindow().getWidth();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getWindowHeight() {
-        return Minecraft.getInstance().getWindow().getHeight();
     }
 
     // =================================================================================

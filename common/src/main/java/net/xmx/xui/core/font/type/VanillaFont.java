@@ -5,7 +5,7 @@
 package net.xmx.xui.core.font.type;
 
 import net.xmx.xui.core.font.Font;
-import net.xmx.xui.core.gl.PlatformRenderBackend;
+import net.xmx.xui.core.platform.PlatformRenderInterface;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.text.TextComponent;
 
@@ -14,7 +14,7 @@ import net.xmx.xui.core.text.TextComponent;
  * <p>
  * This class acts as a <b>Proxy</b> or <b>Adapter</b>. Since the Core module cannot directly
  * access game engine classes (like {@code FontRenderer}), this class delegates all measurement
- * and rendering requests to the {@link PlatformRenderBackend} via the
+ * and rendering requests to the {@link PlatformRenderInterface} via the
  * central {@link UIRenderer}.
  * </p>
  * <p>
@@ -50,7 +50,7 @@ public class VanillaFont extends Font {
      */
     @Override
     public float getLineHeight() {
-        return UIRenderer.getInstance().getBackend().getNativeLineHeight();
+        return UIRenderer.getInstance().getPlatform().getNativeLineHeight();
     }
 
     /**
@@ -65,7 +65,7 @@ public class VanillaFont extends Font {
      */
     @Override
     public float getWidth(TextComponent component) {
-        return UIRenderer.getInstance().getBackend().getNativeStringWidth(component);
+        return UIRenderer.getInstance().getPlatform().getNativeStringWidth(component);
     }
 
     /**
@@ -81,7 +81,7 @@ public class VanillaFont extends Font {
      */
     @Override
     public float getWordWrapHeight(TextComponent component, float maxWidth) {
-        return UIRenderer.getInstance().getBackend().getNativeWordWrapHeight(component, maxWidth);
+        return UIRenderer.getInstance().getPlatform().getNativeWordWrapHeight(component, maxWidth);
     }
 
     /**
@@ -103,7 +103,7 @@ public class VanillaFont extends Font {
      */
     @Override
     public void draw(UIRenderer context, TextComponent component, float x, float y, int color, boolean shadow) {
-        context.getBackend().renderNativeText(
+        context.getPlatform().renderNativeText(
                 component,
                 x,
                 y,
@@ -130,7 +130,7 @@ public class VanillaFont extends Font {
      */
     @Override
     public void drawWrapped(UIRenderer context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
-        context.getBackend().renderNativeWrappedText(
+        context.getPlatform().renderNativeWrappedText(
                 component,
                 x,
                 y,

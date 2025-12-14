@@ -5,7 +5,8 @@
 package net.xmx.xui.core.gl.renderer;
 
 import net.xmx.xui.core.font.Font;
-import net.xmx.xui.core.gl.PlatformRenderBackend;
+import net.xmx.xui.core.platform.PlatformRenderInterface;
+import net.xmx.xui.core.platform.PlatformRenderProvider;
 import net.xmx.xui.core.gl.TransformStack;
 import net.xmx.xui.core.text.TextComponent;
 import org.lwjgl.opengl.GL11;
@@ -21,7 +22,7 @@ import org.lwjgl.opengl.GL11;
  * <ul>
  *     <li>Managing the lifecycle of a frame (begin/end).</li>
  *     <li>Routing drawing commands to the correct renderer (e.g., determining if text is Vanilla or MSDF).</li>
- *     <li>Managing the interface with the {@link PlatformRenderBackend}.</li>
+ *     <li>Managing the interface with the {@link PlatformRenderInterface}.</li>
  *     <li><b>Lazy Initialization:</b> Ensures OpenGL resources (Shaders) are only created
  *     after the game engine has established a valid OpenGL context.</li>
  * </ul>
@@ -46,9 +47,9 @@ public class UIRenderer {
     // --- External Dependencies ---
     /**
      * The bridge to the platform/game engine.
-     * This is injected via {@link net.xmx.xui.core.gl.RenderProvider} during initialization.
+     * This is injected via {@link PlatformRenderProvider} during initialization.
      */
-    private PlatformRenderBackend backend;
+    private PlatformRenderInterface platform;
 
     /**
      * The current logical scale factor.
@@ -102,13 +103,13 @@ public class UIRenderer {
     /**
      * Injects the platform-specific backend implementation.
      * <p>
-     * This method is called by the {@code RenderProvider} during the bootstrapping phase.
+     * This method is called by the {@code PlatformRenderProvider} during the bootstrapping phase.
      * </p>
      *
-     * @param backend The concrete implementation of {@link PlatformRenderBackend}.
+     * @param platform The concrete implementation of {@link PlatformRenderInterface}.
      */
-    public void setBackend(PlatformRenderBackend backend) {
-        this.backend = backend;
+    public void setPlatform(PlatformRenderInterface platform) {
+        this.platform = platform;
     }
 
     /**
@@ -117,11 +118,11 @@ public class UIRenderer {
      * @return The backend instance.
      * @throws IllegalStateException If the backend has not been initialized.
      */
-    public PlatformRenderBackend getBackend() {
-        if (backend == null) {
-            throw new IllegalStateException("PlatformRenderBackend is not initialized! Ensure RenderProvider.register() is called.");
+    public PlatformRenderInterface getPlatform() {
+        if (platform == null) {
+            throw new IllegalStateException("PlatformRenderInterface is not initialized! Ensure PlatformRenderProvider.register() is called.");
         }
-        return backend;
+        return platform;
     }
 
     // =================================================================================
@@ -147,11 +148,11 @@ public class UIRenderer {
         // Reset global transforms for the new frame
         this.transformStack.reset();
 
-        if (backend != null) {
+        if (platform != null) {
             // Pass the calculated logical scale to the backend.
             // The backend uses this to scale the native PoseStack, ensuring vanilla elements
             // render at the correct size relative to the UI scale.
-            backend.initiateRenderCycle(this.currentUiScale);
+            platform.initiateRenderCycle(this.currentUiScale);
 
             // If we need a clean depth slate, clear it now.
             if (clearDepthBuffer) {
@@ -167,8 +168,8 @@ public class UIRenderer {
      * </p>
      */
     public void endFrame() {
-        if (backend != null) {
-            backend.finishRenderCycle();
+        if (platform != null) {
+            platform.finishRenderCycle();
         }
     }
 
@@ -177,7 +178,7 @@ public class UIRenderer {
      * <p>
      * <b>Logic:</b> Checks the font type of the component.
      * <ul>
-     *     <li>If {@link Font.Type#VANILLA}: Delegates to {@link PlatformRenderBackend} with current matrix.</li>
+     *     <li>If {@link Font.Type#VANILLA}: Delegates to {@link PlatformRenderInterface} with current matrix.</li>
      *     <li>If {@link Font.Type#CUSTOM}: Delegates to internal MSDF {@link TextRenderer}.</li>
      * </ul>
      * </p>
@@ -193,7 +194,7 @@ public class UIRenderer {
 
         if (text.getFont().getType() == Font.Type.VANILLA) {
             // Logic: Pass the current transform stack so the backend knows where to draw
-            getBackend().renderNativeText(text, x, y, color, shadow, transformStack.getDirectModelMatrix());
+            getPlatform().renderNativeText(text, x, y, color, shadow, transformStack.getDirectModelMatrix());
         } else {
             // Logic: Custom fonts use our internal renderer logic
             // Requires initialization check
@@ -217,7 +218,7 @@ public class UIRenderer {
         if (text == null || text.getFont() == null) return;
 
         if (text.getFont().getType() == Font.Type.VANILLA) {
-            getBackend().renderNativeWrappedText(text, x, y, width, color, shadow, transformStack.getDirectModelMatrix());
+            getPlatform().renderNativeWrappedText(text, x, y, width, color, shadow, transformStack.getDirectModelMatrix());
         } else {
             if (textRenderer != null) {
                 text.getFont().drawWrapped(this, text, x, y, width, color, shadow);

@@ -2,7 +2,7 @@
  * This file is part of XUI.
  * Licensed under MIT license.
  */
-package net.xmx.xui.core.gl;
+package net.xmx.xui.core.platform;
 
 import net.xmx.xui.core.text.TextComponent;
 import org.joml.Matrix4f;
@@ -22,7 +22,7 @@ import org.joml.Matrix4f;
  *
  * @author xI-Mx-Ix
  */
-public interface PlatformRenderBackend {
+public interface PlatformRenderInterface {
 
     /**
      * Acquires the platform's graphics context for the current frame and synchronizes the coordinate systems.
@@ -55,20 +55,6 @@ public interface PlatformRenderBackend {
      * @return The raw scale factor (e.g., 1.0, 2.0, 3.0, 4.0).
      */
     double getScaleFactor();
-
-    /**
-     * Retrieves the physical width of the game window.
-     *
-     * @return Width in physical pixels.
-     */
-    int getWindowWidth();
-
-    /**
-     * Retrieves the physical height of the game window.
-     *
-     * @return Height in physical pixels.
-     */
-    int getWindowHeight();
 
     // =================================================================================
     // Native Font Operations (Bridge to MC FontRenderer)
