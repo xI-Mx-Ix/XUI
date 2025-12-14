@@ -15,6 +15,7 @@ import net.xmx.xui.core.style.StyleSheet;
 import net.xmx.xui.core.style.StyleKey;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -722,6 +723,30 @@ public abstract class UIWidget {
     public UIWidget setOnClick(Consumer<UIWidget> action) {
         this.onClick = action;
         return this;
+    }
+
+    /**
+     * Gets the physical window width using GLFW.
+     *
+     * @return The window width in pixels
+     */
+    public int getScreenWidth() {
+        long window = GLFW.glfwGetCurrentContext();
+        int[] width = new int[1];
+        GLFW.glfwGetWindowSize(window, width, new int[1]);
+        return width[0];
+    }
+
+    /**
+     * Gets the physical window height using GLFW.
+     *
+     * @return The window height in pixels
+     */
+    public int getScreenHeight() {
+        long window = GLFW.glfwGetCurrentContext();
+        int[] height = new int[1];
+        GLFW.glfwGetWindowSize(window, new int[1], height);
+        return height[0];
     }
 
     public float getX() {

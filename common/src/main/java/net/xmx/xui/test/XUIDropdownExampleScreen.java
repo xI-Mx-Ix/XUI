@@ -20,26 +20,32 @@ import net.xmx.xui.core.text.TextComponent;
 import java.util.Arrays;
 
 /**
- * Demonstrates Dropdown Z-Ordering using {@link UIContext}.
- * The Dropdown is in a top panel but renders visually OVER the bottom panel
- * and blocks clicks to elements behind it.
+ * Modernized example screen demonstrating the {@link UIDropdown} component.
+ * <p>
+ * This layout places a dropdown inside a central container. It demonstrates
+ * how the dropdown's overlay correctly floats above other siblings (like the
+ * "Apply" button below it) without affecting the layout flow.
+ * </p>
  *
  * @author xI-Mx-Ix
  */
 public class XUIDropdownExampleScreen extends Screen {
 
+    // The context holds the widget tree and manages scaling
     private final UIContext uiContext = new UIContext();
 
     public XUIDropdownExampleScreen() {
-        super(Component.literal("Dropdown Z-Test"));
+        super(Component.literal("Dropdown Demo"));
     }
 
     @Override
     protected void init() {
+        // 1. Update layout metrics
         int wW = Minecraft.getInstance().getWindow().getWidth();
         int wH = Minecraft.getInstance().getWindow().getHeight();
         uiContext.updateLayout(wW, wH);
 
+        // 2. Build UI only if not already present (preserves state on resize)
         if (!uiContext.isInitialized()) {
             buildUI();
         }
@@ -47,65 +53,88 @@ public class XUIDropdownExampleScreen extends Screen {
 
     private void buildUI() {
         UIPanel root = uiContext.getRoot();
-        root.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF121212);
+        root.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF121212); // Dark background
 
-        // 2. Bottom Container (Acts as the "Background" or "Obstructed" layer)
-        // We place this before the top panel in the add list so it renders first.
-        UIPanel bottomPanel = new UIPanel();
-        bottomPanel.setX(Layout.center())
-                .setY(Layout.pixel(100))
-                .setWidth(Layout.pixel(300))
-                .setHeight(Layout.pixel(200));
-        bottomPanel.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF2A2A2A); // Dark Grey
+        // --- Main Center Panel ---
+        UIPanel container = new UIPanel();
+        container.setX(Layout.center())
+                .setY(Layout.center())
+                .setWidth(Layout.pixel(360))
+                .setHeight(Layout.pixel(220));
 
-        // A Button inside the bottom panel that should be covered by the dropdown overlay
-        UIButton obstructionButton = new UIButton();
-        obstructionButton.setLabel("I am behind the dropdown!");
-        obstructionButton.setX(Layout.center())
-                .setY(Layout.pixel(20))
-                .setWidth(Layout.pixel(200))
-                .setHeight(Layout.pixel(20));
+        container.style()
+                .set(ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
+                .set(ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(ThemeProperties.BORDER_COLOR, 0xFF404040)
+                .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 
-        // If this prints, the overlap logic failed.
-        obstructionButton.setOnClick(w -> System.out.println("FAIL: You clicked the background button!"));
+        // --- Header Title ---
+        UIText title = new UIText();
+        title.setText(TextComponent.literal("Game Settings").setBold(true));
+        title.setCentered(true)
+                .setX(Layout.center())
+                .setY(Layout.pixel(15));
 
-        bottomPanel.add(obstructionButton);
+        // --- Field Label ---
+        UIText lblMode = new UIText();
+        lblMode.setText("Select Game Mode:");
+        lblMode.setX(Layout.pixel(30))
+                .setY(Layout.pixel(55));
+        lblMode.style().set(ThemeProperties.TEXT_COLOR, 0xFFAAAAAA);
 
-        // 3. Top Container (Holds the Dropdown)
-        UIPanel topPanel = new UIPanel();
-        topPanel.setX(Layout.center())
-                .setY(Layout.pixel(50)) // 50px from top
-                .setWidth(Layout.pixel(300))
-                .setHeight(Layout.pixel(60)); // Short height, so dropdown hangs out
-        topPanel.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF353535); // Slightly lighter
-
-        // Label
-        UIText label = new UIText();
-        label.setText("Select Mode:");
-        label.setX(Layout.pixel(10)).setY(Layout.center());
-
+        // --- The Dropdown Widget ---
         UIDropdown dropdown = new UIDropdown();
         dropdown.setOptions(Arrays.asList(
-                TextComponent.literal("Survival Mode"),
-                TextComponent.literal("Creative Mode"),
-                TextComponent.literal("Spectator Mode"),
-                TextComponent.literal("Adventure Mode")
+                TextComponent.literal("Survival Mode").setColor(0xFF55FF55), // Green
+                TextComponent.literal("Creative Mode").setColor(0xFF55FFFF), // Aqua
+                TextComponent.literal("Spectator Mode").setColor(0xFFAAAAAA), // Gray
+                TextComponent.literal("Adventure Mode").setColor(0xFFFFAA00), // Gold
+                TextComponent.literal("Hardcore Mode").setColor(0xFFFF5555)   // Red
         ));
 
-        dropdown.setX(Layout.anchorEnd(10)) // Align right
-                .setY(Layout.center())
-                .setWidth(Layout.pixel(150))
-                .setHeight(Layout.pixel(20));
+        dropdown.setX(Layout.pixel(30))
+                .setY(Layout.sibling(lblMode, 6, true)) // Placed right below label
+                .setWidth(Layout.pixel(300))
+                .setHeight(Layout.pixel(26)); // Modern height
 
-        dropdown.setOnSelected(idx -> System.out.println("Selected Index: " + idx));
+        // Update console on selection
+        dropdown.setOnSelected(idx ->
+                System.out.println("User selected option index: " + idx)
+        );
 
-        topPanel.add(label);
-        topPanel.add(dropdown);
+        // --- Obstructed Element (Button) ---
+        // This button is placed strictly below the dropdown.
+        // When the dropdown opens, it should cover this button visually,
+        // and clicks on the dropdown overlay should NOT trigger this button.
+        UIButton applyBtn = new UIButton();
+        applyBtn.setLabel("Apply Changes");
+        applyBtn.setX(Layout.center())
+                .setY(Layout.sibling(dropdown, 25, true)) // 25px gap
+                .setWidth(Layout.pixel(160))
+                .setHeight(Layout.pixel(32));
 
-        // Add panels to root
-        root.add(bottomPanel);
-        root.add(topPanel);
+        applyBtn.setOnClick(w -> {
+            System.out.println("Settings Applied! (Mode Index: " + dropdown.getSelectedIndex() + ")");
+            this.onClose();
+        });
 
+        // --- Status Text ---
+        UIText statusText = new UIText();
+        statusText.setText("Status: Waiting for input...");
+        statusText.setCentered(true)
+                .setX(Layout.center())
+                .setY(Layout.anchorEnd(15));
+        statusText.style().set(ThemeProperties.TEXT_COLOR, 0xFF666666);
+
+        // Add children to container
+        container.add(title);
+        container.add(lblMode);
+        container.add(dropdown);
+        container.add(applyBtn);
+        container.add(statusText);
+
+        // Add container to root
+        root.add(container);
         root.layout();
     }
 
@@ -114,10 +143,9 @@ public class XUIDropdownExampleScreen extends Screen {
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         // Delegate rendering to the context
         uiContext.render(mouseX, mouseY, partialTick);
-
-        // Debug Text drawn directly to screen (bypassing UIContext)
-        guiGraphics.drawString(font, "Dropdown should cover the button below.", 10, 10, 0xFFFFFFFF);
     }
+
+    // --- Input Forwarding via UIContext ---
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {

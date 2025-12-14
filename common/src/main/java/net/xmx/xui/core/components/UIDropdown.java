@@ -4,291 +4,358 @@
  */
 package net.xmx.xui.core.components;
 
-import net.minecraft.client.Minecraft;
+import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
-import net.xmx.xui.core.gl.RenderInterface;
-import net.xmx.xui.core.UIWidget;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * A Dropdown Widget (ComboBox) that displays a list of selectable options.
- * The header reacts to hover events by brightening, while the opened list maintains
- * a static background color until individual options are hovered.
- * Supports Component-based options.
+ * A Modern Dropdown Widget.
+ * <p>
+ * This component features a header that behaves like a button and a floating
+ * list overlay that animates open/close. The overlay is rendered visually distinct
+ * from the header (floating card style) with a configurable gap.
+ * </p>
  *
  * @author xI-Mx-Ix
  */
 public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
     /**
-     *  Color of the chevron/arrow indicator on the right side.
+     * Defines the expansion direction behavior.
      */
-    public static final StyleKey<Integer> ARROW_COLOR = new StyleKey<>("dropdown_arrow_color", 0xFFAAAAAA);
+    public enum Direction {
+        /**
+         * Automatically determines the best direction based on available screen space.
+         * <p>
+         * Logic:
+         * 1. Try opening downwards.
+         * 2. If space is insufficient, try opening upwards.
+         * 3. If neither fits, open towards the side with the most available space.
+         * </p>
+         */
+        AUTO,
 
-    private final List<TextComponent> options = new ArrayList<>();
+        /**
+         * Always opens downwards, regardless of available space.
+         */
+        DOWN,
 
-    private int selectedIndex = -1;
-    private boolean isOpen = false;
-    private Consumer<Integer> onSelected;
-
-    private boolean openUpward = false;
-    private final int optionHeight = 20;
-
-    private boolean active = true;
-
-    // Cache for calculated overlay position to check for obstructions
-    private float overlayY, overlayHeight;
-
-    /**
-     * Constructs an empty dropdown.
-     * Add options using {@link #addOption(TextComponent)} or {@link #setOptions(List)}.
-     */
-    public UIDropdown() {
-        setupDefaultStyles();
+        /**
+         * Always opens upwards, regardless of available space.
+         */
+        UP
     }
 
     /**
-     * Adds a single option to the dropdown.
+     * Color of the chevron/arrow indicator.
+     */
+    public static final StyleKey<Integer> ARROW_COLOR = new StyleKey<>("dropdown_arrow_color", 0xFFAAAAAA);
+
+    // List Logic
+    private final List<TextComponent> options = new ArrayList<>();
+    private int selectedIndex = -1;
+    private Consumer<Integer> onSelected;
+
+    // State & Animation
+    private boolean isOpen = false;
+    private boolean active = true;
+
+    /**
+     * Current animation progress for the opening effect.
+     * 0.0f = fully closed, 1.0f = fully open.
+     */
+    private float openProgress = 0.0f;
+
+    // Layout Configuration
+    private Direction preferredDirection = Direction.AUTO;
+    private boolean openUpward = false;
+    private final int optionHeight = 24;
+    private final float dropdownGap = 4.0f;
+
+    // Geometry Cache (Calculated in drawSelf for obstruction checks)
+    private float overlayX, overlayY, overlayWidth, overlayHeight;
+
+    /**
+     * Constructs an empty dropdown with modern styling.
+     */
+    public UIDropdown() {
+        setupModernStyles();
+    }
+
+    /**
+     * Configures the visual theme properties.
+     */
+    private void setupModernStyles() {
+        this.style()
+                .setTransitionSpeed(10.0f)
+
+                // Header - Default
+                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF404040)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 6.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)
+                .set(InteractionState.DEFAULT, ARROW_COLOR, 0xFF909090)
+
+                // Hover overlay for items (lighter white)
+                .set(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR, 0x1AFFFFFF)
+
+                // Header - Hover
+                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xFF303030)
+                .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, 0xFF606060)
+                .set(InteractionState.HOVER, ARROW_COLOR, 0xFFFFFFFF)
+
+                // Header - Active/Open
+                .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, 0xFF181818);
+    }
+
+    /**
+     * Adds an option to the list.
      *
-     * @param option The option component to add.
-     * @return This dropdown instance.
+     * @param option The text component.
+     * @return This instance.
      */
     public UIDropdown addOption(TextComponent option) {
         this.options.add(option);
-        if (this.selectedIndex == -1) {
-            this.selectedIndex = 0;
-        }
+        if (this.selectedIndex == -1) selectedIndex = 0;
         return this;
     }
 
     /**
-     * Sets the list of options, replacing any existing ones.
+     * Replaces all options.
      *
-     * @param options The list of options.
-     * @return This dropdown instance.
+     * @param options The new list of options.
+     * @return This instance.
      */
     public UIDropdown setOptions(List<TextComponent> options) {
         this.options.clear();
         this.options.addAll(options);
-        if (!this.options.isEmpty()) {
-            this.selectedIndex = 0;
-        } else {
-            this.selectedIndex = -1;
-        }
+        this.selectedIndex = options.isEmpty() ? -1 : 0;
         return this;
     }
 
-    private void setupDefaultStyles() {
-        this.style()
-                .setTransitionSpeed(15.0f)
-                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF202020)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFFFFFFFF)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 4.0f)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
-                .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)
-                .set(InteractionState.DEFAULT, ARROW_COLOR, 0xFFAAAAAA)
-
-                // This color is drawn over the option to make it "lighter".
-                // 0x40 is alpha (approx 25% opacity). White overlay = lighter background.
-                .set(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR, 0x40FFFFFF)
-
-                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xFF303030)
-                .set(InteractionState.HOVER, ARROW_COLOR, 0xFFFFFFFF)
-
-                .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, 0xFF101010);
+    /**
+     * Sets the direction behavior for the dropdown.
+     *
+     * @param direction The expansion direction (AUTO, UP, or DOWN).
+     * @return This instance for chaining.
+     */
+    public UIDropdown setDirection(Direction direction) {
+        this.preferredDirection = direction;
+        return this;
     }
 
     @Override
     protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
-        updateOverlayGeometry();
+        // 1. Update Animation Logic (Simple Lerp)
+        float targetProgress = isOpen ? 1.0f : 0.0f;
+        // Smoothly interpolate current progress towards target
+        this.openProgress += (targetProgress - this.openProgress) * deltaTime * 15.0f;
 
-        // Calculate the background color for the header based on the current interaction state (e.g. Hover)
-        int headerBgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
-
-        // Calculate the background color for the list overlay.
-        // This always uses the DEFAULT state to ensure the list remains dark even when the header is hovered.
-        int listBgColor = getColor(ThemeProperties.BACKGROUND_COLOR, InteractionState.DEFAULT, deltaTime);
-
-        int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
-        int textColor = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);
-        int arrowColor = getColor(ARROW_COLOR, state, deltaTime);
-        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
-        float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
-
-        float rTL = radius, rTR = radius, rBR = radius, rBL = radius;
-
-        if (isOpen) {
-            if (openUpward) {
-                // List above: Flatten Top corners of the header
-                rTL = 0;
-                rTR = 0;
-            } else {
-                // List below: Flatten Bottom corners of the header
-                rBR = 0;
-                rBL = 0;
-            }
+        // Clamp to avoid float precision issues
+        if (Math.abs(targetProgress - this.openProgress) < 0.001f) {
+            this.openProgress = targetProgress;
         }
 
-        // Draw the Header using the dynamic headerBgColor
-        renderer.drawRect(x, y, width, height, headerBgColor, rTL, rTR, rBR, rBL);
+        // 2. Resolve Styles
+        // Force hover state if open to give visual feedback on the header
+        InteractionState headerState = isOpen ? InteractionState.HOVER : state;
+
+        int headerBg = getColor(ThemeProperties.BACKGROUND_COLOR, headerState, deltaTime);
+        int borderColor = getColor(ThemeProperties.BORDER_COLOR, headerState, deltaTime);
+        int textColor = getColor(ThemeProperties.TEXT_COLOR, headerState, deltaTime);
+        int arrowColor = getColor(ARROW_COLOR, headerState, deltaTime);
+        float radius = getFloat(ThemeProperties.BORDER_RADIUS, headerState, deltaTime);
+        float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, headerState, deltaTime);
+
+        // 3. Draw Header (The Button)
+        renderer.drawRect(x, y, width, height, headerBg, radius);
         if (borderThick > 0) {
-            renderer.drawOutline(x, y, width, height, borderColor, borderThick, rTL, rTR, rBR, rBL);
+            renderer.drawOutline(x, y, width, height, borderColor, radius, borderThick);
         }
 
+        // Draw Selected Text
         if (selectedIndex >= 0 && selectedIndex < options.size()) {
-            float textY = y + (height - TextComponent.getFontHeight()) / 2.0f;
-            renderer.drawText(options.get(selectedIndex), x + 5, textY, textColor, false);
+            float textY = y + (height - TextComponent.getFontHeight()) / 2.0f + 1;
+            // Limit text width to avoid overlapping arrow
+            renderer.drawText(options.get(selectedIndex), x + 8, textY, textColor, false);
         }
 
-        drawArrow(renderer, x + width - 12, y + (height - 5) / 2.0f, arrowColor, isOpen);
+        // Draw Chevron
+        drawArrow(renderer, x + width - 14, y + height / 2.0f, arrowColor, isOpen);
 
-        if (isOpen) {
-            // Render the options overlay on top of everything
-            renderer.translate(0.0f, 0.0f, 300.0f);
-            // Pass the static listBgColor for the overlay background
-            renderDropdownOverlay(renderer, mouseX, mouseY, partialTicks, listBgColor, borderColor, textColor, radius);
-            renderer.translate(0.0f, 0.0f, -300.0f);
+        // 4. Draw Floating List Overlay (if visible)
+        if (openProgress > 0.01f) {
+            updateOverlayGeometry();
+
+            renderer.translate(0, 0, 50);
+
+            // We use the same border/radius style for consistency, but a solid background
+            int listBg = 0xFF181818; // Very dark grey, opaque
+            renderOverlay(renderer, mouseX, mouseY, listBg, borderColor, textColor, radius, borderThick);
+
+            renderer.translate(0, 0, -50);
+        }
+    }
+
+    /**
+     * Calculates the direction in which the dropdown opens.
+     * This is executed once at the start of the opening animation to ensure stability.
+     */
+    private void calculateDirection() {
+        // Logic: Fixed Up
+        if (preferredDirection == Direction.UP) {
+            this.openUpward = true;
+            return;
+        }
+
+        // Logic: Fixed Down
+        if (preferredDirection == Direction.DOWN) {
+            this.openUpward = false;
+            return;
+        }
+
+        // Logic: Auto - Calculate available space
+        int totalListHeight = options.size() * optionHeight;
+        int screenHeight = getScreenHeight();
+
+        float spaceBelow = screenHeight - (this.y + this.height + dropdownGap);
+        float spaceAbove = this.y - dropdownGap;
+
+        // 1. Default: Open downwards if sufficient space exists
+        if (spaceBelow >= totalListHeight) {
+            this.openUpward = false;
+        }
+        // 2. Fallback: Open upwards if down fails but up fits
+        else if (spaceAbove >= totalListHeight) {
+            this.openUpward = true;
+        }
+        // 3. Last Resort: Choose the side with more space
+        else {
+            this.openUpward = (spaceAbove > spaceBelow);
         }
     }
 
     private void updateOverlayGeometry() {
-        int totalHeight = options.size() * optionHeight;
-        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        float spaceBelow = screenHeight - (this.y + this.height);
+        int totalListHeight = options.size() * optionHeight;
 
-        this.openUpward = (this.y > spaceBelow) && (totalHeight > spaceBelow);
-        this.overlayHeight = totalHeight;
+        this.overlayWidth = this.width;
+        // The actual rendered height depends on animation progress
+        this.overlayHeight = totalListHeight * openProgress;
+        this.overlayX = this.x;
 
         if (openUpward) {
-            this.overlayY = this.y - totalHeight + 1;
+            // Grows upwards from the bottom
+            this.overlayY = (this.y - dropdownGap) - this.overlayHeight;
         } else {
-            this.overlayY = this.y + this.height - 1;
+            // Grows downwards from the top
+            this.overlayY = this.y + this.height + dropdownGap;
         }
     }
 
-    /**
-     * Renders the expanded list of options.
-     *
-     * @param renderer     The rendering interface.
-     * @param mouseX       Absolute mouse X.
-     * @param mouseY       Absolute mouse Y.
-     * @param partialTicks Animation time delta.
-     * @param bgColor      The background color for the list (usually InteractionState.DEFAULT).
-     * @param borderColor  The border color.
-     * @param textColor    The text color.
-     * @param radius       The border radius to apply to the outer corners.
-     */
-    private void renderDropdownOverlay(RenderInterface renderer, int mouseX, int mouseY, float partialTicks,
-                                       int bgColor, int borderColor, int textColor, float radius) {
+    private void renderOverlay(RenderInterface renderer, int mouseX, int mouseY,
+                               int bgColor, int borderColor, int textColor, float radius, float borderThick) {
 
-        float rTL = radius, rTR = radius, rBR = radius, rBL = radius;
+        float totalListHeight = options.size() * optionHeight;
 
-        if (openUpward) {
-            rBR = 0;
-            rBL = 0;
-        } else {
-            rTL = 0;
-            rTR = 0;
-        }
+        // --- Radius Clamping Logic ---
+        // Prevent graphical artifacts when the box height is smaller than 2x radius.
+        float effectiveRadius = Math.min(radius, overlayHeight / 2.0f);
 
-        // Ensure background is solid (opaque) for the list so things behind don't bleed through
-        int solidBg = bgColor | 0xFF000000;
+        // --- 1. Clipping (Scissors) ---
+        // We define a window that matches the current animated box size.
+        renderer.enableScissor(overlayX, overlayY, overlayWidth, overlayHeight);
 
-        renderer.drawRect(x, overlayY, width, overlayHeight, solidBg, rTL, rTR, rBR, rBL);
-        renderer.drawOutline(x, overlayY, width, overlayHeight, borderColor, 1.0f, rTL, rTR, rBR, rBL);
+        // --- 2. Draw Background ---
+        renderer.drawRect(overlayX, overlayY, overlayWidth, overlayHeight, bgColor, effectiveRadius);
 
-        // Retrieve the base hover overlay color (usually semi-transparent white)
-        int baseHoverColor = style().getValue(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR);
+        // --- 3. Draw Options ---
+        int hoverColor = style().getValue(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR);
+
+        // If opening upward, we align content to the bottom of the overlay rect
+        float startY = openUpward ? (overlayY + overlayHeight - totalListHeight) : overlayY;
 
         for (int i = 0; i < options.size(); i++) {
-            float optY = overlayY + (i * optionHeight);
+            float optY = startY + (i * optionHeight);
 
-            boolean isOptionHovered = (mouseX >= x && mouseX <= x + width &&
-                    mouseY >= optY && mouseY < optY + optionHeight);
+            // Check hover relative to the visual list and scissor bounds
+            boolean isHovered = (mouseX >= overlayX && mouseX <= overlayX + overlayWidth &&
+                    mouseY >= optY && mouseY < optY + optionHeight &&
+                    mouseY >= overlayY && mouseY <= overlayY + overlayHeight);
 
-            // Draw the highlight immediately if the option is hovered, without interpolation
-            if (isOptionHovered) {
-                renderer.drawRect(x, optY, width, optionHeight, baseHoverColor, 0);
+            if (isHovered) {
+                renderer.drawRect(overlayX + 2, optY, overlayWidth - 4, optionHeight, hoverColor, effectiveRadius / 2);
             }
 
-            TextComponent text = options.get(i);
-            float textY = optY + (optionHeight - TextComponent.getFontHeight()) / 2.0f;
-            renderer.drawText(text, x + 5, textY, textColor, false);
+            float textY = optY + (optionHeight - TextComponent.getFontHeight()) / 2.0f + 1;
+            renderer.drawText(options.get(i), overlayX + 8, textY, textColor, false);
         }
-    }
 
-    private void closeDropdown() {
-        if (this.isOpen) {
-            this.isOpen = false;
-            UIWidget.removeObstructor(this);
+        // --- 4. Draw Border ---
+        if (borderThick > 0) {
+            renderer.drawOutline(overlayX, overlayY, overlayWidth, overlayHeight, borderColor, effectiveRadius, borderThick);
         }
+
+        // Disable clipping
+        renderer.disableScissor();
     }
 
     private void drawArrow(RenderInterface renderer, float ax, float ay, int color, boolean pointUp) {
-        if (pointUp) {
-            for (int i = 0; i < 5; i++) {
-                renderer.drawRect(ax - i, ay + 4 - i, (i * 2) + 1, 1, color, 0);
-            }
-        } else {
-            for (int i = 0; i < 5; i++) {
-                renderer.drawRect(ax - i, ay + i, (i * 2) + 1, 1, color, 0);
-            }
-        }
+        float vDir = pointUp ? -1 : 1;
+
+        // Draw chevron using small rect steps (pixel art style)
+        // Center point
+        renderer.drawRect(ax, ay + (2 * vDir), 1.5f, 1, color, 0);
+        // Middle steps
+        renderer.drawRect(ax - 1, ay + (1 * vDir), 1, 1, color, 0);
+        renderer.drawRect(ax + 1.5f, ay + (1 * vDir), 1, 1, color, 0);
+        // Outer tips
+        renderer.drawRect(ax - 2, ay, 1, 1, color, 0);
+        renderer.drawRect(ax + 2.5f, ay, 1, 1, color, 0);
     }
 
-    /**
-     * Handles mouse clicks for the dropdown.
-     * Validates interaction against the Left Mouse Button (ID 0).
-     * <p>
-     * If the dropdown is open, it checks for clicks within the overlay list.
-     * If closed, it checks for clicks on the header to toggle the state.
-     * </p>
-     *
-     * @param mouseX The absolute X coordinate.
-     * @param mouseY The absolute Y coordinate.
-     * @param button The mouse button used (0 = Left Click).
-     * @return {@code true} if the dropdown consumed the event.
-     */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!isVisible) return false;
+        if (!isVisible || button != 0) return false;
 
-        // Ensure that only Left Click triggers dropdown actions.
-        if (button != 0) return false;
+        // 1. Handle clicks in the overlay (only if fully or partially open)
+        if (isOpen && openProgress > 0.1f) {
+            // Check if mouse is within the VISIBLE part of the overlay
+            if (mouseX >= overlayX && mouseX <= overlayX + overlayWidth &&
+                    mouseY >= overlayY && mouseY <= overlayY + overlayHeight) {
 
-        if (isOpen) {
-            // Check if the click is within the expanded option list overlay
-            if (mouseX >= x && mouseX <= x + width && mouseY >= overlayY && mouseY <= overlayY + overlayHeight) {
-                int clickedIndex = (int) ((mouseY - overlayY) / optionHeight);
+                float totalListHeight = options.size() * optionHeight;
+                float startY = openUpward ? (overlayY + overlayHeight - totalListHeight) : overlayY;
 
-                if (clickedIndex >= 0 && clickedIndex < options.size()) {
-                    setSelectedIndex(clickedIndex);
-                    if (onSelected != null) {
-                        onSelected.accept(clickedIndex);
-                    }
+                float relativeY = (float) mouseY - startY;
+                int index = (int) (relativeY / optionHeight);
+
+                if (index >= 0 && index < options.size()) {
+                    setSelectedIndex(index);
+                    if (onSelected != null) onSelected.accept(index);
                     closeDropdown();
                     return true;
                 }
             }
 
-            // If click is outside the dropdown completely, close it
+            // Close if clicked outside
             if (!isMouseOver(mouseX, mouseY)) {
                 closeDropdown();
                 return true;
             }
         }
 
-        // Toggle the dropdown if the header is clicked
+        // 2. Handle Header Click
         if (isMouseOver(mouseX, mouseY)) {
             if (active) {
-                if (isOpen) closeDropdown();
-                else openDropdown();
+                toggleDropdown();
                 return true;
             }
         }
@@ -296,19 +363,38 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         return false;
     }
 
+    private void toggleDropdown() {
+        if (isOpen) closeDropdown();
+        else openDropdown();
+    }
+
     private void openDropdown() {
-        if (!this.isOpen) {
+        if (!isOpen) {
+            // IMPORTANT: Calculate direction ONLY when opening.
+            // This prevents the direction from flipping during the closing animation
+            // when space calculations might differ due to shrinking dimensions.
+            calculateDirection();
+
             this.isOpen = true;
             UIWidget.addObstructor(this);
+        }
+    }
+
+    private void closeDropdown() {
+        if (isOpen) {
+            this.isOpen = false;
+            UIWidget.removeObstructor(this);
         }
     }
 
     @Override
     public boolean isObstructing(double mouseX, double mouseY) {
         if (!isOpen) return false;
-        return mouseX >= x && mouseX <= x + width &&
+        return mouseX >= overlayX && mouseX <= overlayX + overlayWidth &&
                 mouseY >= overlayY && mouseY <= overlayY + overlayHeight;
     }
+
+    // --- Getters / Setters ---
 
     public int getSelectedIndex() {
         return selectedIndex;

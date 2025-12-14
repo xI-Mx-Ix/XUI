@@ -119,4 +119,13 @@ public class UIButton extends UIWidget {
         this.label = TextComponent.literal(label);
         return this;
     }
+
+    /**
+     * Returns the current button label.
+     *
+     * @return The label TextComponent.
+     */
+    public TextComponent getLabel() {
+        return label;
+    }
 }
