@@ -5,7 +5,7 @@
 package net.xmx.xui.core;
 
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.gl.RenderProvider;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 
 /**
  * Manages the rendering context, scaling logic, and input transformation for a UI tree.
@@ -155,14 +155,14 @@ public class UIContext {
 
         // 2. Begin Frame via Provider
         // Implementation creates the GuiGraphics internally
-        RenderProvider.get().beginFrame(this.scaleFactor, this.clearDepth);
+        UIRenderer.getInstance().beginFrame(this.scaleFactor, this.clearDepth);
 
         // 3. Render Widget Tree
         // Pass the abstract provider to widgets
-        root.render(RenderProvider.get(), (int) logicalMouseX, (int) logicalMouseY, partialTick, deltaTime);
+        root.render(UIRenderer.getInstance(), (int) logicalMouseX, (int) logicalMouseY, partialTick, deltaTime);
 
         // 4. End Frame via Provider
-        RenderProvider.get().endFrame();
+        UIRenderer.getInstance().endFrame();
     }
 
     /**
@@ -225,7 +225,7 @@ public class UIContext {
      * @return The X coordinate in the logical UI system.
      */
     private double transformMouseX(double mcMouseX) {
-        double mcScale = RenderProvider.get().getGuiScale();
+        double mcScale = UIRenderer.getInstance().getBackend().getScaleFactor();
         // 1. Convert MC coordinate to physical pixels: mcMouseX * mcScale
         // 2. Convert physical pixels to logical pixels: / this.scaleFactor
         return (mcMouseX * mcScale) / this.scaleFactor;
@@ -238,7 +238,7 @@ public class UIContext {
      * @return The Y coordinate in the logical UI system.
      */
     private double transformMouseY(double mcMouseY) {
-        double mcScale = RenderProvider.get().getGuiScale();
+        double mcScale = UIRenderer.getInstance().getBackend().getScaleFactor();
         return (mcMouseY * mcScale) / this.scaleFactor;
     }
 
@@ -281,7 +281,7 @@ public class UIContext {
      * @return {@code true} if the event was handled by a widget.
      */
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        double mcScale = RenderProvider.get().getGuiScale();
+        double mcScale = UIRenderer.getInstance().getBackend().getScaleFactor();
         // Calculate the ratio to convert drag distance from MC space to logical space
         double scaleRatio = mcScale / this.scaleFactor;
 

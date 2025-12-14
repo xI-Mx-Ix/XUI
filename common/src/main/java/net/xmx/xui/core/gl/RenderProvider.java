@@ -4,69 +4,34 @@
  */
 package net.xmx.xui.core.gl;
 
-import net.xmx.xui.core.UIContext;
-import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 
 /**
- * Service provider for the global rendering implementation.
+ * Bootstrapping utility to register the platform-specific rendering backend.
  * <p>
- * This class acts as a bridge (Service Locator pattern) between the abstract Core module
- * and the platform-specific Implementation module. It ensures that the Core module
- * remains completely agnostic of the underlying game engine (Minecraft).
- * </p>
- * <p>
- * The implementation module must register its concrete {@link RenderInterface} instance
- * here exactly once during the client initialization phase (e.g., inside the Client Proxy
- * or ModInitializer).
+ * This class uses a simplified Service Locator pattern. It allows the Core module
+ * to remain agnostic of the implementation (RenderImpl) while ensuring that
+ * the {@link UIRenderer} receives a valid backend instance at runtime.
  * </p>
  *
  * @author xI-Mx-Ix
  */
 public final class RenderProvider {
 
-    /**
-     * The singleton instance of the renderer implementation.
-     */
-    private static RenderInterface instance;
-
-    /**
-     * Private constructor to prevent instantiation of this utility class.
-     */
     private RenderProvider() {
         // Prevent instantiation
     }
 
     /**
-     * Registers the concrete implementation of the renderer.
+     * Registers the platform implementation of the render backend.
      * <p>
-     * This method must be called during the mod's client initialization phase
-     * before any UI rendering is attempted.
+     * This method must be called exactly once during the client initialization phase
+     * of the mod (e.g., ClientModInitializer).
      * </p>
      *
-     * @param implementation The concrete implementation of the renderer (e.g., {@code RenderImpl}).
-     * @throws IllegalStateException If a renderer has already been registered.
+     * @param backend The concrete implementation of {@link PlatformRenderBackend}.
      */
-    public static void register(RenderInterface implementation) {
-        if (instance != null) {
-            throw new IllegalStateException("RenderInterface is already registered! Multiple registrations are not allowed.");
-        }
-        instance = implementation;
-    }
-
-    /**
-     * Retrieves the active renderer implementation.
-     * <p>
-     * This is the primary access point for {@link UIContext} and
-     * individual {@link UIWidget}s to perform drawing operations.
-     * </p>
-     *
-     * @return The registered {@link RenderInterface} instance.
-     * @throws IllegalStateException If the renderer has not been registered yet (initialization order error).
-     */
-    public static RenderInterface get() {
-        if (instance == null) {
-            throw new IllegalStateException("RenderInterface has not been registered! Ensure XuiMainClass.onClientInit() was called and registered the renderer.");
-        }
-        return instance;
+    public static void register(PlatformRenderBackend backend) {
+        UIRenderer.getInstance().setBackend(backend);
     }
 }

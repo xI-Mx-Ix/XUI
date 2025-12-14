@@ -10,43 +10,27 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.xmx.xui.core.gl.RenderInterface;
-import net.xmx.xui.core.gl.TransformStack;
-import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.gl.PlatformRenderBackend;
 import net.xmx.xui.core.text.TextComponent;
 import org.joml.Matrix4f;
 
 /**
- * The concrete implementation of the {@link RenderInterface} for the Minecraft platform.
+ * Concrete implementation of the {@link PlatformRenderBackend} for the Minecraft environment.
  * <p>
- * <b>Architecture Note:</b><br>
- * This class acts strictly as a <b>bridge</b> (Adapter Pattern) between the high-level XUI Core
- * and the low-level Minecraft rendering engine. It deliberately contains <b>NO</b> rendering logic
- * for geometry, shapes, or state management. All such logic is handled by the {@link UIRenderer}
- * in the Core module.
- * </p>
- * <p>
- * <b>Responsibilities:</b>
- * <ul>
- *     <li>Acquiring and releasing the {@link GuiGraphics} instance for each frame.</li>
- *     <li>Synchronizing the Core's {@link UIRenderer} state with the new frame.</li>
- *     <li>Delegating text rendering calls to the appropriate font systems, while ensuring
- *         OpenGL matrices are synchronized between XUI and Minecraft.</li>
- * </ul>
+ * This class serves as the raw adapter to Minecraft's rendering systems ({@code GuiGraphics},
+ * {@code FontRenderer}, {@code PoseStack}). It is strictly an execution layer and does
+ * <b>not</b> contain any business logic or state management for the UI.
  * </p>
  *
  * @author xI-Mx-Ix
  */
-public class RenderImpl implements RenderInterface {
+public class RenderImpl implements PlatformRenderBackend {
 
     private static RenderImpl instance;
 
     /**
-     * The Minecraft Graphics object for the current frame.
-     * <p>
-     * This object is instantiated in {@link #beginFrame} and destroyed in {@link #endFrame}.
-     * It is required by vanilla font renderers to draw text.
-     * </p>
+     * The Minecraft graphics context helper.
+     * Valid only between {@link #initiateRenderCycle(double)} and {@link #finishRenderCycle()}.
      */
     private GuiGraphics guiGraphics;
 
@@ -54,10 +38,11 @@ public class RenderImpl implements RenderInterface {
      * Private constructor to enforce Singleton pattern via {@link #getInstance()}.
      */
     private RenderImpl() {
+        // Singleton
     }
 
     /**
-     * Retrieves the singleton instance of the renderer implementation.
+     * Retrieves the singleton instance of the implementation.
      *
      * @return The active renderer implementation.
      */
@@ -68,36 +53,26 @@ public class RenderImpl implements RenderInterface {
         return instance;
     }
 
-    // --- Lifecycle Management ---
-
     /**
      * {@inheritDoc}
      * <p>
-     * This implementation performs the following platform-specific setup:
-     * <ol>
-     *     <li>Instantiates a new {@link GuiGraphics} object tied to Minecraft's buffer source.</li>
-     *     <li>Injects the provided {@code uiScale} into the {@link UIRenderer} so core logic works correctly.</li>
-     *     <li>Resets the {@link UIRenderer}'s transform stack to identity.</li>
-     *     <li>Clears the depth buffer if requested (via direct OpenGL calls).</li>
-     *     <li>Calculates the ratio between XUI's Logical Scale and Minecraft's GUI Scale, applying this
-     *         scaling to the vanilla {@code PoseStack}. This ensures that standard Minecraft items or text
-     *         rendered inside XUI appear at the correct size.</li>
-     * </ol>
+     * Initializes the {@link GuiGraphics} instance and adjusts the internal {@code PoseStack}
+     * to match the logical UI scale. This ensures that vanilla text rendering commands
+     * sent from the UI (in logical pixels) land at the correct screen position and size.
      * </p>
      */
     @Override
-    public void beginFrame(double uiScale, boolean clearDepthBuffer) {
-        RenderInterface.super.beginFrame(uiScale, clearDepthBuffer);
-
+    public void initiateRenderCycle(double uiScale) {
         Minecraft mc = Minecraft.getInstance();
-
-        // We use the main buffer source from Minecraft to allow efficient batching of draw calls.
+        // Create a new graphics context using Minecraft's global buffer source.
         this.guiGraphics = new GuiGraphics(mc, mc.renderBuffers().bufferSource());
 
-        // Adjusts the vanilla PoseStack so that vanilla items/text match the XUI scale.
+        // Calculate the ratio between the custom XUI logical scale and Minecraft's internal GUI scale.
         double mcScale = mc.getWindow().getGuiScale();
         float textScaleAdjustment = (float) (uiScale / mcScale);
 
+        // Apply this scale globally to the vanilla PoseStack.
+        // This bridges the coordinate systems so that (10, 10) in XUI aligns with visual (10, 10) in MC.
         this.guiGraphics.pose().pushPose();
         this.guiGraphics.pose().scale(textScaleAdjustment, textScaleAdjustment, 1.0f);
     }
@@ -105,212 +80,87 @@ public class RenderImpl implements RenderInterface {
     /**
      * {@inheritDoc}
      * <p>
-     * This implementation performs the following cleanup:
-     * <ol>
-     *     <li>Flushes Minecraft's render buffers to ensure all geometry (especially text) is drawn.</li>
-     *     <li>Pops the Vanilla {@code PoseStack} to restore the game's previous state.</li>
-     *     <li>Releases the reference to {@code guiGraphics} to prevent memory leaks or misuse.</li>
-     * </ol>
+     * Flushes the render buffers and restores the state of the vanilla {@code PoseStack}.
+     * It is crucial to pop the stack here to undo the scaling applied in {@link #initiateRenderCycle}.
      * </p>
      */
     @Override
-    public void endFrame() {
-        if (this.guiGraphics == null) return;
+    public void finishRenderCycle() {
+        if (this.guiGraphics != null) {
+            // Force Minecraft to render all buffered batches immediately.
+            Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
 
-        // 1. Flush Render Buffers
-        // This forces any batched text or geometry to be rendered immediately.
-        // Crucial before changing global GL state or popping matrices.
-        Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
+            // Restore the vanilla PoseStack to its clean state (removing our global scale).
+            this.guiGraphics.pose().popPose();
 
-        // 2. Pop Vanilla Stack
-        this.guiGraphics.pose().popPose();
-
-        // 3. Cleanup
-        this.guiGraphics = null;
-    }
-
-    // --- Text Rendering (Platform Bridge) ---
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * <b>Synchronization Logic:</b><br>
-     * The XUI Core maintains its own {@link TransformStack} in {@link UIRenderer}.
-     * However, Minecraft's text rendering uses its own internal stack in {@link GuiGraphics}.
-     * <br>
-     * To ensure text follows the UI's rotations, scales, and translations, this method:
-     * <ol>
-     *     <li>Retrieves the current Model-View matrix from {@link UIRenderer}.</li>
-     *     <li>Pushes a new state onto the Minecraft {@code PoseStack}.</li>
-     *     <li>Multiplies the Minecraft stack by the XUI matrix.</li>
-     *     <li>Delegates the draw call to the {@link TextComponent}'s font (which calls back to Vanilla/Custom logic).</li>
-     *     <li>Pops the Minecraft {@code PoseStack}.</li>
-     * </ol>
-     * </p>
-     */
-    @Override
-    public void drawText(TextComponent text, float x, float y, int color, boolean shadow) {
-        if (guiGraphics == null || text == null || text.getFont() == null) return;
-
-        // 1. Get the current transformation state from Core
-        Matrix4f uiMatrix = UIRenderer.getInstance().getTransformStack().getDirectModelMatrix();
-
-        // 2. Synchronize: Apply Core transformations to Vanilla stack
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().mulPose(uiMatrix);
-
-        // 3. Delegate to the Font object
-        // The font object will either use UIRenderer (CustomFont) or RenderImpl.getGuiGraphics (VanillaFont)
-        text.getFont().draw(this, text, x, y, color, shadow);
-
-        // 4. Restore Vanilla stack
-        guiGraphics.pose().popPose();
+            this.guiGraphics = null;
+        }
     }
 
     /**
      * {@inheritDoc}
-     * <p>
-     * Applies the same matrix synchronization logic as {@link #drawText} to ensure
-     * wrapped text blocks respect global UI transformations.
-     * </p>
      */
     @Override
-    public void drawWrappedText(TextComponent text, float x, float y, float width, int color, boolean shadow) {
-        if (guiGraphics == null || text == null || text.getFont() == null) return;
-
-        // 1. Get the current transformation state from Core
-        Matrix4f uiMatrix = UIRenderer.getInstance().getTransformStack().getDirectModelMatrix();
-
-        // 2. Synchronize: Apply Core transformations to Vanilla stack
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().mulPose(uiMatrix);
-
-        // 3. Delegate to the Font object
-        text.getFont().drawWrapped(this, text, x, y, width, color, shadow);
-
-        // 4. Restore Vanilla stack
-        guiGraphics.pose().popPose();
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @return The raw GUI scale factor from the Minecraft window settings.
-     */
-    @Override
-    public double getGuiScale() {
+    public double getScaleFactor() {
         return Minecraft.getInstance().getWindow().getGuiScale();
     }
 
-    // --- Vanilla Font Bridge (Platform Specific Implementation) ---
-
     /**
      * {@inheritDoc}
-     * <p>
-     * Retrieves the global line height from the Minecraft font engine.
-     * This is used by the Core's {@code VanillaFont} to determine vertical layout metrics.
-     * </p>
-     *
-     * @return The height of a standard text line in physical pixels (usually 9).
      */
     @Override
-    public float getVanillaLineHeight() {
-        return Minecraft.getInstance().font.lineHeight;
+    public int getWindowWidth() {
+        return Minecraft.getInstance().getWindow().getWidth();
     }
 
     /**
      * {@inheritDoc}
-     * <p>
-     * Calculates the width of a {@link TextComponent} using Minecraft's native font renderer.
-     * <p>
-     * <b>Implementation Note:</b><br>
-     * This method converts the XUI component tree into a Minecraft {@link net.minecraft.network.chat.Component}
-     * tree internally before measuring, ensuring that all styles (bold, italic) are accounted for correctly.
-     * </p>
-     *
-     * @param component The text component to measure.
-     * @return The width in logical pixels.
      */
     @Override
-    public float getVanillaWidth(TextComponent component) {
-        if (component == null) return 0;
-        return Minecraft.getInstance().font.width(toMinecraftComponent(component));
+    public int getWindowHeight() {
+        return Minecraft.getInstance().getWindow().getHeight();
     }
+
+    // =================================================================================
+    // Native Font Implementation
+    // =================================================================================
 
     /**
      * {@inheritDoc}
-     * <p>
-     * Calculates the vertical space required to render text wrapped to a specific width
-     * using the Minecraft font engine.
-     * </p>
-     *
-     * @param component The text component to measure.
-     * @param maxWidth  The maximum width allowed before wrapping.
-     * @return The total height in logical pixels.
      */
     @Override
-    public float getVanillaWordWrapHeight(TextComponent component, float maxWidth) {
-        if (component == null) return 0;
-        return Minecraft.getInstance().font.wordWrapHeight(toMinecraftComponent(component), (int) maxWidth);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Performs the actual draw call for the {@code VanillaFont} using the active {@link GuiGraphics}.
-     * </p>
-     * <p>
-     * <b>Matrix State:</b><br>
-     * This method assumes that the caller (typically {@link #drawText(TextComponent, float, float, int, boolean)})
-     * has already synchronized the Core's {@code TransformStack} onto the Vanilla {@code PoseStack}.
-     * Therefore, it only applies a local Z-offset to prevent Z-fighting against background elements.
-     * </p>
-     *
-     * @param text   The component to render.
-     * @param x      The absolute X coordinate.
-     * @param y      The absolute Y coordinate.
-     * @param color  The ARGB color.
-     * @param shadow Whether to render the shadow.
-     */
-    @Override
-    public void drawVanillaText(TextComponent text, float x, float y, int color, boolean shadow) {
-        // If we are not inside a frame (no GuiGraphics), we cannot render using Vanilla logic.
+    public void renderNativeText(TextComponent text, float x, float y, int color, boolean shadow, Matrix4f pose) {
         if (this.guiGraphics == null) return;
 
+        // Convert Core component to Minecraft component
         Component mcComp = toMinecraftComponent(text);
 
-        // Apply a tiny Z-offset (0.05f) to ensure text renders on top of flat geometry (rects).
-        // Without this, text drawn at the exact same Z-level as a button background might flicker.
+        // Synchronize Matrix Stack:
+        // 1. Push new state on MC stack
         this.guiGraphics.pose().pushPose();
+        // 2. Apply the Core's transformation matrix
+        this.guiGraphics.pose().mulPose(pose);
+        // 3. Apply Z-offset to prevent z-fighting with panel backgrounds
         this.guiGraphics.pose().translate(0.0f, 0.0f, 0.05f);
 
+        // 4. Delegate to MC FontRenderer
         this.guiGraphics.drawString(Minecraft.getInstance().font, mcComp, (int) x, (int) y, color, shadow);
 
+        // 5. Restore stack
         this.guiGraphics.pose().popPose();
     }
 
     /**
      * {@inheritDoc}
-     * <p>
-     * Performs the wrapped draw call for the {@code VanillaFont}.
-     * Delegates to {@link GuiGraphics#drawWordWrap}.
-     * </p>
-     *
-     * @param text   The component to render.
-     * @param x      The absolute X coordinate.
-     * @param y      The absolute Y coordinate.
-     * @param width  The wrapping width.
-     * @param color  The ARGB color.
-     * @param shadow Ignored by Vanilla wrapped renderer (standard MC behavior).
      */
     @Override
-    public void drawVanillaWrappedText(TextComponent text, float x, float y, float width, int color, boolean shadow) {
+    public void renderNativeWrappedText(TextComponent text, float x, float y, float width, int color, boolean shadow, Matrix4f pose) {
         if (this.guiGraphics == null) return;
 
         Component mcComp = toMinecraftComponent(text);
 
-        // Z-offset for safety
         this.guiGraphics.pose().pushPose();
+        this.guiGraphics.pose().mulPose(pose);
         this.guiGraphics.pose().translate(0.0f, 0.0f, 0.05f);
 
         this.guiGraphics.drawWordWrap(Minecraft.getInstance().font, mcComp, (int) x, (int) y, (int) width, color);
@@ -318,14 +168,33 @@ public class RenderImpl implements RenderInterface {
         this.guiGraphics.pose().popPose();
     }
 
-    // --- Private Helpers ---
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public float getNativeLineHeight() {
+        return Minecraft.getInstance().font.lineHeight;
+    }
 
     /**
-     * Converts an XUI {@link TextComponent} into a Minecraft native {@link Component}.
-     * <p>
-     * This mapping ensures that styles defined in the Core module (Bold, Italic, Color, etc.)
-     * are correctly interpreted by the Minecraft font renderer.
-     * </p>
+     * {@inheritDoc}
+     */
+    @Override
+    public float getNativeStringWidth(TextComponent text) {
+        return Minecraft.getInstance().font.width(toMinecraftComponent(text));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public float getNativeWordWrapHeight(TextComponent text, float maxWidth) {
+        return Minecraft.getInstance().font.wordWrapHeight(toMinecraftComponent(text), (int) maxWidth);
+    }
+
+    /**
+     * Internal Helper: Converts XUI TextComponents to Minecraft Components.
+     * This handles style mapping (Bold, Italic, etc.) and hierarchy.
      *
      * @param uiComp The Core text component.
      * @return The Minecraft text component with applied styles.

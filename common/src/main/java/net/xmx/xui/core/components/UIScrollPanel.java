@@ -4,10 +4,10 @@
  */
 package net.xmx.xui.core.components;
 
-import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.effect.UIEffect;
 import net.xmx.xui.core.effect.UIScissorsEffect;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.style.StyleKey;
@@ -447,7 +447,7 @@ public class UIScrollPanel extends UIWidget {
     }
 
     @Override
-    public void render(RenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
+    public void render(UIRenderer renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
         if (!isVisible) return;
 
         updateHoverState(mouseX, mouseY);
@@ -499,7 +499,7 @@ public class UIScrollPanel extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+    protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         // Update hover logic
         updateScrollbarHoverState(mouseX, mouseY);
 
@@ -537,7 +537,7 @@ public class UIScrollPanel extends UIWidget {
     /**
      * Renders the scrollbar visuals.
      */
-    private void drawScrollbar(RenderInterface renderer, InteractionState state) {
+    private void drawScrollbar(UIRenderer renderer, InteractionState state) {
         float scrollbarWidth = style().getValue(state, SCROLLBAR_WIDTH);
         float scrollbarPadding = style().getValue(state, SCROLLBAR_PADDING);
         float scrollbarRadius = style().getValue(state, SCROLLBAR_RADIUS);

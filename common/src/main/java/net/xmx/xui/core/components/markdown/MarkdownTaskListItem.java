@@ -5,11 +5,11 @@
 package net.xmx.xui.core.components.markdown;
 
 import net.xmx.xui.core.Layout;
-import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.text.TextComponent;
@@ -107,7 +107,7 @@ public class MarkdownTaskListItem extends UIPanel {
         }
 
         @Override
-        protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+        protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
             int bg = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
             int border = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
             float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);

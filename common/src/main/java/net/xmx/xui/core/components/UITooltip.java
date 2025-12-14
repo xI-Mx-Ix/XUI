@@ -5,7 +5,7 @@
 package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.Layout;
-import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -200,7 +200,7 @@ public class UITooltip extends UIPanel {
      * This avoids recursion issues by wrapping the call to super.render().
      */
     @Override
-    public void render(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime) {
+    public void render(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime) {
         // If no target is set, do not process logic
         if (target == null) return;
 
@@ -252,7 +252,7 @@ public class UITooltip extends UIPanel {
      * Delegates to UIPanel implementation to avoid code duplication and recursion.
      */
     @Override
-    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+    protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         super.drawSelf(renderer, mouseX, mouseY, partialTicks, deltaTime, state);
     }
 

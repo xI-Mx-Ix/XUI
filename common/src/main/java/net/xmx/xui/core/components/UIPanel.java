@@ -4,8 +4,8 @@
  */
 package net.xmx.xui.core.components;
 
-import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.style.InteractionState;
 
@@ -31,7 +31,7 @@ public class UIPanel extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+    protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
         int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
         float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);

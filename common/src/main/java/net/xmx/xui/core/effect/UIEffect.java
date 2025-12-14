@@ -4,8 +4,8 @@
  */
 package net.xmx.xui.core.effect;
 
-import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 
 /**
  * Represents a visual effect applied to a widget and its children during rendering.
@@ -24,17 +24,17 @@ public interface UIEffect {
      * Applied before the widget draws itself.
      * Use this to enable GL states, set scissors, or start stencil masks.
      *
-     * @param renderer The render interface.
+     * @param renderer The renderer instance.
      * @param widget   The widget being rendered.
      */
-    void apply(RenderInterface renderer, UIWidget widget);
+    void apply(UIRenderer renderer, UIWidget widget);
 
     /**
      * Applied after the widget and its children have finished rendering.
      * Used to restore state (pop scissors, disable stencil).
      *
-     * @param renderer The render interface.
+     * @param renderer The renderer instance.
      * @param widget   The widget being rendered.
      */
-    void revert(RenderInterface renderer, UIWidget widget);
+    void revert(UIRenderer renderer, UIWidget widget);
 }

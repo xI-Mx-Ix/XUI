@@ -6,7 +6,7 @@ package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.font.DefaultFonts;
 import net.xmx.xui.core.font.Font;
-import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -169,7 +169,7 @@ public class UIEditBox extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+    protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         // Retrieve style properties and animated colors
         int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
         int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
@@ -192,7 +192,7 @@ public class UIEditBox extends UIWidget {
         float contentX = x + padding;
 
         // Recalculate scroll offsets based on text content and dimensions
-        updateScrolling(renderer);
+        updateScrolling();
 
         // Calculate the base coordinates for drawing text
         float drawX = contentX - scrollX;
@@ -240,7 +240,7 @@ public class UIEditBox extends UIWidget {
         }
     }
 
-    private void renderCursor(RenderInterface renderer, float baseX, float baseY, int fontHeight, int color) {
+    private void renderCursor(UIRenderer renderer, float baseX, float baseY, int fontHeight, int color) {
         // Smooth blink logic
         double time = System.currentTimeMillis() / 250.0;
         float alphaFactor = (float) (0.5 + 0.5 * Math.sin(time));
@@ -287,7 +287,7 @@ public class UIEditBox extends UIWidget {
         renderer.drawRect(cursorX, cursorY - 1, 1, fontHeight + 2, blinkingColor, 0);
     }
 
-    private void renderSelection(RenderInterface renderer, float baseX, float baseY, int color) {
+    private void renderSelection(UIRenderer renderer, float baseX, float baseY, int color) {
         int start = Math.min(cursorPosition, selectionEnd);
         int end = Math.max(cursorPosition, selectionEnd);
         int fontHeight = (int) font.getLineHeight();
@@ -617,7 +617,7 @@ public class UIEditBox extends UIWidget {
         return line.length();
     }
 
-    private void updateScrolling(RenderInterface renderer) {
+    private void updateScrolling() {
         float visibleWidth = width - (padding * 2);
         float visibleHeight = height - (padding * 2);
         int fontHeight = (int) font.getLineHeight();

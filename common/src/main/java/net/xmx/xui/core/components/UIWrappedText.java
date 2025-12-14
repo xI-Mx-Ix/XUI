@@ -4,11 +4,11 @@
  */
 package net.xmx.xui.core.components;
 
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.core.Layout;
-import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
 
 import java.util.ArrayList;
@@ -170,7 +170,7 @@ public class UIWrappedText extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+    protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         int color = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);
 
         float currentY = this.y;

@@ -9,7 +9,6 @@ import net.xmx.xui.core.font.layout.TextLayoutEngine;
 import net.xmx.xui.core.font.layout.TextLine;
 import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.font.data.MSDFData;
-import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.gl.vertex.MeshBuffer;
 import net.xmx.xui.core.text.TextComponent;
@@ -113,12 +112,12 @@ public class CustomFont extends Font {
     // --- Rendering Orchestration ---
 
     @Override
-    public void draw(RenderInterface context, TextComponent component, float x, float y, int color, boolean shadow) {
-        renderTextBatch(() -> drawComponentRecursive(context, component, x, y, x, color));
+    public void draw(UIRenderer renderer, TextComponent component, float x, float y, int color, boolean shadow) {
+        renderTextBatch(() -> drawComponentRecursive(renderer, component, x, y, x, color));
     }
 
     @Override
-    public void drawWrapped(RenderInterface context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
+    public void drawWrapped(UIRenderer renderer, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
         List<TextLine> lines = layoutEngine.computeWrappedLayout(component, maxWidth);
 
         renderTextBatch(() -> {
@@ -132,7 +131,7 @@ public class CustomFont extends Font {
                     String originalText = segment.component().getText();
                     segment.component().setText(segment.text());
 
-                    currentX = drawSingleString(context, segment.component(), currentX, currentY, x, color);
+                    currentX = drawSingleString(renderer, segment.component(), currentX, currentY, x, color);
 
                     segment.component().setText(originalText);
                 }
@@ -187,10 +186,10 @@ public class CustomFont extends Font {
         }
     }
 
-    private float drawComponentRecursive(RenderInterface context, TextComponent comp, float currentX, float currentY, float startX, int defaultColor) {
-        float newX = drawSingleString(context, comp, currentX, currentY, startX, defaultColor);
+    private float drawComponentRecursive(UIRenderer renderer, TextComponent comp, float currentX, float currentY, float startX, int defaultColor) {
+        float newX = drawSingleString(renderer, comp, currentX, currentY, startX, defaultColor);
         for (TextComponent sibling : comp.getSiblings()) {
-            newX = drawComponentRecursive(context, sibling, newX, currentY, startX, defaultColor);
+            newX = drawComponentRecursive(renderer, sibling, newX, currentY, startX, defaultColor);
         }
         return newX;
     }
@@ -199,7 +198,7 @@ public class CustomFont extends Font {
      * Renders the text string and queues any necessary decorations.
      * Updated to support legacy '§' formatting codes, including dynamic font atlas switching.
      *
-     * @param context      The render implementation context.
+     * @param renderer     The renderer instance.
      * @param comp         The component containing text and style.
      * @param x            The absolute X start position.
      * @param y            The absolute Y start position.
@@ -207,7 +206,7 @@ public class CustomFont extends Font {
      * @param defaultColor The fallback color if the component has none.
      * @return The X coordinate after rendering the text.
      */
-    private float drawSingleString(RenderInterface context, TextComponent comp, float x, float y, float startX, int defaultColor) {
+    private float drawSingleString(UIRenderer renderer, TextComponent comp, float x, float y, float startX, int defaultColor) {
         String text = comp.getText();
         if (text == null || text.isEmpty()) return x;
 

@@ -8,7 +8,7 @@ import net.xmx.xui.core.anim.AnimationManager;
 import net.xmx.xui.core.anim.AnimationBuilder;
 import net.xmx.xui.core.effect.UIEffect;
 import net.xmx.xui.core.effect.UIScissorsEffect;
-import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.style.StyleSheet;
@@ -169,13 +169,13 @@ public abstract class UIWidget {
      * The main rendering method.
      * Handles state determination, effect application, animation updates, 3D TRANSFORMS, and child rendering.
      *
-     * @param renderer     The render interface.
+     * @param renderer     The renderer instance.
      * @param mouseX       Current mouse X position.
      * @param mouseY       Current mouse Y position.
      * @param partialTick  The normalized progress between two game ticks.
      * @param deltaTime    The time elapsed since the last frame in seconds.
      */
-    public void render(RenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
+    public void render(UIRenderer renderer, int mouseX, int mouseY, float partialTick, float deltaTime) {
         if (!isVisible) return;
 
         // 1. Update Animation State
@@ -321,14 +321,14 @@ public abstract class UIWidget {
     /**
      * Subclasses implement this to draw their specific content.
      *
-     * @param renderer     The render interface.
+     * @param renderer     The renderer instance.
      * @param mouseX       Mouse X.
      * @param mouseY       Mouse Y.
      * @param partialTick  The normalized progress between game ticks (for interpolation).
      * @param deltaTime    The time elapsed since last frame in seconds (for animations).
      * @param state        The current interactive state (Default, Hover, Active).
      */
-    protected abstract void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTick, float deltaTime, InteractionState state);
+    protected abstract void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTick, float deltaTime, InteractionState state);
 
     /**
      * Helper to retrieve an animated color value based on the current state.

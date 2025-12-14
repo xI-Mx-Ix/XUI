@@ -4,10 +4,10 @@
  */
 package net.xmx.xui.core.components;
 
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
-import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
 
 /**
@@ -63,7 +63,7 @@ public class UIButton extends UIWidget {
     }
 
     @Override
-    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+    protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         // 1. Calculate animated values using the Animation Manager
         int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
         int txtColor = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);

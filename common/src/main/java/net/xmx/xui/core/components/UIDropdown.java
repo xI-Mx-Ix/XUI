@@ -5,7 +5,7 @@
 package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIWidget;
-import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -153,7 +153,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     }
 
     @Override
-    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+    protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         // 1. Update Animation Logic (Simple Lerp)
         float targetProgress = isOpen ? 1.0f : 0.0f;
         // Smoothly interpolate current progress towards target
@@ -260,7 +260,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         }
     }
 
-    private void renderOverlay(RenderInterface renderer, int mouseX, int mouseY,
+    private void renderOverlay(UIRenderer renderer, int mouseX, int mouseY,
                                int bgColor, int borderColor, int textColor, float radius, float borderThick) {
 
         float totalListHeight = options.size() * optionHeight;
@@ -307,7 +307,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         renderer.disableScissor();
     }
 
-    private void drawArrow(RenderInterface renderer, float ax, float ay, int color, boolean pointUp) {
+    private void drawArrow(UIRenderer renderer, float ax, float ay, int color, boolean pointUp) {
         float vDir = pointUp ? -1 : 1;
 
         // Draw chevron using small rect steps (pixel art style)

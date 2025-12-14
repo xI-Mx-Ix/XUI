@@ -5,9 +5,9 @@
 package net.xmx.xui.core.effect;
 
 import net.xmx.xui.core.components.UIScrollPanel;
-import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.gl.renderer.ScissorManager;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 
 /**
  * An effect that limits the rendering area to the bounds of the widget.
@@ -36,11 +36,11 @@ public class UIScissorsEffect implements UIEffect {
     /**
      * Enables the scissor test for the widget's current bounds.
      *
-     * @param renderer The render interface.
+     * @param renderer The renderer instance.
      * @param widget   The widget requesting clipping.
      */
     @Override
-    public void apply(RenderInterface renderer, UIWidget widget) {
+    public void apply(UIRenderer renderer, UIWidget widget) {
         // We simply pass the logical bounds. The ScissorManager will automatically
         // add the current ModelView translation (scroll offset) to x/y.
         renderer.enableScissor(
@@ -54,11 +54,11 @@ public class UIScissorsEffect implements UIEffect {
     /**
      * Disables the scissor test (pops the stack).
      *
-     * @param renderer The render interface.
+     * @param renderer The renderer instance.
      * @param widget   The widget requesting clipping.
      */
     @Override
-    public void revert(RenderInterface renderer, UIWidget widget) {
+    public void revert(UIRenderer renderer, UIWidget widget) {
         renderer.disableScissor();
     }
 }

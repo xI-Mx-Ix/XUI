@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.font;
 
-import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.text.TextComponent;
 
 /**
@@ -68,19 +68,19 @@ public abstract class Font {
     /**
      * Renders a single line of text.
      *
-     * @param context   The render implementation (providing Graphics/GL context).
+     * @param renderer  The renderer instance.
      * @param component The text to render.
      * @param x         Absolute X coordinate.
      * @param y         Absolute Y coordinate.
      * @param color     The text color.
      * @param shadow    Whether to draw a drop shadow.
      */
-    public abstract void draw(RenderInterface context, TextComponent component, float x, float y, int color, boolean shadow);
+    public abstract void draw(UIRenderer renderer, TextComponent component, float x, float y, int color, boolean shadow);
 
     /**
      * Renders text wrapped within a specific width.
      *
-     * @param context   The render implementation.
+     * @param renderer  The renderer instance.
      * @param component The text to render.
      * @param x         Absolute X coordinate.
      * @param y         Absolute Y coordinate.
@@ -88,5 +88,5 @@ public abstract class Font {
      * @param color     The text color.
      * @param shadow    Whether to draw a drop shadow.
      */
-    public abstract void drawWrapped(RenderInterface context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow);
+    public abstract void drawWrapped(UIRenderer renderer, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow);
 }

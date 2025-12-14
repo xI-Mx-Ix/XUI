@@ -5,8 +5,8 @@
 package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.Layout;
-import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.text.TextComponent;
@@ -125,14 +125,14 @@ public class UIText extends UIWidget {
     /**
      * Renders the single text line.
      *
-     * @param renderer     The render interface.
+     * @param renderer     The renderer instance.
      * @param mouseX       The current mouse X coordinate.
      * @param mouseY       The current mouse Y coordinate.
      * @param partialTicks The partial tick time for interpolation.
      * @param state        The current UI state.
      */
     @Override
-    protected void drawSelf(RenderInterface renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
+    protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         int color = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);
 
         float drawX = this.x;
