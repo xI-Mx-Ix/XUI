@@ -525,7 +525,7 @@ public class UIScrollPanel extends UIWidget {
         int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
         if ((bgColor >>> 24) > 0) {
             float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
-            renderer.drawRect(this.getX(), this.getY(), this.getWidth(), this.getHeight(), bgColor, radius);
+            renderer.getGeometry().renderRect(this.getX(), this.getY(), this.getWidth(), this.getHeight(), bgColor, radius);
         }
 
         // Draw Scrollbar (Track + Thumb)
@@ -554,7 +554,7 @@ public class UIScrollPanel extends UIWidget {
         float trackHeight = getScrollbarTrackHeight();
 
         // Draw Track
-        renderer.drawRect(scrollbarX, scrollbarY, scrollbarWidth, trackHeight, trackColor, scrollbarRadius);
+        renderer.getGeometry().renderRect(scrollbarX, scrollbarY, scrollbarWidth, trackHeight, trackColor, scrollbarRadius);
 
         // Draw Thumb
         float thumbY = this.getY() + getScrollbarThumbPosition();
@@ -564,7 +564,7 @@ public class UIScrollPanel extends UIWidget {
         int thumbColor = isScrollbarHovered || isDraggingScrollbar ?
                 brightenColor(scrollbarColor, 1.3f) : scrollbarColor;
 
-        renderer.drawRect(scrollbarX, thumbY, scrollbarWidth, thumbHeight, thumbColor, scrollbarRadius);
+        renderer.getGeometry().renderRect(scrollbarX, thumbY, scrollbarWidth, thumbHeight, thumbColor, scrollbarRadius);
     }
 
     /**

@@ -172,46 +172,6 @@ public class UIRenderer {
         }
     }
 
-    // =================================================================================
-    // Public Drawing API (Used by Widgets)
-    // =================================================================================
-
-    /**
-     * Draws a filled rectangle with uniform rounded corners.
-     * Delegates to {@link GeometryRenderer}.
-     *
-     * @param x      Logical X coordinate.
-     * @param y      Logical Y coordinate.
-     * @param width  Logical Width.
-     * @param height Logical Height.
-     * @param color  ARGB Color.
-     * @param radius Corner radius in pixels.
-     */
-    public void drawRect(float x, float y, float width, float height, int color, float radius) {
-        // Ensure initialized in case draw calls happen outside standard frame cycle (rare)
-        if (geometryRenderer != null) {
-            geometryRenderer.renderRect(x, y, width, height, color, radius);
-        }
-    }
-
-    /**
-     * Draws a hollow outline with uniform rounded corners.
-     * Delegates to {@link GeometryRenderer}.
-     *
-     * @param x         Logical X coordinate.
-     * @param y         Logical Y coordinate.
-     * @param width     Logical Width.
-     * @param height    Logical Height.
-     * @param color     ARGB Color.
-     * @param radius    Corner radius in pixels.
-     * @param thickness Line thickness in pixels.
-     */
-    public void drawOutline(float x, float y, float width, float height, int color, float radius, float thickness) {
-        if (geometryRenderer != null) {
-            geometryRenderer.renderOutline(x, y, width, height, color, radius, thickness);
-        }
-    }
-
     /**
      * Draws a text component.
      * <p>
@@ -268,14 +228,6 @@ public class UIRenderer {
     // =================================================================================
     // State Management API (Matrix, Scissor)
     // =================================================================================
-
-    public void enableScissor(float x, float y, float width, float height) {
-        scissorManager.enableScissor(x, y, width, height);
-    }
-
-    public void disableScissor() {
-        scissorManager.disableScissor();
-    }
 
     public void pushMatrix() {
         transformStack.push();

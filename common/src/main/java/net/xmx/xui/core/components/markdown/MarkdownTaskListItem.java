@@ -113,14 +113,14 @@ public class MarkdownTaskListItem extends UIPanel {
             float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
 
             // Draw Box
-            renderer.drawRect(x, y, width, height, bg, radius);
-            renderer.drawOutline(x, y, width, height, border, radius, 1.0f);
+            renderer.getGeometry().renderRect(x, y, width, height, bg, radius);
+            renderer.getGeometry().renderOutline(x, y, width, height, border, radius, 1.0f);
 
             // Draw Checkmark if checked
             if (checked) {
                 // Draw a small Green center to represent the check
                 float checkPad = 2.0f;
-                renderer.drawRect(x + checkPad, y + checkPad, width - (checkPad * 2), height - (checkPad * 2), 0xFF55FF55, 1.0f);
+                renderer.getGeometry().renderRect(x + checkPad, y + checkPad, width - (checkPad * 2), height - (checkPad * 2), 0xFF55FF55, 1.0f);
             }
         }
     }

@@ -43,7 +43,7 @@ public class UIScissorsEffect implements UIEffect {
     public void apply(UIRenderer renderer, UIWidget widget) {
         // We simply pass the logical bounds. The ScissorManager will automatically
         // add the current ModelView translation (scroll offset) to x/y.
-        renderer.enableScissor(
+        renderer.getScissor().enableScissor(
                 widget.getX(),
                 widget.getY(),
                 widget.getWidth(),
@@ -59,6 +59,6 @@ public class UIScissorsEffect implements UIEffect {
      */
     @Override
     public void revert(UIRenderer renderer, UIWidget widget) {
-        renderer.disableScissor();
+        renderer.getScissor().disableScissor();
     }
 }

@@ -176,9 +176,9 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, headerState, deltaTime);
 
         // 3. Draw Header (The Button)
-        renderer.drawRect(x, y, width, height, headerBg, radius);
+        renderer.getGeometry().renderRect(x, y, width, height, headerBg, radius);
         if (borderThick > 0) {
-            renderer.drawOutline(x, y, width, height, borderColor, radius, borderThick);
+            renderer.getGeometry().renderOutline(x, y, width, height, borderColor, radius, borderThick);
         }
 
         // Draw Selected Text
@@ -271,10 +271,10 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         // --- 1. Clipping (Scissors) ---
         // We define a window that matches the current animated box size.
-        renderer.enableScissor(overlayX, overlayY, overlayWidth, overlayHeight);
+        renderer.getScissor().enableScissor(overlayX, overlayY, overlayWidth, overlayHeight);
 
         // --- 2. Draw Background ---
-        renderer.drawRect(overlayX, overlayY, overlayWidth, overlayHeight, bgColor, effectiveRadius);
+        renderer.getGeometry().renderRect(overlayX, overlayY, overlayWidth, overlayHeight, bgColor, effectiveRadius);
 
         // --- 3. Draw Options ---
         int hoverColor = style().getValue(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR);
@@ -291,7 +291,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                     mouseY >= overlayY && mouseY <= overlayY + overlayHeight);
 
             if (isHovered) {
-                renderer.drawRect(overlayX + 2, optY, overlayWidth - 4, optionHeight, hoverColor, effectiveRadius / 2);
+                renderer.getGeometry().renderRect(overlayX + 2, optY, overlayWidth - 4, optionHeight, hoverColor, effectiveRadius / 2);
             }
 
             float textY = optY + (optionHeight - TextComponent.getFontHeight()) / 2.0f + 1;
@@ -300,11 +300,11 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         // --- 4. Draw Border ---
         if (borderThick > 0) {
-            renderer.drawOutline(overlayX, overlayY, overlayWidth, overlayHeight, borderColor, effectiveRadius, borderThick);
+            renderer.getGeometry().renderOutline(overlayX, overlayY, overlayWidth, overlayHeight, borderColor, effectiveRadius, borderThick);
         }
 
         // Disable clipping
-        renderer.disableScissor();
+        renderer.getScissor().disableScissor();
     }
 
     private void drawArrow(UIRenderer renderer, float ax, float ay, int color, boolean pointUp) {
@@ -312,13 +312,13 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         // Draw chevron using small rect steps (pixel art style)
         // Center point
-        renderer.drawRect(ax, ay + (2 * vDir), 1.5f, 1, color, 0);
+        renderer.getGeometry().renderRect(ax, ay + (2 * vDir), 1.5f, 1, color, 0);
         // Middle steps
-        renderer.drawRect(ax - 1, ay + (1 * vDir), 1, 1, color, 0);
-        renderer.drawRect(ax + 1.5f, ay + (1 * vDir), 1, 1, color, 0);
+        renderer.getGeometry().renderRect(ax - 1, ay + (1 * vDir), 1, 1, color, 0);
+        renderer.getGeometry().renderRect(ax + 1.5f, ay + (1 * vDir), 1, 1, color, 0);
         // Outer tips
-        renderer.drawRect(ax - 2, ay, 1, 1, color, 0);
-        renderer.drawRect(ax + 2.5f, ay, 1, 1, color, 0);
+        renderer.getGeometry().renderRect(ax - 2, ay, 1, 1, color, 0);
+        renderer.getGeometry().renderRect(ax + 2.5f, ay, 1, 1, color, 0);
     }
 
     @Override

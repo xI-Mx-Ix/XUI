@@ -39,7 +39,7 @@ public class UIPanel extends UIWidget {
 
         // 1. Draw the Border (if thickness > 0)
         if (thickness > 0 && (borderColor >>> 24) > 0) {
-            renderer.drawOutline(x, y, width, height, borderColor, radius, thickness);
+            renderer.getGeometry().renderOutline(x, y, width, height, borderColor, radius, thickness);
         }
 
         // 2. Draw the Background
@@ -55,7 +55,7 @@ public class UIPanel extends UIWidget {
             // Adjust background size slightly to fit inside the border if desired,
             // or just draw the full rect behind.
             // Here we draw the full rect.
-            renderer.drawRect(x + thickness, y + thickness, width - (thickness * 2), height - (thickness * 2), bgColor, Math.max(0, radius - thickness));
+            renderer.getGeometry().renderRect(x + thickness, y + thickness, width - (thickness * 2), height - (thickness * 2), bgColor, Math.max(0, radius - thickness));
         }
     }
 }

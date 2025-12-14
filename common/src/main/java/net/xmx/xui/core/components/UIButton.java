@@ -80,11 +80,11 @@ public class UIButton extends UIWidget {
         float adjY = y - (scaledH - height) / 2.0f;
 
         // 4. Draw Main Button Body
-        renderer.drawRect(adjX, adjY, scaledW, scaledH, bgColor, radius);
+        renderer.getGeometry().renderRect(adjX, adjY, scaledW, scaledH, bgColor, radius);
 
         // 5. Draw Border (if enabled)
         if (borderThick > 0 && (borderColor >>> 24) > 0) {
-            renderer.drawOutline(adjX, adjY, scaledW, scaledH, borderColor, radius, borderThick);
+            renderer.getGeometry().renderOutline(adjX, adjY, scaledW, scaledH, borderColor, radius, borderThick);
         }
 
         // 6. Draw Text (Centered)

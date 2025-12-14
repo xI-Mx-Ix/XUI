@@ -182,9 +182,9 @@ public class UIEditBox extends UIWidget {
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
 
         // Render the background and border of the edit box
-        renderer.drawRect(x, y, width, height, bgColor, radius);
+        renderer.getGeometry().renderRect(x, y, width, height, bgColor, radius);
         if (borderThick > 0) {
-            renderer.drawOutline(x, y, width, height, borderColor, radius, borderThick);
+            renderer.getGeometry().renderOutline(x, y, width, height, borderColor, radius, borderThick);
         }
 
         // Use the instance font height instead of static global height
@@ -284,7 +284,7 @@ public class UIEditBox extends UIWidget {
         float cursorY = baseY + cy;
 
         // Draw the cursor line
-        renderer.drawRect(cursorX, cursorY - 1, 1, fontHeight + 2, blinkingColor, 0);
+        renderer.getGeometry().renderRect(cursorX, cursorY - 1, 1, fontHeight + 2, blinkingColor, 0);
     }
 
     private void renderSelection(UIRenderer renderer, float baseX, float baseY, int color) {
@@ -312,7 +312,7 @@ public class UIEditBox extends UIWidget {
 
                         if (end > lineEnd) x2 += 4; // Visual padding for newline selection
 
-                        renderer.drawRect(baseX + x1, baseY + (i * fontHeight), x2 - x1, fontHeight, color, 0);
+                        renderer.getGeometry().renderRect(baseX + x1, baseY + (i * fontHeight), x2 - x1, fontHeight, color, 0);
                     }
                 }
                 pos += lineLen + 1;
@@ -320,7 +320,7 @@ public class UIEditBox extends UIWidget {
         } else {
             float x1 = font.getWidth(TextComponent.literal(text.substring(0, start)).setFont(font));
             float x2 = font.getWidth(TextComponent.literal(text.substring(0, end)).setFont(font));
-            renderer.drawRect(baseX + x1, baseY, x2 - x1, fontHeight, color, 0);
+            renderer.getGeometry().renderRect(baseX + x1, baseY, x2 - x1, fontHeight, color, 0);
         }
     }
 
