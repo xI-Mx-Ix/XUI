@@ -4,20 +4,29 @@
  */
 package net.xmx.xui.core.effect;
 
+import net.xmx.xui.core.components.UIScrollPanel;
 import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.gl.renderer.ScissorManager;
 
 /**
  * An effect that limits the rendering area to the bounds of the widget.
- * Any content (including children) outside the widget's dimensions will be clipped.
  * <p>
- * This implementation handles nested scissor regions (e.g., a scroll panel inside another
- * clipped area) by calculating the intersection of the current scissor rectangle and
- * the widget's bounds.
+ * Any content (including children) rendered outside the widget's logical bounds
+ * will be clipped by the GPU.
  * </p>
  * <p>
- * It uses floating-point coordinates to support sub-pixel positioning (e.g., centered layouts),
- * ensuring that the clipping area matches the widget's visual border exactly.
+ * <b>Implementation Note:</b><br>
+ * This class has been simplified to delegate all calculation logic to the
+ * {@link ScissorManager}. The manager is responsible
+ * for handling:
+ * <ul>
+ *     <li>Coordinate translation (scrolling offsets from {@link UIScrollPanel}).</li>
+ *     <li>Intersection with parent scissor regions (nested clipping).</li>
+ *     <li>Physical pixel scaling.</li>
+ * </ul>
+ * This separation of concerns prevents synchronization bugs where the effect
+ * clips based on logical position while the render view is visually shifted.
  * </p>
  *
  * @author xI-Mx-Ix
@@ -25,59 +34,31 @@ import net.xmx.xui.core.UIWidget;
 public class UIScissorsEffect implements UIEffect {
 
     /**
-     * Applies the scissor test.
-     * Calculates the intersection between the widget's bounds and any existing parent scissor rect.
+     * Enables the scissor test for the widget's current bounds.
      *
      * @param renderer The render interface.
-     * @param widget   The widget being rendered.
+     * @param widget   The widget requesting clipping.
      */
     @Override
     public void apply(RenderInterface renderer, UIWidget widget) {
-        // Use floats to preserve precision (e.g. 10.5 for centering)
-        float targetX = widget.getX();
-        float targetY = widget.getY();
-        float targetW = widget.getWidth();
-        float targetH = widget.getHeight();
-
-        // Check if there is already an active scissor (from a parent)
-        float[] currentScissor = renderer.getCurrentScissor();
-
-        if (currentScissor != null) {
-            // Calculate intersection of the parent scissor and this widget's bounds
-            float pX = currentScissor[0];
-            float pY = currentScissor[1];
-            float pW = currentScissor[2];
-            float pH = currentScissor[3];
-
-            // The new top-left is the maximum of the two X/Y coordinates
-            float newX = Math.max(targetX, pX);
-            float newY = Math.max(targetY, pY);
-
-            // Calculate bottom-right points to determine new width/height
-            float newRight = Math.min(targetX + targetW, pX + pW);
-            float newBottom = Math.min(targetY + targetH, pY + pH);
-
-            // Ensure dimensions are non-negative
-            float newW = Math.max(0, newRight - newX);
-            float newH = Math.max(0, newBottom - newY);
-
-            renderer.enableScissor(newX, newY, newW, newH);
-        } else {
-            // No parent scissor active, just set the widget's bounds
-            renderer.enableScissor(targetX, targetY, targetW, targetH);
-        }
+        // We simply pass the logical bounds. The ScissorManager will automatically
+        // add the current ModelView translation (scroll offset) to x/y.
+        renderer.enableScissor(
+                widget.getX(),
+                widget.getY(),
+                widget.getWidth(),
+                widget.getHeight()
+        );
     }
 
     /**
-     * Reverts the scissor state.
-     * This pops the current scissor rectangle from the stack in the renderer.
+     * Disables the scissor test (pops the stack).
      *
      * @param renderer The render interface.
-     * @param widget   The widget being rendered.
+     * @param widget   The widget requesting clipping.
      */
     @Override
     public void revert(RenderInterface renderer, UIWidget widget) {
-        // Disabling the scissor restores the previous state from the stack in the renderer
         renderer.disableScissor();
     }
 }
