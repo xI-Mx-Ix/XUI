@@ -4,14 +4,16 @@
  */
 package net.xmx.xui.core.font;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.xmx.xui.core.font.type.CustomFont;
 import net.xmx.xui.core.font.type.VanillaFont;
 import net.xmx.xui.init.XuiMainClass;
 
 /**
  * Registry holding the singleton instances of available fonts.
- * Uses lazy initialization to prevent OpenGL crashes during early startup.
+ * <p>
+ * <b>Initialization:</b> Requires {@link #init()} to be called explicitly
+ * once the OpenGL context is available.
+ * </p>
  *
  * @author xI-Mx-Ix
  */
@@ -20,45 +22,36 @@ public final class DefaultFonts {
     private static CustomFont jetBrainsMono;
     private static CustomFont roboto;
     private static VanillaFont vanilla;
-    private static boolean initialized = false;
 
     /**
-     * Internal method to load fonts.
-     * Only called when needed and ensures OpenGL context is active.
+     * Initializes the standard fonts.
+     * <p>
+     * This method must be called exactly once during the application startup,
+     * specifically after the Render System/OpenGL context is ready.
+     * </p>
      */
-    private static void ensureInitialized() {
-        if (initialized) return;
-
-        // Safety check: Ensure we are on the Render Thread with an active context
-        if (!RenderSystem.isOnRenderThread()) {
-            RenderSystem.recordRenderCall(DefaultFonts::ensureInitialized);
-            return;
-        }
+    public static void init() {
+        // Prevent double initialization
+        if (vanilla != null) return;
 
         try {
             // Initialize Vanilla Wrapper
             vanilla = new VanillaFont();
 
             // Initialize JetBrains Mono (MSDF)
-            // The paths include the subdirectory "jetbrains-mono/".
             jetBrainsMono = new CustomFont();
             jetBrainsMono.setRegular(XuiMainClass.MODID, "jetbrains-mono/JetBrainsMono-Regular")
                     .setBold(XuiMainClass.MODID, "jetbrains-mono/JetBrainsMono-Bold")
                     .setItalic(XuiMainClass.MODID, "jetbrains-mono/JetBrainsMono-Italic");
 
             // Initialize Roboto (MSDF)
-            // The paths include the subdirectory "roboto/".
             roboto = new CustomFont();
             roboto.setRegular(XuiMainClass.MODID, "roboto/Roboto-Regular")
                     .setBold(XuiMainClass.MODID, "roboto/Roboto-Bold")
                     .setItalic(XuiMainClass.MODID, "roboto/Roboto-Italic");
 
-            initialized = true;
         } catch (Exception e) {
-            XuiMainClass.LOGGER.error("Failed to load standard fonts!");
-            e.printStackTrace();
-            // Fallback to avoid null pointers later
-            if (vanilla == null) vanilla = new VanillaFont();
+            XuiMainClass.LOGGER.error("Failed to load standard fonts!", e);
         }
     }
 
@@ -66,12 +59,11 @@ public final class DefaultFonts {
      * Retrieves the JetBrains Mono Custom Font instance.
      *
      * @return The JetBrains Mono Custom Font.
+     * @throws IllegalStateException If {@link #init()} has not been called.
      */
     public static CustomFont getJetBrainsMono() {
-        ensureInitialized();
         if (jetBrainsMono == null) {
-            // Fallback if loading failed, to prevent crash
-            throw new IllegalStateException("JetBrains Mono font failed to load. Check logs.");
+            throw new IllegalStateException("DefaultFonts not initialized. Call DefaultFonts.init() first.");
         }
         return jetBrainsMono;
     }
@@ -80,12 +72,11 @@ public final class DefaultFonts {
      * Retrieves the Roboto Custom Font instance.
      *
      * @return The Roboto Custom Font.
+     * @throws IllegalStateException If {@link #init()} has not been called.
      */
     public static CustomFont getRoboto() {
-        ensureInitialized();
         if (roboto == null) {
-            // Fallback if loading failed, to prevent crash
-            throw new IllegalStateException("Roboto font failed to load. Check logs.");
+            throw new IllegalStateException("DefaultFonts not initialized. Call DefaultFonts.init() first.");
         }
         return roboto;
     }
@@ -94,9 +85,12 @@ public final class DefaultFonts {
      * Retrieves the Vanilla Minecraft Font instance.
      *
      * @return The Vanilla Minecraft Font.
+     * @throws IllegalStateException If {@link #init()} has not been called.
      */
     public static VanillaFont getVanilla() {
-        ensureInitialized();
+        if (vanilla == null) {
+            throw new IllegalStateException("DefaultFonts not initialized. Call DefaultFonts.init() first.");
+        }
         return vanilla;
     }
 

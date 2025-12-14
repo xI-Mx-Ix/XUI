@@ -21,10 +21,10 @@ import org.lwjgl.opengl.GL11;
  * <b>Responsibilities:</b>
  * <ul>
  *     <li>Managing the lifecycle of a frame (begin/end).</li>
- *     <li>Routing drawing commands to the correct renderer (e.g., determining if text is Vanilla or MSDF).</li>
+ *     <li>Routing drawing commands to the correct renderer.</li>
  *     <li>Managing the interface with the {@link PlatformRenderInterface}.</li>
- *     <li><b>Lazy Initialization:</b> Ensures OpenGL resources (Shaders) are only created
- *     after the game engine has established a valid OpenGL context.</li>
+ *     <li><b>Explicit Initialization:</b> Requires the public {@link #init()} method to be called
+ *     to set up internal rendering resources.</li>
  * </ul>
  * </p>
  *
@@ -35,14 +35,11 @@ public class UIRenderer {
     private static UIRenderer instance;
 
     // --- Sub-Systems (Internal Renderers) ---
-    private final GlState stateManager;
-    private final ScissorManager scissorManager;
-    private final TransformStack transformStack;
-
-    // These are initialized lazily to prevent OpenGL crashes during mod loading
+    private GlState stateManager;
+    private ScissorManager scissorManager;
+    private TransformStack transformStack;
     private GeometryRenderer geometryRenderer;
     private TextRenderer textRenderer;
-    private boolean initialized = false;
 
     // --- External Dependencies ---
     /**
@@ -59,17 +56,12 @@ public class UIRenderer {
     /**
      * Private constructor to enforce Singleton pattern.
      * <p>
-     * <b>Note on GL Context:</b> This constructor is safe to call during mod initialization
-     * because it does NOT instantiate the {@link GeometryRenderer} or {@link TextRenderer} immediately.
-     * Those classes require an active OpenGL context (for Shader compilation), which is not
-     * available during the {@code onInitialize} phase.
+     * <b>Note:</b> This constructor is safe to call during early initialization phases.
+     * It avoids instantiating heavy rendering resources immediately.
+     * The user must call {@link #init()} later to complete the setup.
      * </p>
      */
     private UIRenderer() {
-        // Safe initializations (Pure Java/Math logic)
-        this.transformStack = new TransformStack();
-        this.stateManager = new GlState();
-        this.scissorManager = new ScissorManager();
     }
 
     /**
@@ -85,18 +77,19 @@ public class UIRenderer {
     }
 
     /**
-     * Ensures that OpenGL-dependent sub-renderers are initialized.
+     * Initializes all rendering sub-systems.
      * <p>
-     * This method is called automatically at the start of {@link #beginFrame}.
-     * By deferring initialization until the first render pass, we guarantee that
-     * the game window and OpenGL context exist.
+     * This method MUST be called exactly once before the first frame is rendered.
+     * Subsequent calls are safely ignored.
      * </p>
      */
-    private void ensureInitialized() {
-        if (!initialized) {
+    public void init() {
+        if (geometryRenderer == null) {
             this.geometryRenderer = new GeometryRenderer();
             this.textRenderer = new TextRenderer();
-            this.initialized = true;
+            this.transformStack = new TransformStack();
+            this.stateManager = new GlState();
+            this.scissorManager = new ScissorManager();
         }
     }
 
@@ -132,17 +125,15 @@ public class UIRenderer {
     /**
      * Prepares the renderer for a new frame.
      * <p>
-     * This method ensures GL resources are initialized, resets the transformation stack,
-     * initializes the platform backend with the current scale, and optionally clears the depth buffer.
+     * This method assumes GL resources have been initialized via {@link #init()}.
+     * It resets the transformation stack, initializes the platform backend with the
+     * current scale, and optionally clears the depth buffer.
      * </p>
      *
      * @param uiScale          The logical scale factor for this frame.
      * @param clearDepthBuffer {@code true} if the depth buffer should be cleared.
      */
     public void beginFrame(double uiScale, boolean clearDepthBuffer) {
-        // Critical: Ensure Shaders and Buffers are created now that we have a Context
-        ensureInitialized();
-
         this.currentUiScale = uiScale;
 
         // Reset global transforms for the new frame
@@ -197,7 +188,6 @@ public class UIRenderer {
             getPlatform().renderNativeText(text, x, y, color, shadow, transformStack.getDirectModelMatrix());
         } else {
             // Logic: Custom fonts use our internal renderer logic
-            // Requires initialization check
             if (textRenderer != null) {
                 text.getFont().draw(this, text, x, y, color, shadow);
             }
@@ -280,9 +270,12 @@ public class UIRenderer {
      * Retrieves the Geometry Renderer responsible for drawing shapes.
      *
      * @return The GeometryRenderer instance.
+     * @throws IllegalStateException If {@link #init()} has not been called.
      */
     public GeometryRenderer getGeometry() {
-        ensureInitialized(); // Safety access
+        if (geometryRenderer == null) {
+            throw new IllegalStateException("UIRenderer has not been initialized. Call UIRenderer.getInstance().init() first.");
+        }
         return geometryRenderer;
     }
 
@@ -290,9 +283,12 @@ public class UIRenderer {
      * Retrieves the Text Renderer responsible for font drawing.
      *
      * @return The TextRenderer instance.
+     * @throws IllegalStateException If {@link #init()} has not been called.
      */
     public TextRenderer getText() {
-        ensureInitialized(); // Safety access
+        if (textRenderer == null) {
+            throw new IllegalStateException("UIRenderer has not been initialized. Call UIRenderer.getInstance().init() first.");
+        }
         return textRenderer;
     }
 
