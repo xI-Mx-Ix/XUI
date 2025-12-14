@@ -1,6 +1,6 @@
 /*
  * This file is part of XUI.
- * Licensed under MIT license.
+ * Licensed under LGPL 3.0.
  */
 package net.xmx.xui.init.registry;
 
