@@ -155,6 +155,19 @@ public interface RenderInterface {
      */
     float[] getCurrentScissor();
 
+    /**
+     * Returns the currently active GUI scale factor.
+     * <p>
+     * This value represents the logical-to-physical pixel scaling used for
+     * rendering UI elements. All coordinates passed to this renderer are
+     * expected to be in logical UI units and are internally transformed
+     * using this scale.
+     * </p>
+     *
+     * @return The current GUI scale factor.
+     */
+    double getGuiScale();
+
     // --- Matrix Transformations (New) ---
 
     /**

@@ -11,7 +11,6 @@ import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.util.URLUtil;
-import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.regex.Matcher;
@@ -146,7 +145,7 @@ public class MarkdownParagraph extends UIPanel {
         if (isLink && url != null) {
             // Hover: Change cursor to Hand
             widget.setOnMouseEnter(wgt -> {
-                long window = Minecraft.getInstance().getWindow().getWindow();
+                long window = GLFW.glfwGetCurrentContext();
                 // Create a standard hand cursor via GLFW
                 long cursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
                 GLFW.glfwSetCursor(window, cursor);
@@ -154,7 +153,7 @@ public class MarkdownParagraph extends UIPanel {
 
             // Exit: Change cursor back to Arrow
             widget.setOnMouseExit(wgt -> {
-                long window = Minecraft.getInstance().getWindow().getWindow();
+                long window = GLFW.glfwGetCurrentContext();
                 long cursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
                 GLFW.glfwSetCursor(window, cursor);
             });

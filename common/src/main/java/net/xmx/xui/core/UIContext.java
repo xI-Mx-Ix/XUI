@@ -4,7 +4,6 @@
  */
 package net.xmx.xui.core;
 
-import net.minecraft.client.Minecraft;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.gl.RenderProvider;
 
@@ -226,7 +225,7 @@ public class UIContext {
      * @return The X coordinate in the logical UI system.
      */
     private double transformMouseX(double mcMouseX) {
-        double mcScale = Minecraft.getInstance().getWindow().getGuiScale();
+        double mcScale = RenderProvider.get().getGuiScale();
         // 1. Convert MC coordinate to physical pixels: mcMouseX * mcScale
         // 2. Convert physical pixels to logical pixels: / this.scaleFactor
         return (mcMouseX * mcScale) / this.scaleFactor;
@@ -239,7 +238,7 @@ public class UIContext {
      * @return The Y coordinate in the logical UI system.
      */
     private double transformMouseY(double mcMouseY) {
-        double mcScale = Minecraft.getInstance().getWindow().getGuiScale();
+        double mcScale = RenderProvider.get().getGuiScale();
         return (mcMouseY * mcScale) / this.scaleFactor;
     }
 
@@ -282,7 +281,7 @@ public class UIContext {
      * @return {@code true} if the event was handled by a widget.
      */
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        double mcScale = Minecraft.getInstance().getWindow().getGuiScale();
+        double mcScale = RenderProvider.get().getGuiScale();
         // Calculate the ratio to convert drag distance from MC space to logical space
         double scaleRatio = mcScale / this.scaleFactor;
 

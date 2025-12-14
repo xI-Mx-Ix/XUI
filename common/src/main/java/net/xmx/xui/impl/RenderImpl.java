@@ -323,6 +323,11 @@ public class RenderImpl implements RenderInterface {
         };
     }
 
+    @Override
+    public double getGuiScale() {
+        return Minecraft.getInstance().getWindow().getGuiScale();
+    }
+
     // --- Matrix Implementation ---
 
     @Override

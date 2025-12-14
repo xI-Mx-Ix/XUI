@@ -11,7 +11,6 @@ import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.core.UIWidget;
-import net.minecraft.client.Minecraft;
 
 import java.util.List;
 
@@ -332,19 +331,6 @@ public class UITooltip extends UIPanel {
      * Calculates the position of the tooltip based on mouse coordinates.
      */
     private void calculateSmartPosition(int mouseX, int mouseY) {
-        // Determine logical screen bounds
-        float screenWidth;
-        float screenHeight;
-
-        if (getParent() != null) {
-            screenWidth = getParent().getWidth();
-            screenHeight = getParent().getHeight();
-        } else {
-            // Fallback (might not match logical scaling, but prevents crash)
-            screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-            screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        }
-
         // Retrieve offsets from style
         float offX = style().getValue(InteractionState.DEFAULT, OFFSET_X);
         float offY = style().getValue(InteractionState.DEFAULT, OFFSET_Y);
@@ -354,11 +340,11 @@ public class UITooltip extends UIPanel {
         float newY = mouseY + offY;
 
         // Check Right Edge
-        if (newX + width > screenWidth - 5) {
+        if (newX + width > getScreenWidth() - 5) {
             newX = mouseX - width - offX; // Flip to left
         }
         // Check Bottom Edge
-        if (newY + height > screenHeight - 5) {
+        if (newY + height > getScreenHeight() - 5) {
             newY = mouseY - height; // Flip upwards
         }
 

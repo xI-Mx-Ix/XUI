@@ -4,7 +4,6 @@
  */
 package net.xmx.xui.core.components;
 
-import net.minecraft.client.Minecraft;
 import net.xmx.xui.core.font.DefaultFonts;
 import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.gl.RenderInterface;
@@ -14,6 +13,7 @@ import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.effect.UIScissorsEffect;
+import net.xmx.xui.util.ClipboardUtil;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -463,27 +463,21 @@ public class UIEditBox extends UIWidget {
     private void copyToClipboard() {
         int start = Math.min(cursorPosition, selectionEnd);
         int end = Math.max(cursorPosition, selectionEnd);
+
         if (start < end) {
             String selected = text.substring(start, end);
-            try {
-                // Try to use MC handler
-                Minecraft.getInstance().keyboardHandler.setClipboard(selected);
-            } catch (Exception e) {
-                // Fallback to GLFW if possible, or ignore
-                long window = Minecraft.getInstance().getWindow().getWindow();
-                GLFW.glfwSetClipboardString(window, selected);
-            }
+            long window = GLFW.glfwGetCurrentContext();
+
+            // Delegate to the Singleton ClipboardUtil
+            ClipboardUtil.getInstance().setClipboardString(window, selected);
         }
     }
 
     private void pasteFromClipboard() {
-        String content = "";
-        try {
-            content = Minecraft.getInstance().keyboardHandler.getClipboard();
-        } catch (Exception e) {
-            long window = Minecraft.getInstance().getWindow().getWindow();
-            content = GLFW.glfwGetClipboardString(window);
-        }
+        long window = GLFW.glfwGetCurrentContext();
+
+        // Delegate to the Singleton ClipboardUtil
+        String content = ClipboardUtil.getInstance().getClipboardString(window);
 
         if (content != null && !content.isEmpty()) {
             StringBuilder filtered = new StringBuilder();
@@ -512,8 +506,8 @@ public class UIEditBox extends UIWidget {
         // If the widget is focused and the user Left Clicks inside, update the cursor position.
         // Also checks for Shift key to handle text selection initialization.
         if (isFocused && button == 0) {
-            boolean shift = (GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS) ||
-                    (GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS);
+            boolean shift = (GLFW.glfwGetKey(GLFW.glfwGetCurrentContext(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS) ||
+                    (GLFW.glfwGetKey(GLFW.glfwGetCurrentContext(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS);
             int index = getIndexAtPosition(mouseX, mouseY);
             setCursorPos(index, shift);
             return true;
