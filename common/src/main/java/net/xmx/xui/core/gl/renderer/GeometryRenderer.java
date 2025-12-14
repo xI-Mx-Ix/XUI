@@ -53,7 +53,7 @@ public class GeometryRenderer {
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
 
         // Setup Orthographic Projection: (0,0) at top-left
-        projectionMatrix.identity().ortho(0, viewport[2], viewport[3], 0, 1000, -1000);
+        projectionMatrix.identity().ortho(0, viewport[2], viewport[3], 0, -10000, 10000);
         projectionMatrix.scale((float) guiScale, (float) guiScale, 1.0f);
 
         shader.bind();

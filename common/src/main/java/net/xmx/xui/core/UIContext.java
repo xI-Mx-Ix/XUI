@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.impl.RenderImpl;
+import org.lwjgl.opengl.GL11;
 
 /**
  * Manages the rendering context, scaling logic, and input transformation for a UI tree.
@@ -165,6 +166,8 @@ public class UIContext {
         // We create a fresh GuiGraphics instance to manage the PoseStack for this specific rendering pass.
         // We reuse the main buffer source from Minecraft to batch render calls efficiently.
         GuiGraphics graphics = new GuiGraphics(mc, mc.renderBuffers().bufferSource());
+
+        GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
 
         // Calculate the relative scale adjustment.
         double mcScale = mc.getWindow().getGuiScale();
