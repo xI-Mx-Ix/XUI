@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.gl.renderer;
 
-import net.xmx.xui.core.gl.shader.impl.UICoreShader;
+import net.xmx.xui.core.gl.shader.impl.PositionColorShader;
 import net.xmx.xui.core.gl.vertex.MeshBuffer;
 import net.xmx.xui.core.gl.vertex.VertexFormat;
 import org.joml.Matrix4f;
@@ -23,14 +23,14 @@ import org.lwjgl.opengl.GL11;
  * </ul>
  * </p>
  * <p>
- * It utilizes the {@link UICoreShader} for rendering and a {@link MeshBuffer} for vertex management.
+ * It utilizes the {@link PositionColorShader} for rendering and a {@link MeshBuffer} for vertex management.
  * </p>
  *
  * @author xI-Mx-Ix
  */
 public class GeometryRenderer {
 
-    private final UICoreShader shader;
+    private final PositionColorShader shader;
     private final MeshBuffer mesh;
     private final Matrix4f projectionMatrix = new Matrix4f();
 
@@ -42,7 +42,7 @@ public class GeometryRenderer {
      * </p>
      */
     public GeometryRenderer() {
-        this.shader = new UICoreShader();
+        this.shader = new PositionColorShader();
         this.mesh = new MeshBuffer(VertexFormat.POS_COLOR);
     }
 

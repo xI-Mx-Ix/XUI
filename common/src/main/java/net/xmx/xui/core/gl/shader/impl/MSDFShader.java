@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.gl.shader.impl;
 
-import net.xmx.xui.core.gl.shader.UIShaderProgram;
+import net.xmx.xui.core.gl.shader.ShaderProgram;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20;
@@ -17,7 +17,7 @@ import java.nio.FloatBuffer;
  *
  * @author xI-Mx-Ix
  */
-public class UIMSDFShader extends UIShaderProgram {
+public class MSDFShader extends ShaderProgram {
 
     private int locProjMat;
     private int locModelViewMat;
@@ -27,10 +27,10 @@ public class UIMSDFShader extends UIShaderProgram {
     private final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
 
     /**
-     * Constructs the shader by loading the "ui_msdf" sources.
+     * Constructs the shader by loading the "msdf_font" sources.
      */
-    public UIMSDFShader() {
-        super("xui", "core/ui_msdf");
+    public MSDFShader() {
+        super("xui", "core/msdf_font");
     }
 
     @Override

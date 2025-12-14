@@ -4,7 +4,7 @@
  */
 package net.xmx.xui.core.gl.shader.impl;
 
-import net.xmx.xui.core.gl.shader.UIShaderProgram;
+import net.xmx.xui.core.gl.shader.ShaderProgram;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20;
@@ -20,17 +20,17 @@ import java.nio.FloatBuffer;
  *
  * @author xI-Mx-Ix
  */
-public class UICoreShader extends UIShaderProgram {
+public class PositionColorShader extends ShaderProgram {
 
     private int locationProjectionMatrix;
     private int locationModelViewMatrix;
     private final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
 
     /**
-     * Loads the "ui_core" shader from the "xui" namespace.
+     * Loads the "position_color" shader from the "xui" namespace.
      */
-    public UICoreShader() {
-        super("xui", "core/ui_core");
+    public PositionColorShader() {
+        super("xui", "core/position_color");
     }
 
     @Override

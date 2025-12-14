@@ -5,7 +5,7 @@
 package net.xmx.xui.core.gl.renderer;
 
 import net.xmx.xui.core.font.data.MSDFData;
-import net.xmx.xui.core.gl.shader.impl.UIMSDFShader;
+import net.xmx.xui.core.gl.shader.impl.MSDFShader;
 import net.xmx.xui.core.gl.vertex.MeshBuffer;
 import net.xmx.xui.core.gl.vertex.VertexFormat;
 import org.joml.Matrix4f;
@@ -20,7 +20,7 @@ import org.lwjgl.opengl.GL13;
  */
 public class TextRenderer {
 
-    private final UIMSDFShader shader;
+    private final MSDFShader shader;
     private final MeshBuffer mesh;
     private final Matrix4f projectionMatrix = new Matrix4f();
 
@@ -28,7 +28,7 @@ public class TextRenderer {
      * Constructs a new text renderer with an MSDF shader and a standard mesh buffer.
      */
     public TextRenderer() {
-        this.shader = new UIMSDFShader();
+        this.shader = new MSDFShader();
         // Uses the generic Position + Color + UV vertex format
         this.mesh = new MeshBuffer(VertexFormat.POS_COLOR_UV);
     }
