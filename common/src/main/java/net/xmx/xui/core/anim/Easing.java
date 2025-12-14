@@ -100,4 +100,22 @@ public interface Easing {
             return n1 * (t -= 2.625 / d1) * t + 0.984375f;
         }
     };
+
+    /**
+     * Easing equation for a sinusoidal (sin) ease-in.
+     * Accelerates gently.
+     */
+    Easing EASE_IN_SINE = t -> 1f - (float) Math.cos((t * Math.PI) / 2f);
+
+    /**
+     * Easing equation for a sinusoidal (sin) ease-out.
+     * Decelerates gently.
+     */
+    Easing EASE_OUT_SINE = t -> (float) Math.sin((t * Math.PI) / 2f);
+
+    /**
+     * Easing equation for a sinusoidal (sin) ease-in/out.
+     * Gentle acceleration and deceleration.
+     */
+    Easing EASE_IN_OUT_SINE = t -> -(float) (Math.cos(Math.PI * t) - 1f) / 2f;
 }
