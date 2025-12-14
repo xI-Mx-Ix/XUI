@@ -5,10 +5,8 @@
 package net.xmx.xui.core;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.impl.RenderImpl;
-import org.lwjgl.opengl.GL11;
+import net.xmx.xui.core.gl.RenderProvider;
 
 /**
  * Manages the rendering context, scaling logic, and input transformation for a UI tree.
@@ -67,6 +65,12 @@ public class UIContext {
      * </p>
      */
     private static final double REFERENCE_HEIGHT = 360.0;
+
+    /**
+     * Controls whether the OpenGL depth buffer is cleared at the start of the render pass.
+     * Default is {@code true}, which is suitable for standalone screens.
+     */
+    private boolean clearDepth = true;
 
     /**
      * Constructs a new UI Context with an initialized, empty root panel.
@@ -128,72 +132,54 @@ public class UIContext {
     /**
      * Renders the UI tree managed by this context.
      * <p>
-     * This method orchestrates the rendering process by:
-     * <ol>
-     *   <li>Calculating the {@code deltaTime} based on wall-clock time for animations.</li>
-     *   <li>Injecting the custom {@code scaleFactor} into the {@link RenderImpl}.</li>
-     *   <li>Transforming the raw Minecraft mouse coordinates into logical coordinates.</li>
-     *   <li>Creating a new {@link GuiGraphics} instance with a scaled {@code PoseStack}
-     *       to ensure text rendering matches the custom coordinate system.</li>
-     * </ol>
+     * This method triggers the rendering lifecycle via the provider.
+     * Note that no graphics object is passed here; the implementation is expected
+     * to manage its own graphics context.
      * </p>
      *
-     * @param mouseX       The mouse X coordinate provided by Minecraft (already scaled by MC's internal scale).
-     * @param mouseY       The mouse Y coordinate provided by Minecraft (already scaled by MC's internal scale).
-     * @param partialTick The partial tick time used for smooth rendering interpolation (0.0 to 1.0).
+     * @param mouseX       The raw mouse X coordinate from the window/screen.
+     * @param mouseY       The raw mouse Y coordinate from the window/screen.
+     * @param partialTick  The partial tick time for interpolation.
      */
     public void render(int mouseX, int mouseY, float partialTick) {
-        // 0. Calculate Delta Time for Animations (Wall-clock time)
-        // This ensures animations run at constant speed regardless of framerate or partial ticks.
+        // 0. Calculate Delta Time for Animations
         long now = System.currentTimeMillis();
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
-        // 1. Set the custom scale in the render implementation.
-        // This allows the UIRenderer (which handles shaders/VBOs) to project geometry correctly
-        // and perform pixel snapping.
-        RenderImpl.getInstance().setScale(this.scaleFactor);
-
-        // 2. Transform input coordinates from Minecraft's GUI space to our custom logical space.
-        // This is necessary because hit-testing (hover effects) happens during the render pass
-        // or relies on the mouse position passed here.
+        // 1. Transform input coordinates (using internal scale factor)
+        // Note: transformMouseX/Y logic usually needs MC window scale.
+        // If transformMouseX uses Minecraft.getInstance(), you might need to extract that too via an InputProvider interface later if you want 100% purity.
+        // For now, assuming transformMouseX logic is solved or acceptable:
         double logicalMouseX = transformMouseX(mouseX);
         double logicalMouseY = transformMouseY(mouseY);
 
-        // 3. Setup text rendering context.
-        Minecraft mc = Minecraft.getInstance();
+        // 2. Begin Frame via Provider
+        // Implementation creates the GuiGraphics internally
+        RenderProvider.get().beginFrame(this.scaleFactor, this.clearDepth);
 
-        // We create a fresh GuiGraphics instance to manage the PoseStack for this specific rendering pass.
-        // We reuse the main buffer source from Minecraft to batch render calls efficiently.
-        GuiGraphics graphics = new GuiGraphics(mc, mc.renderBuffers().bufferSource());
+        // 3. Render Widget Tree
+        // Pass the abstract provider to widgets
+        root.render(RenderProvider.get(), (int) logicalMouseX, (int) logicalMouseY, partialTick, deltaTime);
 
-        // Clears the depth buffer so depth values from the previous frame don’t interfere
-        GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
+        // 4. End Frame via Provider
+        RenderProvider.get().endFrame();
+    }
 
-        // Calculate the relative scale adjustment.
-        double mcScale = mc.getWindow().getGuiScale();
-        float textScaleAdjustment = (float) (this.scaleFactor / mcScale);
-
-        // Push a new pose onto the stack and apply the scaling.
-        graphics.pose().pushPose();
-        graphics.pose().scale(textScaleAdjustment, textScaleAdjustment, 1.0f);
-
-        // Inject this specific GuiGraphics instance into the renderer implementation.
-        // This allows widgets (like Text or EditBox) to draw text using this transformed stack.
-        RenderImpl.getInstance().setGuiGraphics(graphics);
-
-        // Render the root widget and all its descendants recursively.
-        // We pass BOTH partialTick (for render interpolation) and deltaTime (for state updates).
-        root.render(RenderImpl.getInstance(), (int) logicalMouseX, (int) logicalMouseY, partialTick, deltaTime);
-
-        // Flush the render buffers (endBatch) before popping the pose.
-        // This forces any text or geometry buffered by GuiGraphics to be drawn to the screen
-        // using the *current* scaling matrix and scissor state.
-        // Without this, the draw calls might execute later after we've popped the matrix, causing artifacts.
-        mc.renderBuffers().bufferSource().endBatch();
-
-        // Restore the previous matrix state.
-        graphics.pose().popPose();
+    /**
+     * Configures whether the depth buffer should be cleared before rendering.
+     * <p>
+     * Set this to {@code true} (default) for full-screen UIs to ensure 3D widgets
+     * sort correctly. Set this to {@code false} for HUDs or in-game overlays to
+     * avoid clearing the rendered world behind the UI.
+     * </p>
+     *
+     * @param clearDepth {@code true} to clear the depth buffer; {@code false} to keep it.
+     * @return This context instance for chaining.
+     */
+    public UIContext setClearDepth(boolean clearDepth) {
+        this.clearDepth = clearDepth;
+        return this;
     }
 
     /**

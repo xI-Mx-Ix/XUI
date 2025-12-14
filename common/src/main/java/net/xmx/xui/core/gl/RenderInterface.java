@@ -17,6 +17,30 @@ import net.xmx.xui.core.text.TextComponent;
 public interface RenderInterface {
 
     /**
+     * Initializes the rendering pipeline for a new frame.
+     * <p>
+     * Implementation note: The implementation class is responsible for acquiring
+     * the necessary graphics context (e.g., creating a new {@code GuiGraphics} instance)
+     * and setting up the transformation stacks.
+     * </p>
+     *
+     * @param uiScale          The calculated logical UI scale factor.
+     * @param clearDepthBuffer {@code true} to clear the depth buffer (GL_DEPTH_BUFFER_BIT)
+     *                         before rendering starts.
+     */
+    void beginFrame(double uiScale, boolean clearDepthBuffer);
+
+    /**
+     * Finalizes the rendering frame.
+     * <p>
+     * This method is responsible for cleaning up the state set by {@link #beginFrame}.
+     * This typically involves popping transformation matrices, flushing render buffers,
+     * and disposing of any temporary graphics contexts created.
+     * </p>
+     */
+    void endFrame();
+
+    /**
      * Draws a filled rectangle with uniform corners.
      *
      * @param x      The absolute x-coordinate.
