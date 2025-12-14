@@ -4,89 +4,94 @@
  */
 package net.xmx.xui.core.font.type;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextColor;
 import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.gl.RenderInterface;
+import net.xmx.xui.core.gl.RenderProvider;
 import net.xmx.xui.core.text.TextComponent;
-import net.xmx.xui.impl.RenderImpl;
 
 /**
- * Implementation of {@link Font} that delegates to the internal Minecraft font renderer.
- * Ensures consistent look and feel with the base game and resource pack support.
+ * Represents the platform's native font (e.g., Minecraft Vanilla Font).
+ * <p>
+ * This class resides in the Core module and is therefore strictly decoupled from
+ * any specific game engine classes. It functions as a proxy, delegating all
+ * measurement and rendering calls back to the {@link RenderInterface}, which
+ * is implemented by the platform-specific module.
+ * </p>
  *
  * @author xI-Mx-Ix
  */
 public class VanillaFont extends Font {
 
+    /**
+     * Constructs a new VanillaFont instance.
+     * Sets the type to {@link Font.Type#VANILLA}.
+     */
     public VanillaFont() {
         super(Type.VANILLA);
     }
 
+    /**
+     * Retrieves the line height from the platform implementation.
+     *
+     * @return The line height in logical pixels.
+     */
     @Override
     public float getLineHeight() {
-        return Minecraft.getInstance().font.lineHeight;
-    }
-
-    @Override
-    public float getWidth(TextComponent component) {
-        return Minecraft.getInstance().font.width(toMinecraftComponent(component));
-    }
-
-    @Override
-    public float getWordWrapHeight(TextComponent component, float maxWidth) {
-        return Minecraft.getInstance().font.wordWrapHeight(toMinecraftComponent(component), (int) maxWidth);
-    }
-
-    @Override
-    public void draw(RenderImpl context, TextComponent component, float x, float y, int color, boolean shadow) {
-        GuiGraphics graphics = context.getGuiGraphics();
-        if (graphics == null) return;
-
-        Component mcComp = toMinecraftComponent(component);
-        
-        graphics.pose().pushPose();
-        // Slight Z-offset to ensure text renders above background planes
-        graphics.pose().translate(0, 0, 0.1f);
-        graphics.drawString(Minecraft.getInstance().font, mcComp, (int) x, (int) y, color, shadow);
-        graphics.pose().popPose();
-    }
-
-    @Override
-    public void drawWrapped(RenderImpl context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
-        GuiGraphics graphics = context.getGuiGraphics();
-        if (graphics == null) return;
-
-        Component mcComp = toMinecraftComponent(component);
-        // Note: GuiGraphics.drawWordWrap typically ignores the shadow parameter and doesn't use it.
-        graphics.drawWordWrap(Minecraft.getInstance().font, mcComp, (int) x, (int) y, (int) maxWidth, color);
+        // Delegate to the registered renderer implementation
+        return RenderProvider.get().getVanillaLineHeight();
     }
 
     /**
-     * Helper to convert XUI Component tree to Minecraft Component tree.
+     * Calculates the width of the component by asking the platform implementation.
+     *
+     * @param component The root component to measure.
+     * @return The total width in logical pixels.
      */
-    private Component toMinecraftComponent(TextComponent uiComp) {
-        MutableComponent mcComp = Component.literal(uiComp.getText());
-        Style style = Style.EMPTY
-                .withBold(uiComp.isBold())
-                .withItalic(uiComp.isItalic())
-                .withUnderlined(uiComp.isUnderline())
-                .withStrikethrough(uiComp.isStrikethrough())
-                .withObfuscated(uiComp.isObfuscated());
+    @Override
+    public float getWidth(TextComponent component) {
+        return RenderProvider.get().getVanillaWidth(component);
+    }
 
-        if (uiComp.getColor() != null) {
-            style = style.withColor(TextColor.fromRgb(uiComp.getColor()));
-        }
+    /**
+     * Calculates the wrapped height of the component by asking the platform implementation.
+     *
+     * @param component The text content.
+     * @param maxWidth  The width limit in logical pixels.
+     * @return The total vertical height in logical pixels.
+     */
+    @Override
+    public float getWordWrapHeight(TextComponent component, float maxWidth) {
+        return RenderProvider.get().getVanillaWordWrapHeight(component, maxWidth);
+    }
 
-        mcComp.setStyle(style);
+    /**
+     * Delegates the draw call to the platform-specific {@link RenderInterface#drawVanillaText} method.
+     *
+     * @param context   The render interface context.
+     * @param component The text component to render.
+     * @param x         The absolute logical X coordinate.
+     * @param y         The absolute logical Y coordinate.
+     * @param color     The default ARGB text color.
+     * @param shadow    {@code true} to draw a drop shadow.
+     */
+    @Override
+    public void draw(RenderInterface context, TextComponent component, float x, float y, int color, boolean shadow) {
+        context.drawVanillaText(component, x, y, color, shadow);
+    }
 
-        for (TextComponent sibling : uiComp.getSiblings()) {
-            mcComp.append(toMinecraftComponent(sibling));
-        }
-
-        return mcComp;
+    /**
+     * Delegates the wrapped draw call to the platform-specific {@link RenderInterface#drawVanillaWrappedText} method.
+     *
+     * @param context   The render interface context.
+     * @param component The text component to render.
+     * @param x         The absolute logical X coordinate.
+     * @param y         The absolute logical Y coordinate.
+     * @param maxWidth  The maximum width in logical pixels.
+     * @param color     The default ARGB text color.
+     * @param shadow    {@code true} to draw a drop shadow.
+     */
+    @Override
+    public void drawWrapped(RenderInterface context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
+        context.drawVanillaWrappedText(component, x, y, maxWidth, color, shadow);
     }
 }

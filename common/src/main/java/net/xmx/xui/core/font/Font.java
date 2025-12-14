@@ -4,8 +4,8 @@
  */
 package net.xmx.xui.core.font;
 
+import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.text.TextComponent;
-import net.xmx.xui.impl.RenderImpl;
 
 /**
  * Abstract base class for font families.
@@ -75,7 +75,7 @@ public abstract class Font {
      * @param color     The text color.
      * @param shadow    Whether to draw a drop shadow.
      */
-    public abstract void draw(RenderImpl context, TextComponent component, float x, float y, int color, boolean shadow);
+    public abstract void draw(RenderInterface context, TextComponent component, float x, float y, int color, boolean shadow);
 
     /**
      * Renders text wrapped within a specific width.
@@ -88,5 +88,5 @@ public abstract class Font {
      * @param color     The text color.
      * @param shadow    Whether to draw a drop shadow.
      */
-    public abstract void drawWrapped(RenderImpl context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow);
+    public abstract void drawWrapped(RenderInterface context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow);
 }

@@ -4,11 +4,23 @@
  */
 package net.xmx.xui.core.gl.renderer;
 
-import org.joml.Matrix4f;
+import net.xmx.xui.core.gl.TransformStack;
 
 /**
- * The central coordinator for the UI rendering system.
- * Acts as a facade, delegating specific rendering tasks to modular sub-components.
+ * The central hub for the UI rendering system.
+ * <p>
+ * This class acts as a container for the rendering state and the specialized sub-renderers.
+ * It is responsible for maintaining the Global Transformation Stack and the current UI Scale,
+ * but it does <b>not</b> contain direct drawing logic.
+ * </p>
+ * <p>
+ * Access to drawing capabilities is provided through the getters:
+ * <ul>
+ *     <li>{@link #getGeometry()} - For shapes and outlines.</li>
+ *     <li>{@link #getText()} - For font rendering.</li>
+ *     <li>{@link #getScissor()} - For clipping regions.</li>
+ * </ul>
+ * </p>
  *
  * @author xI-Mx-Ix
  */
@@ -16,18 +28,33 @@ public class UIRenderer {
 
     private static UIRenderer instance;
 
+    // Sub-systems
     private final GlState stateManager;
     private final ScissorManager scissorManager;
     private final GeometryRenderer geometryRenderer;
     private final TextRenderer textRenderer;
 
+    // Global State
+    private final TransformStack transformStack;
+    private double currentUiScale = 1.0;
+
+    /**
+     * Private constructor to enforce Singleton pattern.
+     * Initializes all sub-renderers and the transform stack.
+     */
     private UIRenderer() {
         this.stateManager = new GlState();
         this.scissorManager = new ScissorManager();
         this.geometryRenderer = new GeometryRenderer();
         this.textRenderer = new TextRenderer();
+        this.transformStack = new TransformStack();
     }
 
+    /**
+     * Retrieves the singleton instance of the UIRenderer.
+     *
+     * @return The active UIRenderer instance.
+     */
     public static UIRenderer getInstance() {
         if (instance == null) {
             instance = new UIRenderer();
@@ -35,72 +62,106 @@ public class UIRenderer {
         return instance;
     }
 
-    // --- Accessors ---
+    // --- State Accessors ---
 
     /**
-     * Retrieves the state manager responsible for capturing and restoring OpenGL state.
-     * This allows external renderers (like Fonts) to isolate their draw calls from the game engine.
+     * Updates the global UI scale factor for the current frame.
+     * This is typically called by the platform implementation at the start of a frame.
      *
-     * @return The GlState instance.
+     * @param scale The new scale factor.
+     */
+    public void setCurrentUiScale(double scale) {
+        this.currentUiScale = scale;
+    }
+
+    /**
+     * Retrieves the current logical UI scale factor.
+     *
+     * @return The scale factor.
+     */
+    public double getCurrentUiScale() {
+        return currentUiScale;
+    }
+
+    /**
+     * Retrieves the Global Transformation Stack.
+     *
+     * @return The transform stack instance.
+     */
+    public TransformStack getTransformStack() {
+        return transformStack;
+    }
+
+    /**
+     * Retrieves the State Manager responsible for OpenGL capability handling.
+     *
+     * @return The GlState manager.
      */
     public GlState getStateManager() {
         return stateManager;
     }
 
+    /**
+     * Retrieves the Scissor Manager responsible for clipping operations.
+     *
+     * @return The ScissorManager instance.
+     */
     public ScissorManager getScissor() {
         return scissorManager;
     }
 
-    public TextRenderer getText() {
-        return textRenderer;
-    }
-
+    /**
+     * Retrieves the Geometry Renderer responsible for drawing shapes.
+     *
+     * @return The GeometryRenderer instance.
+     */
     public GeometryRenderer getGeometry() {
         return geometryRenderer;
     }
 
-    // --- High-Level Geometry API ---
+    /**
+     * Retrieves the Text Renderer responsible for font drawing.
+     *
+     * @return The TextRenderer instance.
+     */
+    public TextRenderer getText() {
+        return textRenderer;
+    }
+
+    // --- Matrix Passthrough ---
 
     /**
-     * Renders a rectangle with configurable rounded corners.
-     * Automatically handles GL state saving/restoring and shader setup,
-     * applying the provided ModelView matrix for transformations.
-     *
-     * @param x              Logical X.
-     * @param y              Logical Y.
-     * @param width          Logical Width.
-     * @param height         Logical Height.
-     * @param color          ARGB Color.
-     * @param rTL            Top-Left radius.
-     * @param rTR            Top-Right radius.
-     * @param rBR            Bottom-Right radius.
-     * @param rBL            Bottom-Left radius.
-     * @param guiScale       Current GUI scale.
-     * @param modelViewMatrix The current transformation matrix.
+     * Pushes a new matrix onto the stack.
      */
-    public void drawRect(float x, float y, float width, float height, int color, float rTL, float rTR, float rBR, float rBL, double guiScale, Matrix4f modelViewMatrix) {
-        stateManager.capture();
-        stateManager.setupForUI();
-
-        geometryRenderer.begin(guiScale, modelViewMatrix);
-        geometryRenderer.drawRect(x, y, width, height, color, rTL, rTR, rBR, rBL);
-        geometryRenderer.end();
-
-        stateManager.restore();
+    public void pushMatrix() {
+        transformStack.push();
     }
 
     /**
-     * Renders an outline with configurable rounded corners.
-     * Applies the provided ModelView matrix for transformations.
+     * Pops the current matrix from the stack.
      */
-    public void drawOutline(float x, float y, float width, float height, int color, float thickness, float rTL, float rTR, float rBR, float rBL, double guiScale, Matrix4f modelViewMatrix) {
-        stateManager.capture();
-        stateManager.setupForUI();
+    public void popMatrix() {
+        transformStack.pop();
+    }
 
-        geometryRenderer.begin(guiScale, modelViewMatrix);
-        geometryRenderer.drawOutline(x, y, width, height, color, thickness, rTL, rTR, rBR, rBL);
-        geometryRenderer.end();
+    /**
+     * Applies a translation to the current matrix.
+     */
+    public void translate(float x, float y, float z) {
+        transformStack.applyTranslation(x, y, z);
+    }
 
-        stateManager.restore();
+    /**
+     * Applies a rotation to the current matrix.
+     */
+    public void rotate(float degrees, float x, float y, float z) {
+        transformStack.applyRotation(degrees, x, y, z);
+    }
+
+    /**
+     * Applies a scaling to the current matrix.
+     */
+    public void scale(float x, float y, float z) {
+        transformStack.applyScaling(x, y, z);
     }
 }

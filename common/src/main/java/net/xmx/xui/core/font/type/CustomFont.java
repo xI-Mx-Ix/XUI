@@ -9,11 +9,11 @@ import net.xmx.xui.core.font.layout.TextLayoutEngine;
 import net.xmx.xui.core.font.layout.TextLine;
 import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.font.data.MSDFData;
+import net.xmx.xui.core.gl.RenderInterface;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.gl.vertex.MeshBuffer;
 import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.core.text.TextFormatting;
-import net.xmx.xui.impl.RenderImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -113,17 +113,15 @@ public class CustomFont extends Font {
     // --- Rendering Orchestration ---
 
     @Override
-    public void draw(RenderImpl context, TextComponent component, float x, float y, int color, boolean shadow) {
-        renderTextBatch(context, x, y, () -> {
-            drawComponentRecursive(context, component, x, y, x, color);
-        });
+    public void draw(RenderInterface context, TextComponent component, float x, float y, int color, boolean shadow) {
+        renderTextBatch(() -> drawComponentRecursive(context, component, x, y, x, color));
     }
 
     @Override
-    public void drawWrapped(RenderImpl context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
+    public void drawWrapped(RenderInterface context, TextComponent component, float x, float y, float maxWidth, int color, boolean shadow) {
         List<TextLine> lines = layoutEngine.computeWrappedLayout(component, maxWidth);
 
-        renderTextBatch(context, x, y, () -> {
+        renderTextBatch(() -> {
             float currentY = y;
             float lineHeight = getLineHeight();
 
@@ -147,7 +145,7 @@ public class CustomFont extends Font {
      * Wraps the rendering operations in the necessary OpenGL state management.
      * Handles the Two-Pass strategy: Text First, then Decorations.
      */
-    private void renderTextBatch(RenderImpl context, float x, float y, Runnable renderAction) {
+    private void renderTextBatch(Runnable renderAction) {
         if (regular == null) return;
 
         UIRenderer renderer = UIRenderer.getInstance();
@@ -158,7 +156,8 @@ public class CustomFont extends Font {
 
         try {
             // 2. Pass 1: Render Text Glyphs (MSDF Shader)
-            renderer.getText().begin(context.getCurrentScale(), regular.getData().atlas, context.getCurrentMatrix());
+            renderer.getText().begin(UIRenderer.getInstance().getCurrentUiScale(),
+                    regular.getData().atlas, UIRenderer.getInstance().getTransformStack().getDirectModelMatrix());
 
             // Execute the recursive drawing logic.
             // This populates the mesh AND fills pendingDecorations.
@@ -168,7 +167,8 @@ public class CustomFont extends Font {
 
             // 3. Pass 2: Render Decorations (Geometry Shader)
             if (!pendingDecorations.isEmpty()) {
-                renderer.getGeometry().begin(context.getCurrentScale(), context.getCurrentMatrix());
+                renderer.getGeometry().begin(UIRenderer.getInstance().getCurrentUiScale(),
+                        UIRenderer.getInstance().getTransformStack().getDirectModelMatrix());
 
                 for (Decoration deco : pendingDecorations) {
                     renderer.getGeometry().drawRect(
@@ -187,7 +187,7 @@ public class CustomFont extends Font {
         }
     }
 
-    private float drawComponentRecursive(RenderImpl context, TextComponent comp, float currentX, float currentY, float startX, int defaultColor) {
+    private float drawComponentRecursive(RenderInterface context, TextComponent comp, float currentX, float currentY, float startX, int defaultColor) {
         float newX = drawSingleString(context, comp, currentX, currentY, startX, defaultColor);
         for (TextComponent sibling : comp.getSiblings()) {
             newX = drawComponentRecursive(context, sibling, newX, currentY, startX, defaultColor);
@@ -207,7 +207,7 @@ public class CustomFont extends Font {
      * @param defaultColor The fallback color if the component has none.
      * @return The X coordinate after rendering the text.
      */
-    private float drawSingleString(RenderImpl context, TextComponent comp, float x, float y, float startX, int defaultColor) {
+    private float drawSingleString(RenderInterface context, TextComponent comp, float x, float y, float startX, int defaultColor) {
         String text = comp.getText();
         if (text == null || text.isEmpty()) return x;
 
