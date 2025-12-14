@@ -167,6 +167,7 @@ public class UIContext {
         // We reuse the main buffer source from Minecraft to batch render calls efficiently.
         GuiGraphics graphics = new GuiGraphics(mc, mc.renderBuffers().bufferSource());
 
+        // Clears the depth buffer so depth values from the previous frame don’t interfere
         GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
 
         // Calculate the relative scale adjustment.
