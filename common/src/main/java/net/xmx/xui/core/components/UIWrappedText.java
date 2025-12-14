@@ -4,12 +4,13 @@
  */
 package net.xmx.xui.core.components;
 
+import net.xmx.xui.core.Layout;
+import net.xmx.xui.core.UIWidget;
+import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
-import net.xmx.xui.core.Layout;
-import net.xmx.xui.core.UIWidget;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,9 @@ import java.util.List;
  * A flexible text component supporting multiple vertical lines.
  * Each line can be independently configured to wrap automatically or remain on a single line.
  * The widget automatically calculates its total height based on the content of all lines.
+ * <p>
+ * Supports custom fonts, which are applied to all text lines contained within this widget.
+ * </p>
  *
  * @author xI-Mx-Ix
  */
@@ -47,12 +51,36 @@ public class UIWrappedText extends UIWidget {
     private boolean centered = false;
     private boolean shadow = true;
 
+    // Optional custom font applied to all lines in this widget.
+    private Font customFont = null;
+
     /**
      * Constructs a wrapped text widget with no initial content.
      * The default text color is set to white.
      */
     public UIWrappedText() {
         this.style().set(ThemeProperties.TEXT_COLOR, 0xFFFFFFFF);
+    }
+
+    /**
+     * Sets a custom font for this widget.
+     * This font overrides the font of individual text components added to this widget.
+     *
+     * @param font The font to use, or null to use the component's default font.
+     * @return This widget instance for chaining.
+     */
+    public UIWrappedText setFont(Font font) {
+        this.customFont = font;
+        return this;
+    }
+
+    /**
+     * Returns the currently configured custom font.
+     *
+     * @return The custom font, or null if none is set.
+     */
+    public Font getFont() {
+        return this.customFont;
     }
 
     /**
@@ -125,6 +153,18 @@ public class UIWrappedText extends UIWidget {
     }
 
     /**
+     * Applies the widget's custom font to the text component if one is configured.
+     * This ensures correct size calculations and rendering for the component.
+     *
+     * @param component The component to update.
+     */
+    private void applyFont(TextComponent component) {
+        if (this.customFont != null) {
+            component.setFont(this.customFont);
+        }
+    }
+
+    /**
      * Calculates the layout dimensions.
      * Iterates through all added lines to determine the total required height.
      * If no lines have wrapping enabled, it also autosizes the width to fit the widest line.
@@ -140,8 +180,11 @@ public class UIWrappedText extends UIWidget {
         int maxLineWidth = 0;
         boolean anyLineWraps = false;
 
-        // 2. Calculate dimensions based on lines using RenderImpl
+        // 2. Calculate dimensions based on lines
         for (TextLine line : lines) {
+            // Ensure the component has the correct font before calculating dimensions
+            applyFont(line.content);
+
             if (line.wrap) {
                 // For wrapping lines, height depends on the current resolved width
                 totalHeight += TextComponent.getWordWrapHeight(line.content, (int) this.width);
@@ -176,6 +219,9 @@ public class UIWrappedText extends UIWidget {
         float currentY = this.y;
 
         for (TextLine line : lines) {
+            // Ensure the component uses the correct font for rendering
+            applyFont(line.content);
+
             float lineDrawX = this.x;
             int lineHeight;
 
