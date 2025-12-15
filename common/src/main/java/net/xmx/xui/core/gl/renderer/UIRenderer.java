@@ -40,6 +40,7 @@ public class UIRenderer {
     private TransformStack transformStack;
     private GeometryRenderer geometryRenderer;
     private TextRenderer textRenderer;
+    private ImageRenderer imageRenderer;
 
     // --- External Dependencies ---
     /**
@@ -88,6 +89,7 @@ public class UIRenderer {
             this.geometryRenderer = new GeometryRenderer();
             this.textRenderer = new TextRenderer();
             this.transformStack = new TransformStack();
+            this.imageRenderer = new ImageRenderer();
             this.stateManager = new GlState();
             this.scissorManager = new ScissorManager();
         }
@@ -290,6 +292,19 @@ public class UIRenderer {
             throw new IllegalStateException("UIRenderer has not been initialized. Call UIRenderer.getInstance().init() first.");
         }
         return textRenderer;
+    }
+
+    /**
+     * Retrieves the Image Renderer responsible for drawing images.
+     *
+     * @return The ImageRenderer instance.
+     * @throws IllegalStateException If {@link #init()} has not been called.
+     */
+    public ImageRenderer getImage() {
+        if (imageRenderer == null) {
+            throw new IllegalStateException("UIRenderer has not been initialized. Call UIRenderer.getInstance().init() first.");
+        }
+        return imageRenderer;
     }
 
     public double getCurrentUiScale() {
