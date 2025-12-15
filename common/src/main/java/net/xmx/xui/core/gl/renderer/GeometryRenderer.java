@@ -417,6 +417,140 @@ public class GeometryRenderer {
         }
     }
 
+    // Pie & Donut Chart Primitives
+
+    /**
+     * Renders a filled Pie Slice (Circle Segment).
+     *
+     * @param cx         Center X.
+     * @param cy         Center Y.
+     * @param radius     The radius of the pie.
+     * @param startAngle Start angle in degrees (0 = Right, 90 = Bottom).
+     * @param endAngle   End angle in degrees.
+     * @param color      ARGB Color.
+     */
+    public void renderPieSlice(float cx, float cy, float radius, float startAngle, float endAngle, int color) {
+        UIRenderer renderer = UIRenderer.getInstance();
+        GlState state = renderer.getStateManager();
+
+        state.capture();
+        state.setupForUI();
+
+        begin(renderer.getCurrentUiScale(), renderer.getTransformStack().getDirectModelMatrix());
+        drawPieSlice(cx, cy, radius, startAngle, endAngle, color);
+        end();
+
+        state.restore();
+    }
+
+    /**
+     * Renders a filled Donut Slice (Ring Segment).
+     *
+     * @param cx          Center X.
+     * @param cy          Center Y.
+     * @param radiusOuter The outer radius.
+     * @param radiusInner The inner radius (hole).
+     * @param startAngle  Start angle in degrees.
+     * @param endAngle    End angle in degrees.
+     * @param color       ARGB Color.
+     */
+    public void renderDonutSlice(float cx, float cy, float radiusOuter, float radiusInner, float startAngle, float endAngle, int color) {
+        UIRenderer renderer = UIRenderer.getInstance();
+        GlState state = renderer.getStateManager();
+
+        state.capture();
+        state.setupForUI();
+
+        begin(renderer.getCurrentUiScale(), renderer.getTransformStack().getDirectModelMatrix());
+        drawDonutSlice(cx, cy, radiusOuter, radiusInner, startAngle, endAngle, color);
+        end();
+
+        state.restore();
+    }
+
+    // --- Vertex Generation Implementation ---
+
+    /**
+     * Queues vertices for a Pie Slice (Filled Fan).
+     */
+    public void drawPieSlice(float cx, float cy, float radius, float startAngleDeg, float endAngleDeg, int color) {
+        if (radius <= 0) return;
+
+        float[] rgba = unpackColor(color);
+        // Delegate to the donut drawer with inner radius 0 for code reuse,
+        // or optimize here by drawing single triangles connected to center.
+        // Optimization:
+
+        double startRad = Math.toRadians(startAngleDeg);
+        double endRad = Math.toRadians(endAngleDeg);
+        double totalSweep = Math.abs(endRad - startRad);
+
+        // Calculate segments based on size and angle to look smooth
+        int segments = (int) (totalSweep * (radius * 0.5));
+        if (segments < 4) segments = 4;
+        if (segments > 100) segments = 100; // Cap for performance
+
+        double step = (endRad - startRad) / segments;
+
+        for (int i = 0; i < segments; i++) {
+            double a1 = startRad + i * step;
+            double a2 = startRad + (i + 1) * step;
+
+            // Center Point
+            mesh.pos(cx, cy, 0).color(rgba[0], rgba[1], rgba[2], rgba[3]).endVertex();
+
+            // Outer Point 1
+            mesh.pos(cx + (float)(Math.cos(a1) * radius), cy + (float)(Math.sin(a1) * radius), 0)
+                    .color(rgba[0], rgba[1], rgba[2], rgba[3]).endVertex();
+
+            // Outer Point 2
+            mesh.pos(cx + (float)(Math.cos(a2) * radius), cy + (float)(Math.sin(a2) * radius), 0)
+                    .color(rgba[0], rgba[1], rgba[2], rgba[3]).endVertex();
+        }
+    }
+
+    /**
+     * Queues vertices for a Donut Slice (Filled Ring Segment).
+     */
+    public void drawDonutSlice(float cx, float cy, float radiusOuter, float radiusInner, float startAngleDeg, float endAngleDeg, int color) {
+        if (radiusOuter <= 0) return;
+        if (radiusInner >= radiusOuter) return; // Invalid
+
+        float[] rgba = unpackColor(color);
+
+        double startRad = Math.toRadians(startAngleDeg);
+        double endRad = Math.toRadians(endAngleDeg);
+        double totalSweep = Math.abs(endRad - startRad);
+
+        // Calculate segments
+        int segments = (int) (totalSweep * (radiusOuter * 0.5));
+        if (segments < 4) segments = 4;
+
+        double step = (endRad - startRad) / segments;
+
+        for (int i = 0; i < segments; i++) {
+            double a1 = startRad + i * step;
+            double a2 = startRad + (i + 1) * step;
+
+            float cos1 = (float) Math.cos(a1);
+            float sin1 = (float) Math.sin(a1);
+            float cos2 = (float) Math.cos(a2);
+            float sin2 = (float) Math.sin(a2);
+
+            // Quad formed by 2 Triangles
+
+            // Triangle 1: Inner1 -> Outer1 -> Outer2
+            mesh.pos(cx + cos1 * radiusInner, cy + sin1 * radiusInner, 0).color(rgba[0], rgba[1], rgba[2], rgba[3]).endVertex();
+            mesh.pos(cx + cos1 * radiusOuter, cy + sin1 * radiusOuter, 0).color(rgba[0], rgba[1], rgba[2], rgba[3]).endVertex();
+            mesh.pos(cx + cos2 * radiusOuter, cy + sin2 * radiusOuter, 0).color(rgba[0], rgba[1], rgba[2], rgba[3]).endVertex();
+
+            // Triangle 2: Inner1 -> Outer2 -> Inner2
+            mesh.pos(cx + cos1 * radiusInner, cy + sin1 * radiusInner, 0).color(rgba[0], rgba[1], rgba[2], rgba[3]).endVertex();
+            mesh.pos(cx + cos2 * radiusOuter, cy + sin2 * radiusOuter, 0).color(rgba[0], rgba[1], rgba[2], rgba[3]).endVertex();
+            mesh.pos(cx + cos2 * radiusInner, cy + sin2 * radiusInner, 0).color(rgba[0], rgba[1], rgba[2], rgba[3]).endVertex();
+        }
+    }
+
     /**
      * Utility method to extract normalized RGBA float values from a packed ARGB integer.
      *
