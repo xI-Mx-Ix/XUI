@@ -8,7 +8,6 @@ import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.core.style.ThemeProperties;
-import net.xmx.xui.core.style.InteractionState;
 
 import java.util.ArrayList;
 import java.util.List;

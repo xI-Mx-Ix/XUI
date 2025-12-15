@@ -5,13 +5,11 @@
 package net.xmx.xui.core.components.data;
 
 import net.xmx.xui.core.Layout;
-import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
-import net.xmx.xui.core.components.UIText;
 
 import java.util.ArrayList;
 import java.util.List;
