@@ -21,4 +21,20 @@ public interface AxisFunc {
      * @return The calculated absolute position or dimension in pixels.
      */
     float calculate(float parentPos, float parentSize, float selfSize);
+
+    /**
+     * Subtracts a fixed pixel value from the result.
+     */
+    default AxisFunc minus(float pixels) {
+        return (parentPos, parentSize, selfSize) ->
+                this.calculate(parentPos, parentSize, selfSize) - pixels;
+    }
+
+    /**
+     * Adds a fixed pixel value to the result.
+     */
+    default AxisFunc plus(float pixels) {
+        return (parentPos, parentSize, selfSize) ->
+                this.calculate(parentPos, parentSize, selfSize) + pixels;
+    }
 }
