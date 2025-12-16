@@ -4,7 +4,6 @@
  */
 package net.xmx.xui.core.gl.renderer;
 
-import net.xmx.xui.core.components.UIScrollPanel;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -13,20 +12,22 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * Manages scissor testing and clipping regions for the UI.
+ * Manages the OpenGL scissor test capabilities to define clipping regions for the UI.
  * <p>
- * This class maintains a stack of clipping rectangles to support nested UI elements
- * (e.g., a scroll panel inside another clipped panel).
+ * This manager maintains a stack of clipping rectangles to support nested UI elements.
+ * For example, a scroll view inside a modal dialog will clip content correctly against
+ * both the scroll view's bounds and the dialog's bounds.
  * </p>
  * <p>
- * <b>Key Features:</b>
+ * <b>Features:</b>
  * <ul>
- *     <li><b>Scroll Awareness:</b> Automatically accounts for the current ModelView
- *     translation matrix. This ensures that when a {@link UIScrollPanel}
- *     shifts content visually, the clipping rectangle moves with it.</li>
- *     <li><b>Intersection Logic:</b> Ensures that a child's scissor region never
- *     extends beyond its parent's scissor region. The active scissor is always
- *     the intersection of the requested area and the current top of the stack.</li>
+ *     <li><b>Transform Awareness:</b> The manager accounts for the current ModelView translation.
+ *     This ensures that clipping regions move dynamically with the content (e.g., during scrolling).</li>
+ *     <li><b>Recursive Intersection:</b> A new scissor region is always intersected with the
+ *     currently active region on the stack. This prevents a child widget from rendering outside
+ *     its parent's visible area.</li>
+ *     <li><b>Coordinate Scaling:</b> Automatically handles the conversion between logical UI pixels
+ *     and physical display pixels (Retina/High-DPI support).</li>
  * </ul>
  * </p>
  *
@@ -35,59 +36,52 @@ import java.util.Deque;
 public class ScissorManager {
 
     /**
-     * Stack to store active physical scissor states.
-     * Each entry is an int array {@code [physicalX, physicalY, physicalWidth, physicalHeight]}.
+     * A stack containing the active physical scissor rectangles.
+     * Format: {@code [physicalX, physicalY, physicalWidth, physicalHeight]}.
      */
     private final Deque<int[]> scissorStack = new ArrayDeque<>();
 
     /**
-     * Reusable vector to extract translation from the matrix without allocating new objects.
+     * Temporary vector used to retrieve matrix translation without memory allocation.
      */
     private final Vector3f scratchPos = new Vector3f();
 
     /**
-     * Enables a new scissor region.
+     * Activates a new clipping region.
      * <p>
-     * The process involves four steps:
-     * <ol>
-     *     <li><b>Translation:</b> Retrieve the current translation (scroll offset) from the global transform stack.</li>
-     *     <li><b>scaling:</b> Convert the logical coordinates to physical window pixels using the UI scale.</li>
-     *     <li><b>Intersection:</b> Clip the requested area against the currently active scissor (parent bounds).</li>
-     *     <li><b>Application:</b> Push the result to the stack and execute the OpenGL command.</li>
-     * </ol>
+     * The logical coordinates provided are transformed by the current ModelView matrix
+     * (accounting for scroll offsets), scaled to physical pixels, and intersected with
+     * the current parent scissor rect (if any).
      * </p>
      *
-     * @param x      Logical X coordinate of the clipping area.
-     * @param y      Logical Y coordinate of the clipping area.
-     * @param width  Logical Width of the clipping area.
-     * @param height Logical Height of the clipping area.
+     * @param x      The logical X coordinate of the clipping area (relative to current transform).
+     * @param y      The logical Y coordinate of the clipping area.
+     * @param width  The logical width of the clipping area.
+     * @param height The logical height of the clipping area.
      */
     public void enableScissor(float x, float y, float width, float height) {
         double scale = UIRenderer.getInstance().getCurrentUiScale();
 
-        // --- 1. Apply Scroll Offset (Matrix Translation) ---
-        // Retrieve the current translation (e.g., set by UIScrollPanel via renderer.translate)
+        // 1. Retrieve the current translation from the renderer's transform stack.
+        // This accounts for any active scroll offsets or container translations.
         UIRenderer.getInstance().getTransformStack().getDirectModelMatrix().getTranslation(scratchPos);
 
-        // Add the translation to the logical coordinates.
-        // Note: scratchPos.y is usually negative when scrolling down. Adding it correctly moves
-        // the virtual window "up" relative to the content, or the content "down".
+        // 2. Apply translation to determine the visual position on the virtual screen.
         float visualX = x + scratchPos.x;
         float visualY = y + scratchPos.y;
 
-        // --- 2. Convert to Physical Coordinates ---
+        // 3. Convert logical visual coordinates to physical window pixels.
         int reqX = (int) (visualX * scale);
         int reqY = (int) (visualY * scale);
         int reqW = (int) (width * scale);
         int reqH = (int) (height * scale);
 
-        // --- 3. Intersection Logic (Clipping against Parent) ---
+        // 4. Perform intersection with the current parent scissor (if exists).
         int finalX = reqX;
         int finalY = reqY;
         int finalW = reqW;
         int finalH = reqH;
 
-        // If a parent scissor is already active, the new scissor must be contained within it.
         if (!scissorStack.isEmpty()) {
             int[] parent = scissorStack.peek();
             int pX = parent[0];
@@ -95,31 +89,28 @@ public class ScissorManager {
             int pW = parent[2];
             int pH = parent[3];
 
-            // Calculate the geometric intersection of two rectangles
-            int newLeft   = Math.max(reqX, pX);
-            int newTop    = Math.max(reqY, pY);
-            int newRight  = Math.min(reqX + reqW, pX + pW);
+            // Calculate intersection rectangle (AABB)
+            int newLeft = Math.max(reqX, pX);
+            int newTop = Math.max(reqY, pY);
+            int newRight = Math.min(reqX + reqW, pX + pW);
             int newBottom = Math.min(reqY + reqH, pY + pH);
 
-            // Calculate new dimensions from intersection points
             finalX = newLeft;
             finalY = newTop;
-            // Ensure non-negative dimensions (if rectangles don't overlap, width/height becomes 0)
             finalW = Math.max(0, newRight - newLeft);
             finalH = Math.max(0, newBottom - newTop);
         }
 
-        // --- 4. Apply & Push ---
-        // Store the INTERSECTED result, so subsequent children are clipped against this smaller area.
+        // 5. Push state and apply to GPU.
         scissorStack.push(new int[]{finalX, finalY, finalW, finalH});
         applyScissor(finalX, finalY, finalW, finalH);
     }
 
     /**
-     * Disables the current scissor region by popping the stack.
+     * Deactivates the current clipping region.
      * <p>
-     * If the stack is not empty after popping, the previous (parent) scissor state is immediately restored.
-     * If the stack becomes empty, the scissor test is disabled in OpenGL.
+     * Removes the top entry from the scissor stack. If the stack is empty, scissor testing
+     * is disabled entirely. Otherwise, the previous (parent) scissor state is restored.
      * </p>
      */
     public void disableScissor() {
@@ -130,7 +121,7 @@ public class ScissorManager {
         if (scissorStack.isEmpty()) {
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
         } else {
-            // Restore previous (Parent) scissor state
+            // Restore the parent's scissor state
             int[] prev = scissorStack.peek();
             if (prev != null) {
                 applyScissor(prev[0], prev[1], prev[2], prev[3]);
@@ -139,14 +130,13 @@ public class ScissorManager {
     }
 
     /**
-     * Gets the currently active scissor rectangle converted back to logical pixels.
+     * Retrieves the currently active scissor rectangle in logical pixels.
      * <p>
-     * This returns the physical scissor rect currently on the GPU, divided by the UI scale.
-     * Note that this includes any scroll offsets applied during {@link #enableScissor}.
+     * This reverses the scaling and coordinate transformation to provide the
+     * "virtual" bounds of the current clip region.
      * </p>
      *
-     * @return A float array {@code [x, y, width, height]} in logical pixels,
-     *         or {@code null} if no scissor test is active.
+     * @return A float array {@code [x, y, width, height]} or {@code null} if inactive.
      */
     public float[] getCurrentLogicalScissor() {
         int[] phys = scissorStack.peek();
@@ -165,14 +155,14 @@ public class ScissorManager {
     }
 
     /**
-     * Applies the scissor test to the OpenGL context.
+     * Executes the OpenGL commands to set the scissor rectangle.
      * <p>
-     * Handles the coordinate system inversion required by OpenGL, where (0,0) is at the
-     * bottom-left corner of the window, whereas UI systems typically use top-left.
+     * Converts the top-left based coordinate system (UI) to the bottom-left based
+     * coordinate system (OpenGL).
      * </p>
      *
-     * @param x      Physical X coordinate (Left).
-     * @param y      Physical Y coordinate (Top-Left based).
+     * @param x      Physical X coordinate.
+     * @param y      Physical Y coordinate (Top-Left).
      * @param width  Physical Width.
      * @param height Physical Height.
      */
@@ -182,10 +172,10 @@ public class ScissorManager {
         int[] wH = new int[1];
         GLFW.glfwGetFramebufferSize(windowHandle, wW, wH);
 
-        // Invert Y axis calculation: GL_Y = WindowHeight - UI_Y - UI_Height
+        // Convert Y to OpenGL coordinate space (Bottom-Left origin)
         int glY = wH[0] - (y + height);
 
-        // Safety clamping to prevent invalid GL operations
+        // Clamp values to prevent GL errors
         if (x < 0) x = 0;
         if (glY < 0) glY = 0;
         if (width < 0) width = 0;

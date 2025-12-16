@@ -4,29 +4,26 @@
  */
 package net.xmx.xui.core.effect;
 
-import net.xmx.xui.core.components.UIScrollPanel;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.gl.renderer.ScissorManager;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 
 /**
- * An effect that limits the rendering area to the bounds of the widget.
+ * A visual effect that restricts rendering to the boundaries of the host widget.
  * <p>
- * Any content (including children) rendered outside the widget's logical bounds
- * will be clipped by the GPU.
+ * When applied, any content (including child widgets) that extends outside the
+ * widget's dimensions will be clipped by the GPU.
  * </p>
  * <p>
- * <b>Implementation Note:</b><br>
- * This class has been simplified to delegate all calculation logic to the
- * {@link ScissorManager}. The manager is responsible
- * for handling:
+ * <b>Implementation Details:</b><br>
+ * This class acts as a high-level bridge to the {@link ScissorManager}.
+ * It does not perform coordinate math itself. Instead, it passes the widget's
+ * logical bounds to the manager, which handles:
  * <ul>
- *     <li>Coordinate translation (scrolling offsets from {@link UIScrollPanel}).</li>
- *     <li>Intersection with parent scissor regions (nested clipping).</li>
- *     <li>Physical pixel scaling.</li>
+ *     <li>Applying the current scroll/transform matrix.</li>
+ *     <li>Intersecting with any existing parent scissors.</li>
+ *     <li>Scaling to physical display pixels.</li>
  * </ul>
- * This separation of concerns prevents synchronization bugs where the effect
- * clips based on logical position while the render view is visually shifted.
  * </p>
  *
  * @author xI-Mx-Ix
@@ -34,15 +31,15 @@ import net.xmx.xui.core.gl.renderer.UIRenderer;
 public class UIScissorsEffect implements UIEffect {
 
     /**
-     * Enables the scissor test for the widget's current bounds.
+     * Activates the scissor test for the widget's area.
      *
-     * @param renderer The renderer instance.
-     * @param widget   The widget requesting clipping.
+     * @param renderer The active renderer instance.
+     * @param widget   The widget defining the clipping bounds.
      */
     @Override
     public void apply(UIRenderer renderer, UIWidget widget) {
-        // We simply pass the logical bounds. The ScissorManager will automatically
-        // add the current ModelView translation (scroll offset) to x/y.
+        // Delegate to ScissorManager. The manager handles scroll offsets automatically
+        // via the renderer's transform stack.
         renderer.getScissor().enableScissor(
                 widget.getX(),
                 widget.getY(),
@@ -52,10 +49,10 @@ public class UIScissorsEffect implements UIEffect {
     }
 
     /**
-     * Disables the scissor test (pops the stack).
+     * Deactivates the scissor test, restoring the previous state.
      *
-     * @param renderer The renderer instance.
-     * @param widget   The widget requesting clipping.
+     * @param renderer The active renderer instance.
+     * @param widget   The widget defining the clipping bounds.
      */
     @Override
     public void revert(UIRenderer renderer, UIWidget widget) {

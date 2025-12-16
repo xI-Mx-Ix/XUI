@@ -11,8 +11,10 @@ import net.minecraft.network.chat.Component;
 import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.UIContext;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.components.UIScrollPanel;
 import net.xmx.xui.core.components.markdown.UIMarkdown;
+import net.xmx.xui.core.components.scroll.ScrollOrientation;
+import net.xmx.xui.core.components.scroll.UIScrollBar;
+import net.xmx.xui.core.components.scroll.UIScrollComponent;
 import net.xmx.xui.core.font.DefaultFonts;
 import net.xmx.xui.core.style.ThemeProperties;
 
@@ -84,7 +86,7 @@ public class XUIMarkdownExampleScreen extends Screen {
         UIPanel root = uiContext.getRoot();
         root.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF121212);
 
-        // Container Panel
+        // --- Container Panel ---
         UIPanel container = new UIPanel();
         container.setX(Layout.center())
                 .setY(Layout.center())
@@ -97,21 +99,38 @@ public class XUIMarkdownExampleScreen extends Screen {
                 .set(ThemeProperties.BORDER_COLOR, 0xFF404040)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 
-        // Scroll Panel
-        UIScrollPanel scrollPanel = new UIScrollPanel();
-        scrollPanel.setX(Layout.pixel(20))
+        // --- Scroll Component (Viewport) ---
+        // occupies the majority of the container, leaving space for the scrollbar on the right.
+        UIScrollComponent scrollComponent = new UIScrollComponent();
+        scrollComponent.setX(Layout.pixel(20))
                 .setY(Layout.pixel(20))
-                .setWidth(Layout.pixel(460))
-                .setHeight(Layout.pixel(360));
+                .setWidth(Layout.pixel(465)) // Leave room for scrollbar
+                .setHeight(Layout.pixel(380));
 
+        // --- Markdown Content ---
         UIMarkdown markdown = new UIMarkdown();
-        markdown.setContentWidth(440);
+        markdown.setContentWidth(445); // Fit inside component
         markdown.setMarkdown(SAMPLE_MARKDOWN);
         markdown.setFont(DefaultFonts.getVanilla());
 
-        // Add to hierarchy
-        scrollPanel.add(markdown);
-        container.add(scrollPanel);
+        scrollComponent.add(markdown);
+
+        // --- Vertical Scrollbar ---
+        UIScrollBar scrollBar = new UIScrollBar(scrollComponent, ScrollOrientation.VERTICAL);
+        scrollBar.setX(Layout.anchorEnd(10)) // Anchored to right edge
+                .setY(Layout.pixel(10))
+                .setWidth(Layout.pixel(8))
+                .setHeight(Layout.pixel(380));
+
+        // Optional: Style the scrollbar
+        scrollBar.style()
+                .set(UIScrollBar.TRACK_COLOR, 0x10FFFFFF)
+                .set(UIScrollBar.THUMB_COLOR, 0x60FFFFFF)
+                .set(UIScrollBar.ROUNDING, 4.0f);
+
+        // Add everything to hierarchy
+        container.add(scrollComponent);
+        container.add(scrollBar);
         root.add(container);
 
         root.layout();
