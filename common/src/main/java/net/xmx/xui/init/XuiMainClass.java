@@ -36,10 +36,14 @@ public class XuiMainClass {
     }
 
     /**
-     * Called by a Mixin to initialize the shaders with a valid OpenGL context.
+     * Called by a Mixin to initialize OpenGL components with a valid OpenGL context.
+     * <p>
+     * This method ensures that the renderer, fonts, and icons are loaded only after
+     * the game window and GL context are fully available.
+     * </p>
      */
     @Environment(EnvType.CLIENT)
-    public static void initShaders() {
+    public static void initGl() {
         PlatformRenderProvider.register(RenderImpl.getInstance());
         UIRenderer.getInstance().init();
         DefaultFonts.init();

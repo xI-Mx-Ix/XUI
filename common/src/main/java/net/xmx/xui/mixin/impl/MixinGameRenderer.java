@@ -33,6 +33,6 @@ public class MixinGameRenderer {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onGameRendererInit(CallbackInfo ci) {
         // Initialize custom shaders with a valid OpenGL context
-        XuiMainClass.initShaders();
+        XuiMainClass.initGl();
     }
 }
