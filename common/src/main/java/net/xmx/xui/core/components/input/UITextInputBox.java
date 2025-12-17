@@ -2,7 +2,7 @@
  * This file is part of XUI.
  * Licensed under LGPL 3.0.
  */
-package net.xmx.xui.core.components;
+package net.xmx.xui.core.components.input;
 
 import net.xmx.xui.core.font.DefaultFonts;
 import net.xmx.xui.core.font.Font;
@@ -31,7 +31,7 @@ import org.lwjgl.glfw.GLFW;
  *
  * @author xI-Mx-Ix
  */
-public class UIEditBox extends UIWidget {
+public class UITextInputBox extends UIWidget {
 
     /**
      * Property for the color of the text cursor.
@@ -73,7 +73,7 @@ public class UIEditBox extends UIWidget {
     /**
      * Constructs a default EditBox.
      */
-    public UIEditBox() {
+    public UITextInputBox() {
         setupStyles();
         this.addEffect(new UIScissorsEffect());
     }
@@ -102,7 +102,7 @@ public class UIEditBox extends UIWidget {
      * @param multiline True to allow multiple lines.
      * @return This instance.
      */
-    public UIEditBox setMultiline(boolean multiline) {
+    public UITextInputBox setMultiline(boolean multiline) {
         this.isMultiline = multiline;
         return this;
     }
@@ -113,7 +113,7 @@ public class UIEditBox extends UIWidget {
      * @param hint The hint text.
      * @return This instance.
      */
-    public UIEditBox setHint(String hint) {
+    public UITextInputBox setHint(String hint) {
         this.hintText = hint;
         return this;
     }
@@ -133,7 +133,7 @@ public class UIEditBox extends UIWidget {
      * @param font The font instance.
      * @return This widget instance for chaining.
      */
-    public UIEditBox setFont(Font font) {
+    public UITextInputBox setFont(Font font) {
         this.font = font;
         return this;
     }
