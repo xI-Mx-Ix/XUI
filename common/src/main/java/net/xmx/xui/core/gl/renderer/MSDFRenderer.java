@@ -4,17 +4,21 @@
  */
 package net.xmx.xui.core.gl.renderer;
 
-import net.xmx.xui.core.font.data.MSDFData;
-import net.xmx.xui.core.gl.shader.impl.MSDFShader;
 import net.xmx.xui.core.gl.vertex.MeshBuffer;
 import net.xmx.xui.core.gl.vertex.VertexFormat;
+import net.xmx.xui.core.msdf.MSDFAtlas;
+import net.xmx.xui.core.gl.shader.impl.MSDFShader;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
 /**
- * Handles the rendering lifecycle for any MSDF-based elements (Fonts, Icons, Shapes).
- * Acts as the bridge between high-level draw calls and OpenGL draw commands.
+ * Handles the rendering lifecycle for generic MSDF-based elements.
+ * <p>
+ * This renderer acts as the bridge between high-level draw calls (Fonts, Icons) and
+ * OpenGL draw commands. It manages the shader state, matrix uploads, and uniform configuration.
+ * It is agnostic to the content type, accepting any object implementing {@link MSDFAtlas}.
+ * </p>
  *
  * @author xI-Mx-Ix
  */
@@ -44,13 +48,17 @@ public class MSDFRenderer {
 
     /**
      * Initializes the rendering state for a batch of MSDF elements.
-     * Sets up the projection matrix and configures shader uniforms based on the atlas metadata.
+     * <p>
+     * Sets up the orthogonal projection matrix and configures shader uniforms based on the
+     * provided atlas metadata.
+     * </p>
      *
-     * @param guiScale        The current GUI scale factor.
-     * @param atlasInfo       The metadata of the MSDF atlas (contains distance range).
-     * @param modelViewMatrix The current transformation matrix.
+     * @param guiScale        The current GUI scale factor used for projection.
+     * @param atlas           The MSDF atlas that will be rendered. This provides the texture
+     *                        and the {@code distanceRange} (pxRange) metadata required by the shader.
+     * @param modelViewMatrix The current model-view transformation matrix.
      */
-    public void begin(double guiScale, MSDFData.AtlasInfo atlasInfo, Matrix4f modelViewMatrix) {
+    public void begin(double guiScale, MSDFAtlas atlas, Matrix4f modelViewMatrix) {
         int[] viewport = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
 
@@ -63,14 +71,16 @@ public class MSDFRenderer {
         shader.uploadModelView(modelViewMatrix);
         shader.uploadTextureUnit(0);
 
-        if (atlasInfo != null) {
-            // Pass the distance range from the JSON (font or icon atlas) to the shader
-            shader.uploadPxRange(atlasInfo.distanceRange);
+        // Upload the pixel range from the atlas metadata to the shader.
+        // This ensures edge sharpness is calculated correctly regardless of whether
+        // we are rendering a small icon or large text.
+        if (atlas != null && atlas.getMetadata() != null && atlas.getMetadata().atlas != null) {
+            shader.uploadPxRange(atlas.getMetadata().atlas.distanceRange);
         }
     }
 
     /**
-     * Binds the specific MSDF texture and draws the buffered mesh.
+     * Binds the specified texture and draws the buffered mesh.
      * <p>
      * This method binds the provided texture ID to GL_TEXTURE0 and then
      * flushes the mesh buffer content as GL_TRIANGLES.

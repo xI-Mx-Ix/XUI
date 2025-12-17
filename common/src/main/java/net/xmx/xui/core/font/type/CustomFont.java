@@ -5,10 +5,10 @@
 package net.xmx.xui.core.font.type;
 
 import net.xmx.xui.core.font.FontAtlas;
+import net.xmx.xui.core.font.data.FontMetadata;
 import net.xmx.xui.core.font.layout.TextLayoutEngine;
 import net.xmx.xui.core.font.layout.TextLine;
 import net.xmx.xui.core.font.Font;
-import net.xmx.xui.core.font.data.MSDFData;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.gl.vertex.MeshBuffer;
 import net.xmx.xui.core.text.TextComponent;
@@ -155,7 +155,7 @@ public class CustomFont extends Font {
         try {
             // 2. Pass 1: Render Text Glyphs (MSDF Shader)
             renderer.getMsdf().begin(UIRenderer.getInstance().getCurrentUiScale(),
-                    regular.getData().atlas, UIRenderer.getInstance().getTransformStack().getDirectModelMatrix());
+                    regular, UIRenderer.getInstance().getTransformStack().getDirectModelMatrix());
 
             // Execute the recursive drawing logic.
             // This populates the mesh AND fills pendingDecorations.
@@ -260,13 +260,13 @@ public class CustomFont extends Font {
             }
 
             // --- Glyph Resolution & Fallback Strategy ---
-            MSDFData.Glyph glyph = currentFont.getGlyph(c);
+            FontMetadata.Glyph glyph = currentFont.getGlyph(c);
 
             // Fallback to Regular if missing in current style (Bold/Italic).
             // This is still necessary even without legacy codes, because a Bold font might
             // miss a symbol that the Regular font has.
             if (glyph == null && currentFont != this.regular && this.regular != null) {
-                MSDFData.Glyph fallback = this.regular.getGlyph(c);
+                FontMetadata.Glyph fallback = this.regular.getGlyph(c);
                 if (fallback != null) {
                     // Flush current batch (e.g. Bold)
                     UIRenderer.getInstance().getMsdf().drawBatch(currentFont.getTextureId());
@@ -290,7 +290,7 @@ public class CustomFont extends Font {
             if (glyph == null) {
                 // Determine a safe advance width (e.g. from space or '?' char)
                 // This prevents text collapsing when characters are missing
-                MSDFData.Glyph space = currentFont.getGlyph(' ');
+                FontMetadata.Glyph space = currentFont.getGlyph(' ');
                 float missingAdvance = (space != null) ? space.advance : 0.5f;
                 cursorX += missingAdvance * FONT_SIZE;
                 continue;
@@ -312,7 +312,7 @@ public class CustomFont extends Font {
         }
 
         if (isStrikethrough) {
-            float midOffset = (currentFont.getData().metrics.ascender * FONT_SIZE) * 0.4f;
+            float midOffset = (currentFont.getFontData().metrics.ascender * FONT_SIZE) * 0.4f;
             float lineY = cursorY - midOffset;
             pendingDecorations.add(new Decoration(x, lineY, textWidth, thickness, finalColor));
         }
@@ -347,7 +347,7 @@ public class CustomFont extends Font {
      * @param b       Blue color component (0-1).
      * @param a       Alpha color component (0-1).
      */
-    private void renderGlyph(MeshBuffer mesh, MSDFData.Glyph glyph, float cursorX, float cursorY, FontAtlas font, float r, float g, float b, float a) {
+    private void renderGlyph(MeshBuffer mesh, FontMetadata.Glyph glyph, float cursorX, float cursorY, FontAtlas font, float r, float g, float b, float a) {
         if (glyph.planeBounds != null && glyph.atlasBounds != null) {
             // 1. Calculate Screen Positions (Vertex Coordinates)
             // Plane bounds are normalized (EM space), so we multiply by FONT_SIZE.
@@ -365,8 +365,8 @@ public class CustomFont extends Font {
 
             // 2. Calculate Texture Coordinates (UVs)
             // Atlas bounds are in raw pixels. We normalize by atlas dimensions.
-            float atlasW = font.getData().atlas.width;
-            float atlasH = font.getData().atlas.height;
+            float atlasW = font.getFontData().atlas.width;
+            float atlasH = font.getFontData().atlas.height;
 
             float u0 = glyph.atlasBounds.left / atlasW;
             float u1 = glyph.atlasBounds.right / atlasW;

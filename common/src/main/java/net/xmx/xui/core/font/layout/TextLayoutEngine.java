@@ -5,7 +5,7 @@
 package net.xmx.xui.core.font.layout;
 
 import net.xmx.xui.core.font.FontAtlas;
-import net.xmx.xui.core.font.data.MSDFData;
+import net.xmx.xui.core.font.data.FontMetadata;
 import net.xmx.xui.core.font.type.CustomFont;
 import net.xmx.xui.core.text.TextComponent;
 
@@ -62,13 +62,13 @@ public class TextLayoutEngine {
         char[] chars = text.toCharArray();
 
         for (char c : chars) {
-            MSDFData.Glyph glyph = font.getGlyph(c);
+            FontMetadata.Glyph glyph = font.getGlyph(c);
 
             if (glyph != null) {
                 width += glyph.advance * fontSize;
             } else {
                 // Fallback for missing characters using the space width or a default constant
-                MSDFData.Glyph space = font.getGlyph(' ');
+                FontMetadata.Glyph space = font.getGlyph(' ');
                 if (space != null) {
                     width += space.advance * fontSize;
                 } else {
@@ -118,11 +118,11 @@ public class TextLayoutEngine {
                 float wordWidth = 0;
                 char[] wChars = word.toCharArray();
                 for (char c : wChars) {
-                    MSDFData.Glyph g = font.getGlyph(c);
+                    FontMetadata.Glyph g = font.getGlyph(c);
                     if (g != null) {
                         wordWidth += g.advance * fontSize;
                     } else {
-                        MSDFData.Glyph space = font.getGlyph(' ');
+                        FontMetadata.Glyph space = font.getGlyph(' ');
                         if (space != null) {
                             wordWidth += space.advance * fontSize;
                         } else {
