@@ -70,9 +70,18 @@ public class UIImage extends UIWidget {
      * @param texture The loaded texture instance.
      * @return This instance.
      */
-    public UIImage setImage(UITexture texture) {
+    public UIImage setTexture(UITexture texture) {
         this.texture = texture;
         return this;
+    }
+
+    /**
+     * Returns the currently set texture.
+     *
+     * @return The texture instance.
+     */
+    public UITexture getTexture() {
+        return texture;
     }
 
     /**
