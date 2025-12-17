@@ -49,7 +49,7 @@ public class TextLayoutEngine {
 
     /**
      * Measures a single component's text string.
-     * Ignores legacy formatting codes (§ + char) to ensure visual width matches logical width.
+     * Calculates the width of every character in the sequence.
      */
     private float getSingleComponentWidth(TextComponent component) {
         String text = component.getText();
@@ -61,18 +61,19 @@ public class TextLayoutEngine {
         float width = 0;
         char[] chars = text.toCharArray();
 
-        for (int i = 0; i < chars.length; i++) {
-            char c = chars[i];
-
-            // Skip formatting codes (e.g. §l for Bold) so they don't add invisible width
-            if (c == '§' && i + 1 < chars.length) {
-                i++;
-                continue;
-            }
-
+        for (char c : chars) {
             MSDFData.Glyph glyph = font.getGlyph(c);
+
             if (glyph != null) {
                 width += glyph.advance * fontSize;
+            } else {
+                // Fallback for missing characters using the space width or a default constant
+                MSDFData.Glyph space = font.getGlyph(' ');
+                if (space != null) {
+                    width += space.advance * fontSize;
+                } else {
+                    width += 0.5f * fontSize;
+                }
             }
         }
         return width;
@@ -102,7 +103,6 @@ public class TextLayoutEngine {
             if (font == null) continue;
 
             // Split by boundaries while keeping the structure manageable
-            // Splits by looking-ahead or looking-behind whitespace
             String[] words = text.split("((?<=\\s)|(?=\\s))");
 
             for (String word : words) {
@@ -114,18 +114,21 @@ public class TextLayoutEngine {
                     continue;
                 }
 
-                // Measure the word, ignoring formatting codes
+                // Measure the word
                 float wordWidth = 0;
                 char[] wChars = word.toCharArray();
-                for (int k = 0; k < wChars.length; k++) {
-                    char c = wChars[k];
-                    if (c == '§' && k + 1 < wChars.length) {
-                        k++;
-                        continue;
-                    }
-
+                for (char c : wChars) {
                     MSDFData.Glyph g = font.getGlyph(c);
-                    if (g != null) wordWidth += g.advance * fontSize;
+                    if (g != null) {
+                        wordWidth += g.advance * fontSize;
+                    } else {
+                        MSDFData.Glyph space = font.getGlyph(' ');
+                        if (space != null) {
+                            wordWidth += space.advance * fontSize;
+                        } else {
+                            wordWidth += 0.5f * fontSize;
+                        }
+                    }
                 }
 
                 // Check fit

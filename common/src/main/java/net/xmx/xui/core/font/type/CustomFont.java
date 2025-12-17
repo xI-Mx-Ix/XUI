@@ -12,7 +12,6 @@ import net.xmx.xui.core.font.data.MSDFData;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.gl.vertex.MeshBuffer;
 import net.xmx.xui.core.text.TextComponent;
-import net.xmx.xui.core.text.TextFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -113,7 +112,7 @@ public class CustomFont extends Font {
 
     @Override
     public void draw(UIRenderer renderer, TextComponent component, float x, float y, int color, boolean shadow) {
-        renderTextBatch(() -> drawComponentRecursive(renderer, component, x, y, x, color));
+        renderTextBatch(() -> drawComponentRecursive(component, x, y, x, color));
     }
 
     @Override
@@ -131,7 +130,7 @@ public class CustomFont extends Font {
                     String originalText = segment.component().getText();
                     segment.component().setText(segment.text());
 
-                    currentX = drawSingleString(renderer, segment.component(), currentX, currentY, x, color);
+                    currentX = drawSingleString(segment.component(), currentX, currentY, x, color);
 
                     segment.component().setText(originalText);
                 }
@@ -186,19 +185,18 @@ public class CustomFont extends Font {
         }
     }
 
-    private float drawComponentRecursive(UIRenderer renderer, TextComponent comp, float currentX, float currentY, float startX, int defaultColor) {
-        float newX = drawSingleString(renderer, comp, currentX, currentY, startX, defaultColor);
+    private float drawComponentRecursive(TextComponent comp, float currentX, float currentY, float startX, int defaultColor) {
+        float newX = drawSingleString(comp, currentX, currentY, startX, defaultColor);
         for (TextComponent sibling : comp.getSiblings()) {
-            newX = drawComponentRecursive(renderer, sibling, newX, currentY, startX, defaultColor);
+            newX = drawComponentRecursive(sibling, newX, currentY, startX, defaultColor);
         }
         return newX;
     }
 
     /**
      * Renders the text string and queues any necessary decorations.
-     * Updated to support legacy '§' formatting codes, including dynamic font atlas switching.
+     * Updated to remove legacy formatting codes. Styles are now strictly derived from the TextComponent.
      *
-     * @param renderer     The renderer instance.
      * @param comp         The component containing text and style.
      * @param x            The absolute X start position.
      * @param y            The absolute Y start position.
@@ -206,16 +204,14 @@ public class CustomFont extends Font {
      * @param defaultColor The fallback color if the component has none.
      * @return The X coordinate after rendering the text.
      */
-    private float drawSingleString(UIRenderer renderer, TextComponent comp, float x, float y, float startX, int defaultColor) {
+    private float drawSingleString(TextComponent comp, float x, float y, float startX, int defaultColor) {
         String text = comp.getText();
         if (text == null || text.isEmpty()) return x;
 
-        // Resolve the initial font based on component state
-        FontAtlas initialFont = resolveFont(comp);
-        if (initialFont == null) return x;
-
-        // Track the currently active font atlas (may change mid-string via §l or §o)
-        FontAtlas currentFont = initialFont;
+        // Resolve the active font based on component state once at the start.
+        // Since we removed legacy codes, the font variant (Bold/Italic) is constant for this string.
+        FontAtlas currentFont = resolveFont(comp);
+        if (currentFont == null) return x;
 
         // --- 1. Setup Base State ---
         int color = (comp.getColor() != null) ? comp.getColor() : defaultColor;
@@ -225,15 +221,13 @@ public class CustomFont extends Font {
         float g = ((color >> 8) & 0xFF) / 255.0f;
         float b = (color & 0xFF) / 255.0f;
 
-        // Track active styles
-        boolean isBold = comp.isBold();
-        boolean isItalic = comp.isItalic();
+        // Track active styles directly from the component
         boolean isUnderlined = comp.isUnderline();
         boolean isStrikethrough = comp.isStrikethrough();
         boolean isObfuscated = comp.isObfuscated();
 
         // --- 2. Prepare Rendering ---
-        // Bind the initial texture
+        // Bind the texture for the active font style
         UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
         MeshBuffer mesh = UIRenderer.getInstance().getText().getMesh();
 
@@ -255,82 +249,6 @@ public class CustomFont extends Font {
         for (int i = 0; i < chars.length; i++) {
             char c = chars[i];
 
-            // Handle Formatting Codes (§)
-            if (c == '§' && i + 1 < chars.length) {
-                char code = Character.toLowerCase(chars[i + 1]);
-                TextFormatting fmt = TextFormatting.getByCode(code);
-
-                if (fmt != null) {
-                    boolean fontChanged = false;
-
-                    if (fmt == TextFormatting.RESET) {
-                        // Reset all states to component defaults
-                        int resetColor = (comp.getColor() != null) ? comp.getColor() : defaultColor;
-                        a = ((resetColor >> 24) & 0xFF) / 255.0f;
-                        r = ((resetColor >> 16) & 0xFF) / 255.0f;
-                        g = ((resetColor >> 8) & 0xFF) / 255.0f;
-                        b = (resetColor & 0xFF) / 255.0f;
-
-                        isUnderlined = comp.isUnderline();
-                        isStrikethrough = comp.isStrikethrough();
-                        isObfuscated = comp.isObfuscated();
-                        isBold = comp.isBold();
-                        isItalic = comp.isItalic();
-                        fontChanged = true;
-
-                    } else if (fmt.isColor()) {
-                        // Apply Color and reset styles
-                        int fmtColor = fmt.getColor();
-                        r = ((fmtColor >> 16) & 0xFF) / 255.0f;
-                        g = ((fmtColor >> 8) & 0xFF) / 255.0f;
-                        b = (fmtColor & 0xFF) / 255.0f;
-
-                        isUnderlined = false;
-                        isStrikethrough = false;
-                        isObfuscated = false;
-                        isBold = false;
-                        isItalic = false;
-                        fontChanged = true;
-
-                    } else if (fmt.isStyle()) {
-                        switch (fmt) {
-                            case UNDERLINE -> isUnderlined = true;
-                            case STRIKETHROUGH -> isStrikethrough = true;
-                            case OBFUSCATED -> isObfuscated = true;
-                            case BOLD -> {
-                                isBold = true;
-                                fontChanged = true;
-                            }
-                            case ITALIC -> {
-                                isItalic = true;
-                                fontChanged = true;
-                            }
-                        }
-                    }
-
-                    // Switch texture if font style changed
-                    if (fontChanged) {
-                        FontAtlas targetFont;
-                        if (isBold && this.bold != null) targetFont = this.bold;
-                        else if (isItalic && this.italic != null) targetFont = this.italic;
-                        else targetFont = (this.regular != null) ? this.regular : initialFont;
-
-                        // Only flush if the font actually differs
-                        if (targetFont != currentFont) {
-                            // Flush current geometry with the OLD texture
-                            UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
-                            // Update current font reference for subsequent characters
-                            currentFont = targetFont;
-
-                            // Note: We do NOT recalculate cursorY here because we are enforcing
-                            // a unified baseline (y + 7.0f) for all fonts.
-                        }
-                    }
-                }
-                i++; // Skip code character
-                continue;
-            }
-
             if (c == '\n') {
                 cursorX = startX;
                 continue;
@@ -344,11 +262,13 @@ public class CustomFont extends Font {
             // --- Glyph Resolution & Fallback Strategy ---
             MSDFData.Glyph glyph = currentFont.getGlyph(c);
 
-            // Fallback to Regular if missing in current style (Bold/Italic)
+            // Fallback to Regular if missing in current style (Bold/Italic).
+            // This is still necessary even without legacy codes, because a Bold font might
+            // miss a symbol that the Regular font has.
             if (glyph == null && currentFont != this.regular && this.regular != null) {
                 MSDFData.Glyph fallback = this.regular.getGlyph(c);
                 if (fallback != null) {
-                    // Flush current batch (Bold)
+                    // Flush current batch (e.g. Bold)
                     UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
 
                     // Render single char using Regular texture
@@ -356,6 +276,9 @@ public class CustomFont extends Font {
 
                     // Flush Regular batch immediately
                     UIRenderer.getInstance().getText().drawBatch(this.regular.getTextureId());
+
+                    // Switch back binding to current font (e.g. Bold) for next chars
+                    UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
 
                     // Advance cursor
                     cursorX += fallback.advance * FONT_SIZE;
@@ -394,6 +317,7 @@ public class CustomFont extends Font {
             pendingDecorations.add(new Decoration(x, lineY, textWidth, thickness, finalColor));
         }
 
+        // Ensure the texture binding is correct before returning control
         UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
         return cursorX;
     }
