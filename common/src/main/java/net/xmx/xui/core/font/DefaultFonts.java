@@ -21,6 +21,7 @@ public final class DefaultFonts {
 
     private static CustomFont jetBrainsMono;
     private static CustomFont roboto;
+    private static CustomFont merriweather;
     private static VanillaFont vanilla;
 
     /**
@@ -49,6 +50,12 @@ public final class DefaultFonts {
             roboto.setRegular(XuiMainClass.MODID, "roboto/Roboto-Regular")
                     .setBold(XuiMainClass.MODID, "roboto/Roboto-Bold")
                     .setItalic(XuiMainClass.MODID, "roboto/Roboto-Italic");
+
+            // Initialize Merriweather (MSDF)
+            merriweather = new CustomFont();
+            merriweather.setRegular(XuiMainClass.MODID, "merriweather/Merriweather-Regular")
+                    .setBold(XuiMainClass.MODID, "merriweather/Merriweather-Bold")
+                    .setItalic(XuiMainClass.MODID, "merriweather/Merriweather-Italic");
 
         } catch (Exception e) {
             XuiMainClass.LOGGER.error("Failed to load standard fonts!", e);
@@ -79,6 +86,19 @@ public final class DefaultFonts {
             throw new IllegalStateException("DefaultFonts not initialized. Call DefaultFonts.init() first.");
         }
         return roboto;
+    }
+
+    /**
+     * Retrieves the Merriweather Custom Font instance.
+     *
+     * @return The Merriweather Custom Font.
+     * @throws IllegalStateException If {@link #init()} has not been called.
+     */
+    public static CustomFont getMerriweather() {
+        if (merriweather == null) {
+            throw new IllegalStateException("DefaultFonts not initialized. Call DefaultFonts.init() first.");
+        }
+        return merriweather;
     }
 
     /**
