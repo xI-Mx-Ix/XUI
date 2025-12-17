@@ -2,13 +2,11 @@
  * This file is part of XUI.
  * Licensed under LGPL 3.0.
  */
-package net.xmx.xui.core.components.data;
+package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.anim.Easing;
-import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.scroll.ScrollOrientation;
 import net.xmx.xui.core.components.scroll.UIScrollBar;
 import net.xmx.xui.core.components.scroll.UIScrollComponent;
@@ -69,6 +67,21 @@ public class UIAccordion extends UIPanel {
      */
     public static final StyleKey<Float> BODY_GAP = new StyleKey<>("accordion_body_gap", 4.0f);
 
+    /**
+     * Background color of the expanded body area.
+     */
+    public static final StyleKey<Integer> BODY_BACKGROUND_COLOR = new StyleKey<>("accordion_body_bg", 0xFF181818);
+
+    /**
+     * Border color of the expanded body area.
+     */
+    public static final StyleKey<Integer> BODY_BORDER_COLOR = new StyleKey<>("accordion_body_border", 0xFF404040);
+
+    /**
+     * Border radius of the expanded body area.
+     */
+    public static final StyleKey<Float> BODY_BORDER_RADIUS = new StyleKey<>("accordion_body_radius", 4.0f);
+
     // --- Child Components ---
 
     private final UIPanel header;
@@ -109,11 +122,15 @@ public class UIAccordion extends UIPanel {
         this.body = new UIScrollComponent() {
             @Override
             protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTick, float deltaTime, InteractionState state) {
-                // Retrieve styling properties assigned to this component
-                int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
-                int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
-                float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
-                float thickness = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
+                // Retrieve styling properties from the parent Accordion to ensure consistent styling.
+                // We use Default state for the body to ensure stability.
+                int bgColor = UIAccordion.this.getColor(BODY_BACKGROUND_COLOR, InteractionState.DEFAULT, deltaTime);
+                int borderColor = UIAccordion.this.getColor(BODY_BORDER_COLOR, InteractionState.DEFAULT, deltaTime);
+                float radius = UIAccordion.this.getFloat(BODY_BORDER_RADIUS, InteractionState.DEFAULT, deltaTime);
+
+                // Thickness is currently generic, but could be added as a key if needed.
+                // We fetch it from the body's local style or fallback.
+                float thickness = getFloat(ThemeProperties.BORDER_THICKNESS, InteractionState.DEFAULT, deltaTime);
 
                 // Draw Border (Outline)
                 if (thickness > 0 && (borderColor >>> 24) > 0) {
@@ -181,7 +198,12 @@ public class UIAccordion extends UIPanel {
 
                 // Arrow colors
                 .set(InteractionState.DEFAULT, ARROW_COLOR, 0xFF888888)
-                .set(InteractionState.HOVER, ARROW_COLOR, 0xFFFFFFFF);
+                .set(InteractionState.HOVER, ARROW_COLOR, 0xFFFFFFFF)
+
+                // Body Styles
+                .set(InteractionState.DEFAULT, BODY_BACKGROUND_COLOR, 0xFF181818)
+                .set(InteractionState.DEFAULT, BODY_BORDER_COLOR, 0xFF404040)
+                .set(InteractionState.DEFAULT, BODY_BORDER_RADIUS, 4.0f);
 
         // --- Header Panel Styling ---
         header.style()
@@ -189,13 +211,9 @@ public class UIAccordion extends UIPanel {
                 .set(ThemeProperties.BORDER_COLOR, 0xFF404040)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 
-        // --- Body Panel Styling ---
-        // These styles are used by the anonymous implementation of drawSelf in 'body'.
+        // --- Body Panel Styling (Local properties used for Thickness) ---
         body.style()
-                .set(ThemeProperties.BACKGROUND_COLOR, 0xFF181818) // Dark content background
-                .set(ThemeProperties.BORDER_COLOR, 0xFF404040)     // Matches header border
-                .set(ThemeProperties.BORDER_THICKNESS, 1.0f)
-                .set(ThemeProperties.BORDER_RADIUS, 4.0f);
+                .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
     }
 
     /**
