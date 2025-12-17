@@ -14,7 +14,7 @@ import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.effect.UIScissorsEffect;
-import net.xmx.xui.util.ClipboardUtil;
+import net.xmx.xui.core.util.ClipboardUtil;
 import org.lwjgl.glfw.GLFW;
 
 /**

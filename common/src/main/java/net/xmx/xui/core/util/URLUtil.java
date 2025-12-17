@@ -2,7 +2,7 @@
  * This file is part of XUI.
  * Licensed under LGPL 3.0.
  */
-package net.xmx.xui.util;
+package net.xmx.xui.core.util;
 
 import java.io.IOException;
 

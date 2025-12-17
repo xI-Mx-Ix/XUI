@@ -10,7 +10,7 @@ import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
-import net.xmx.xui.util.URLUtil;
+import net.xmx.xui.core.util.URLUtil;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.regex.Matcher;
