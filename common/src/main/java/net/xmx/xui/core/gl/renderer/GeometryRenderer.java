@@ -552,6 +552,51 @@ public class GeometryRenderer {
     }
 
     /**
+     * Renders a solid, smooth triangular arrow pointing to the right.
+     * <p>
+     * This shape is vector-based, making it suitable for rotation without
+     * the "deformed" artifacting seen in pixel-art compositions.
+     * The arrow is drawn centered at the specified (x, y) coordinates.
+     * </p>
+     *
+     * @param x     The center X coordinate.
+     * @param y     The center Y coordinate.
+     * @param size  The size (width/height) of the arrow.
+     * @param color The ARGB color.
+     */
+    public void renderArrow(float x, float y, float size, int color) {
+        if (size <= 0) return;
+
+        UIRenderer renderer = UIRenderer.getInstance();
+        GlState state = renderer.getStateManager();
+
+        // Capture and setup state for safe rendering
+        state.capture();
+        state.setupForUI();
+
+        begin(renderer.getCurrentUiScale(), renderer.getTransformStack().getDirectModelMatrix());
+
+        float[] rgba = unpackColor(color);
+        float r = rgba[0], g = rgba[1], b = rgba[2], a = rgba[3];
+        float halfSize = size / 2.0f;
+
+        // Define a Triangle pointing Right (0 degrees) centered at (x, y)
+
+        // Vertex 1: The Tip (Right Center)
+        mesh.pos(x + halfSize, y, 0).color(r, g, b, a).endVertex();
+
+        // Vertex 2: Bottom Left Corner
+        mesh.pos(x - halfSize, y + halfSize, 0).color(r, g, b, a).endVertex();
+
+        // Vertex 3: Top Left Corner
+        mesh.pos(x - halfSize, y - halfSize, 0).color(r, g, b, a).endVertex();
+
+        end();
+
+        state.restore();
+    }
+
+    /**
      * Utility method to extract normalized RGBA float values from a packed ARGB integer.
      *
      * @param color The packed ARGB color integer (e.g., 0xFFFFFFFF).

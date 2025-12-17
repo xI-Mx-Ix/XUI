@@ -726,6 +726,15 @@ public abstract class UIWidget {
     }
 
     /**
+     * Checks if this widget is currently being hovered by the mouse.
+     *
+     * @return true if hovered.
+     */
+    public boolean isHovered() {
+        return isHovered;
+    }
+
+    /**
      * Gets the physical window width using GLFW.
      *
      * @return The window width in pixels

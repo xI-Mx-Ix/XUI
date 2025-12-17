@@ -63,6 +63,14 @@ public interface Easing {
     Easing EASE_OUT_CUBIC = t -> (--t) * t * t + 1;
 
     /**
+     * Easing equation for a cubic (t^3) ease-in/out.
+     * Accelerates until halfway, then decelerates.
+     */
+    Easing EASE_IN_OUT_CUBIC = t -> t < 0.5f
+            ? 4f * t * t * t
+            : 1f - (float) Math.pow(-2 * t + 2, 3) / 2f;
+
+    /**
      * Easing equation for a back ease-in.
      * Pulls back slightly before accelerating (like an arrow in a bow).
      */

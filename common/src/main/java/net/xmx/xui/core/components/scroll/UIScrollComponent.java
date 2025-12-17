@@ -336,45 +336,49 @@ public class UIScrollComponent extends UIWidget {
     }
 
     /**
-     * Handles mouse wheel scrolling.
-     * <p>
-     * Logic:
-     * <ul>
-     *   <li>Default: Scroll Vertically (Y).</li>
-     *   <li>Shift Key Held: Scroll Horizontally (X).</li>
-     * </ul>
-     * </p>
+     * Handles mouse wheel scrolling with support for nested scroll containers.
      */
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        // If not visible or mouse not inside the panel, ignore
         if (!isVisible || !isMouseOver(mouseX, mouseY)) return false;
 
-        // Check Input State for Shift Key
+        // 1. Pass to Children FIRST (Nested Scrolling Logic)
+        // We must manually transform the mouse coordinates because children exist in "scrolled space".
+        double scrolledMouseX = mouseX + scrollX;
+        double scrolledMouseY = mouseY + scrollY;
+
+        handlingChildEvent = true;
+        try {
+            // Iterate in reverse Z-order (topmost first)
+            for (int i = children.size() - 1; i >= 0; i--) {
+                if (children.get(i).mouseScrolled(scrolledMouseX, scrolledMouseY, scrollDelta)) {
+                    return true; // Child consumed the event
+                }
+            }
+        } finally {
+            handlingChildEvent = false;
+        }
+
+        // 2. If children didn't consume it, handle scrolling ourselves
+        if (isClippedByParent(mouseX, mouseY) || isGlobalObstructed(mouseX, mouseY)) return false;
+
         long windowHandle = GLFW.glfwGetCurrentContext();
         boolean isShiftDown = GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
                 || GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
 
         boolean handled = false;
 
-        // 1. Try Horizontal Scrolling (Shift pressed OR only horizontal available)
         if (isShiftDown && maxScrollX > 0) {
             targetScrollX -= (float) (scrollDelta * SCROLL_SPEED);
             clampScrollOffsets();
             handled = true;
-        } 
-        // 2. Try Vertical Scrolling (Default)
-        else if (!isShiftDown && maxScrollY > 0) {
+        } else if (!isShiftDown && maxScrollY > 0) {
             targetScrollY -= (float) (scrollDelta * SCROLL_SPEED);
             clampScrollOffsets();
             handled = true;
         }
 
-        // Even if we scrolled, we technically consumed the event.
-        if (handled) return true;
-
-        // Fallback: Pass to children (though unlikely needed for standard scroll panels)
-        return super.mouseScrolled(mouseX, mouseY, scrollDelta);
+        return handled;
     }
 
     /**
