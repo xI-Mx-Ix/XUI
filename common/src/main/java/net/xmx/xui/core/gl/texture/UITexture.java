@@ -15,6 +15,12 @@ import java.nio.IntBuffer;
 
 /**
  * Represents a single loaded OpenGL texture from a resource path.
+ * <p>
+ * Updated Configuration:
+ * - Uses {@code GL_NEAREST} filtering to prevent blurring on pixel-art/low-res images.
+ * - Resets {@code GL_UNPACK_*} alignment to prevent crash on upload.
+ * - Forces 4-channel (RGBA) loading to ensure transparency works (fixes black backgrounds).
+ * </p>
  *
  * @author xI-Mx-Ix
  */
@@ -47,7 +53,7 @@ public class UITexture {
             IntBuffer h = BufferUtils.createIntBuffer(1);
             IntBuffer c = BufferUtils.createIntBuffer(1);
 
-            // Load as RGBA (4 channels)
+            // Load as RGBA (4 channels) strictly to support transparency
             ByteBuffer image = STBImage.stbi_load_from_memory(buffer, w, h, c, 4);
             if (image == null) {
                 throw new RuntimeException("Failed to load texture via STB: " + STBImage.stbi_failure_reason());
@@ -60,13 +66,23 @@ public class UITexture {
             this.textureId = GL11.glGenTextures();
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
 
-            // Parameters
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            // Configure Parameters
+            // NEAREST ensures sharp edges for pixel art and icons
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+
+            // Clamp to edge prevents bleeding at the texture borders
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
 
-            // Upload
+            // Reset Pixel Store to default alignment before upload
+            // Minecraft often changes these for font/atlas rendering.
+            GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0);
+            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_PIXELS, 0);
+            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_ROWS, 0);
+            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
+
+            // Upload Texture Data
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image);
 
             STBImage.stbi_image_free(image);
@@ -91,7 +107,7 @@ public class UITexture {
     public void bind() {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
     }
-    
+
     public void cleanup() {
         GL11.glDeleteTextures(textureId);
     }

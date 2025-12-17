@@ -33,6 +33,13 @@ public class UIImage extends UIWidget {
     private UITexture texture;
 
     /**
+     * Controls the texture filtering mode.
+     * true = Nearest Neighbor (Pixel Perfect, sharp edges).
+     * false = Linear Interpolation (Smooth, blurred edges).
+     */
+    private boolean pixelPerfect = true;
+
+    /**
      * Constructs an empty image component.
      * Use {@link #setImage(String, String)} to assign a texture.
      */
@@ -68,6 +75,18 @@ public class UIImage extends UIWidget {
         return this;
     }
 
+    /**
+     * Configures the texture filtering mode.
+     *
+     * @param pixelPerfect If true, uses Nearest-Neighbor (blocky/sharp).
+     *                     If false, uses Linear (smooth/blurry).
+     * @return This instance.
+     */
+    public UIImage setPixelPerfect(boolean pixelPerfect) {
+        this.pixelPerfect = pixelPerfect;
+        return this;
+    }
+
     @Override
     protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         if (texture == null) return;
@@ -75,7 +94,7 @@ public class UIImage extends UIWidget {
         // Retrieve styles
         float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
         int tint = getColor(TINT_COLOR, state, deltaTime);
-        
+
         // Handle transparency of the widget (opacity) combined with tint alpha
         float opacity = style().getValue(state, ThemeProperties.OPACITY);
         if (opacity < 1.0f) {
@@ -83,12 +102,14 @@ public class UIImage extends UIWidget {
             alpha = (int) (alpha * opacity);
             tint = (tint & 0x00FFFFFF) | (alpha << 24);
         }
-        
+
+        // Delegate to renderer with the specific filtering flag
         renderer.getImage().drawImage(
                 texture,
                 x, y, width, height,
                 tint,
                 radius,
+                pixelPerfect,
                 renderer.getCurrentUiScale(),
                 renderer.getTransformStack().getDirectModelMatrix()
         );

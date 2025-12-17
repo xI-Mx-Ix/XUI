@@ -111,74 +111,69 @@ public class UIScrollBar extends UIWidget {
 
     @Override
     protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTick, float deltaTime, InteractionState state) {
-        // Fetch Styles
-        int trackColor = style().getValue(state, TRACK_COLOR);
-        float rounding = style().getValue(state, ROUNDING);
-        
         // 1. Draw the Background Track
+        // We use the standard animation fetch for track color and rounding
+        int trackColor = getColor(TRACK_COLOR, state, deltaTime);
+        float rounding = getFloat(ROUNDING, state, deltaTime);
+
         renderer.getGeometry().renderRect(this.x, this.y, this.width, this.height, trackColor, rounding);
 
-        // If content fits perfectly, we don't draw the thumb, but we still drew the track for layout consistency.
-        // Alternatively, you could return early here if you want it to be invisible.
         if (!canScroll()) {
             return;
         }
 
-        // Fetch remaining styles
-        int thumbColor = style().getValue(state, THUMB_COLOR);
-        int thumbHoverColor = style().getValue(state, THUMB_HOVER_COLOR);
-        float padding = style().getValue(state, PADDING);
+        // 2. Determine Target Thumb Color
+        // Instead of swapping instantly, we define the TARGET color based on logic.
+        // We look up the raw value from the style sheet for the specific state we want.
+        int targetThumbColor;
+        if (isDragging || isHovered) {
+            targetThumbColor = style().getValue(InteractionState.HOVER, THUMB_HOVER_COLOR);
+        } else {
+            targetThumbColor = style().getValue(InteractionState.DEFAULT, THUMB_COLOR);
+        }
 
-        // 2. Calculate Thumb Geometry
+        // 3. Animate Thumb Color
+        // We use THUMB_COLOR as the "Identity Key" for the animation manager to store the intermediate value.
+        // The manager will interpolate from the last frame's color towards 'targetThumbColor'.
+        int effectiveColor = animManager.getAnimatedColor(
+                THUMB_COLOR,
+                targetThumbColor,
+                style().getTransitionSpeed(),
+                deltaTime
+        );
+
+        float padding = getFloat(PADDING, state, deltaTime);
+
+        // 4. Calculate Thumb Geometry (Standard logic)
         float thumbX = this.x + padding;
         float thumbY = this.y + padding;
         float thumbW, thumbH;
 
         if (orientation == ScrollOrientation.VERTICAL) {
-            // --- Vertical Math ---
             float trackInnerHeight = this.height - (padding * 2);
-            
-            // Ratio of Viewport Height to Content Height
             float viewRatio = target.getHeight() / target.getContentHeight();
-            
-            // Calculate Thumb Height (proportional, but clamped to min size)
-            thumbH = Math.max(MIN_THUMB_SIZE, trackInnerHeight * viewRatio);
+            thumbH = Math.max(20.0f, trackInnerHeight * viewRatio);
             thumbW = this.width - (padding * 2);
 
-            // Calculate Thumb Position based on Scroll Progress
             float maxTravel = trackInnerHeight - thumbH;
             float scrollProgress = target.getScrollY() / target.getMaxScrollY();
-            
-            // Safety check for NaN
             if (Float.isNaN(scrollProgress)) scrollProgress = 0;
-            
+
             thumbY += maxTravel * scrollProgress;
-
         } else {
-            // --- Horizontal Math ---
             float trackInnerWidth = this.width - (padding * 2);
-
-            // Ratio of Viewport Width to Content Width
             float viewRatio = target.getWidth() / target.getContentWidth();
-
-            // Calculate Thumb Width
-            thumbW = Math.max(MIN_THUMB_SIZE, trackInnerWidth * viewRatio);
+            thumbW = Math.max(20.0f, trackInnerWidth * viewRatio);
             thumbH = this.height - (padding * 2);
 
-            // Calculate Thumb Position
             float maxTravel = trackInnerWidth - thumbW;
             float scrollProgress = target.getScrollX() / target.getMaxScrollX();
-
-            // Safety check for NaN
             if (Float.isNaN(scrollProgress)) scrollProgress = 0;
 
             thumbX += maxTravel * scrollProgress;
         }
 
-        // 3. Determine Color (Hover/Drag Highlight)
-        int effectiveColor = (isDragging || isHovered) ? thumbHoverColor : thumbColor;
-
-        // 4. Draw the Thumb
+        // 5. Draw the Thumb with the animated color
         renderer.getGeometry().renderRect(thumbX, thumbY, thumbW, thumbH, effectiveColor, rounding);
     }
 

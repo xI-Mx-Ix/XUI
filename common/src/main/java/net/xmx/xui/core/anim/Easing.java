@@ -84,6 +84,19 @@ public interface Easing {
     };
 
     /**
+     * Easing equation for a back ease-in/out.
+     * Pulls back, accelerates, then overshoots and settles.
+     */
+    Easing EASE_IN_OUT_BACK = t -> {
+        float c1 = 1.70158f;
+        float c2 = c1 * 1.525f;
+
+        return t < 0.5
+                ? (float) ((Math.pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2)
+                : (float) ((Math.pow(2 * t - 2, 2) * ((c2 + 1) * (2 * t - 2) + c2) + 2) / 2);
+    };
+
+    /**
      * Easing equation for a bounce ease-out.
      * Bounces at the end of the transition (like a ball dropping).
      */
