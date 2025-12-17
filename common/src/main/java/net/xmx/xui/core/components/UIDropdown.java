@@ -59,6 +59,12 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     public static final StyleKey<Integer> ARROW_COLOR = new StyleKey<>("dropdown_arrow_color", 0xFFAAAAAA);
 
     /**
+     * The rotation angle of the chevron arrow in degrees.
+     * 0 = Right (Closed), 90 = Down (Open).
+     */
+    private static final StyleKey<Float> ARROW_ROTATION = new StyleKey<>("dropdown_arrow_rot", 0.0f);
+
+    /**
      * Background color of the expanded overlay list.
      */
     public static final StyleKey<Integer> OVERLAY_BACKGROUND_COLOR = new StyleKey<>("dropdown_overlay_bg", 0xFF181818);
@@ -72,6 +78,11 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
      * Border radius of the expanded overlay list.
      */
     public static final StyleKey<Float> OVERLAY_BORDER_RADIUS = new StyleKey<>("dropdown_overlay_radius", 6.0f);
+
+    /**
+     * The vertical spacing (gap) between the header and the expanded overlay in pixels.
+     */
+    public static final StyleKey<Float> DROPDOWN_GAP = new StyleKey<>("dropdown_gap", 4.0f);
 
     // List Logic
     private final List<TextComponent> options = new ArrayList<>();
@@ -92,7 +103,6 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     private Direction preferredDirection = Direction.AUTO;
     private boolean openUpward = false;
     private final int optionHeight = 24;
-    private final float dropdownGap = 4.0f;
 
     // Geometry Cache (Calculated in drawSelf for obstruction checks)
     private float overlayX, overlayY, overlayWidth, overlayHeight;
@@ -119,6 +129,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
                 .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)
                 .set(InteractionState.DEFAULT, ARROW_COLOR, 0xFF909090)
+                .set(InteractionState.DEFAULT, DROPDOWN_GAP, 4.0f)
 
                 // --- Overlay (List) Styles ---
                 .set(InteractionState.DEFAULT, OVERLAY_BACKGROUND_COLOR, 0xFF181818)
@@ -209,8 +220,8 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
             renderer.drawText(options.get(selectedIndex), x + 8, textY, textColor, false);
         }
 
-        // Draw Chevron
-        drawArrow(renderer, x + width - 14, y + height / 2.0f, arrowColor, isOpen);
+        // Draw Chevron (Using GeometryRenderer rotation logic)
+        drawArrow(renderer, x + width - 12, y + height / 2.0f, arrowColor, deltaTime);
 
         // 4. Draw Floating List Overlay (if visible)
         if (openProgress > 0.01f) {
@@ -229,6 +240,27 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
             renderer.translate(0, 0, -50);
         }
+    }
+
+    /**
+     * Renders the rotating chevron arrow on the right side of the header.
+     * Uses the GeometryRenderer's smooth vector arrow with interpolated rotation.
+     */
+    private void drawArrow(UIRenderer renderer, float arrowX, float arrowY, int color, float deltaTime) {
+        // Calculate current rotation (0 = Right, 90 = Down)
+        float rotation = animManager.getAnimatedFloat(ARROW_ROTATION, isOpen ? 90f : 0f, style().getTransitionSpeed(), deltaTime);
+        float arrowSize = 6.0f;
+
+        renderer.pushMatrix();
+
+        // Pivot rotation around the center of the arrow
+        renderer.translate(arrowX, arrowY, 0);
+        renderer.rotate(rotation, 0, 0, 1);
+
+        // Render smooth vector arrow centered at (0,0) relative to matrix
+        renderer.getGeometry().renderArrow(0, 0, arrowSize, color);
+
+        renderer.popMatrix();
     }
 
     /**
@@ -252,8 +284,11 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         int totalListHeight = options.size() * optionHeight;
         int screenHeight = getScreenHeight();
 
-        float spaceBelow = screenHeight - (this.y + this.height + dropdownGap);
-        float spaceAbove = this.y - dropdownGap;
+        // Retrieve gap from styles
+        float gap = style().getValue(InteractionState.DEFAULT, DROPDOWN_GAP);
+
+        float spaceBelow = screenHeight - (this.y + this.height + gap);
+        float spaceAbove = this.y - gap;
 
         // 1. Default: Open downwards if sufficient space exists
         if (spaceBelow >= totalListHeight) {
@@ -271,6 +306,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
     private void updateOverlayGeometry() {
         int totalListHeight = options.size() * optionHeight;
+        float gap = style().getValue(InteractionState.DEFAULT, DROPDOWN_GAP);
 
         this.overlayWidth = this.width;
         // The actual rendered height depends on animation progress
@@ -279,10 +315,10 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         if (openUpward) {
             // Grows upwards from the bottom
-            this.overlayY = (this.y - dropdownGap) - this.overlayHeight;
+            this.overlayY = (this.y - gap) - this.overlayHeight;
         } else {
             // Grows downwards from the top
-            this.overlayY = this.y + this.height + dropdownGap;
+            this.overlayY = this.y + this.height + gap;
         }
     }
 
@@ -331,20 +367,6 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         // Disable clipping
         renderer.getScissor().disableScissor();
-    }
-
-    private void drawArrow(UIRenderer renderer, float ax, float ay, int color, boolean pointUp) {
-        float vDir = pointUp ? -1 : 1;
-
-        // Draw chevron using small rect steps (pixel art style)
-        // Center point
-        renderer.getGeometry().renderRect(ax, ay + (2 * vDir), 1.5f, 1, color, 0);
-        // Middle steps
-        renderer.getGeometry().renderRect(ax - 1, ay + (1 * vDir), 1, 1, color, 0);
-        renderer.getGeometry().renderRect(ax + 1.5f, ay + (1 * vDir), 1, 1, color, 0);
-        // Outer tips
-        renderer.getGeometry().renderRect(ax - 2, ay, 1, 1, color, 0);
-        renderer.getGeometry().renderRect(ax + 2.5f, ay, 1, 1, color, 0);
     }
 
     @Override
