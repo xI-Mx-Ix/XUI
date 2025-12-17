@@ -6,6 +6,7 @@ package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -80,7 +81,7 @@ public class UIToggleButton extends UIWidget {
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF404040)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 6.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(6.0f))
                 .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFAAAAAA)
                 .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
 
@@ -234,7 +235,7 @@ public class UIToggleButton extends UIWidget {
 
         // 3. Resolve Geometry and Scale
         // These are handled normally via the standard animation manager logic for hover/active effects
-        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+        CornerRadii radii = getCornerRadii(ThemeProperties.BORDER_RADIUS, state, deltaTime);
         float scale = getFloat(ThemeProperties.SCALE, state, deltaTime);
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
 
@@ -245,11 +246,17 @@ public class UIToggleButton extends UIWidget {
         float adjY = y - (scaledH - height) / 2.0f;
 
         // 5. Draw Body
-        renderer.getGeometry().renderRect(adjX, adjY, scaledW, scaledH, finalBg, radius);
+        renderer.getGeometry().renderRect(
+                adjX, adjY, scaledW, scaledH, finalBg,
+                radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+        );
 
         // 6. Draw Border
         if (borderThick > 0) {
-            renderer.getGeometry().renderOutline(adjX, adjY, scaledW, scaledH, finalBorder, radius, borderThick);
+            renderer.getGeometry().renderOutline(
+                    adjX, adjY, scaledW, scaledH, finalBorder, borderThick,
+                    radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+            );
         }
 
         // 7. Draw Text (Centered)

@@ -4,6 +4,7 @@
  */
 package net.xmx.xui.core.anim;
 
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.StyleKey;
 
 import java.util.ArrayList;
@@ -80,7 +81,7 @@ public class Timeline<T> {
      * Calculates the interpolated value of the property at a specific point in time.
      *
      * @param time The elapsed time of the animation in seconds.
-     * @return The interpolated value (Color int or Float).
+     * @return The interpolated value.
      */
     @SuppressWarnings("unchecked")
     public T getValueAt(float time) {
@@ -116,13 +117,13 @@ public class Timeline<T> {
             }
         }
 
-        // Fallback (should not be reached due to Case 2)
+        // Fallback
         return keyframes.get(keyframes.size() - 1).value();
     }
 
     /**
      * Helper method to interpolate between two generic values.
-     * Supports Floats (Linear Algebra) and Integers (Color Channels).
+     * Supports Floats, Integers (Colors), and CornerRadii.
      *
      * @param start The start value.
      * @param end   The end value.
@@ -136,11 +137,16 @@ public class Timeline<T> {
             float e = (Float) end;
             return (T) Float.valueOf(s + (e - s) * t);
         }
+
+        if (start instanceof CornerRadii && end instanceof CornerRadii) {
+            return (T) ((CornerRadii) start).lerp((CornerRadii) end, t);
+        }
+
         if (start instanceof Integer && end instanceof Integer) {
             // Standard ARGB Color Interpolation
             int c1 = (Integer) start;
             int c2 = (Integer) end;
-            
+
             int a1 = (c1 >> 24) & 0xFF;
             int r1 = (c1 >> 16) & 0xFF;
             int g1 = (c1 >> 8) & 0xFF;
@@ -156,7 +162,7 @@ public class Timeline<T> {
             int g = (int) (g1 + (g2 - g1) * t);
             int b = (int) (b1 + (b2 - b1) * t);
 
-            // Clamp values to valid byte range (0-255) to prevent overflow/underflow artifacts
+            // Clamp values
             a = Math.max(0, Math.min(255, a));
             r = Math.max(0, Math.min(255, r));
             g = Math.max(0, Math.min(255, g));
@@ -164,8 +170,8 @@ public class Timeline<T> {
 
             return (T) Integer.valueOf((a << 24) | (r << 16) | (g << 8) | b);
         }
-        
-        // Fallback for non-interpolatable types (e.g. Boolean, Enums) -> Snap to End
+
+        // Fallback for non-interpolatable types
         return t >= 0.5f ? end : start;
     }
 }

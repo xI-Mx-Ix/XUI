@@ -16,6 +16,7 @@ import net.xmx.xui.core.components.scroll.ScrollOrientation;
 import net.xmx.xui.core.components.scroll.UIScrollBar;
 import net.xmx.xui.core.components.scroll.UIScrollComponent;
 import net.xmx.xui.core.font.DefaultFonts;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.ThemeProperties;
 
 /**
@@ -95,7 +96,7 @@ public class XUIMarkdownExampleScreen extends Screen {
 
         container.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, 0xFF1E1E1E)
-                .set(ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(8.0f))
                 .set(ThemeProperties.BORDER_COLOR, 0xFF404040)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 

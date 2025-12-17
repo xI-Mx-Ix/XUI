@@ -6,6 +6,7 @@ package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -32,22 +33,34 @@ public class UITooltip extends UIPanel {
 
     // --- Tooltip Specific ThemeProperties ---
 
-    /** Time in seconds the mouse must hover before the tooltip appears. */
+    /**
+     * Time in seconds the mouse must hover before the tooltip appears.
+     */
     public static final StyleKey<Float> SHOW_DELAY = new StyleKey<>("tooltip_show_delay", 0.5f);
 
-    /** Duration of the fade-in animation in seconds. */
+    /**
+     * Duration of the fade-in animation in seconds.
+     */
     public static final StyleKey<Float> FADE_IN_TIME = new StyleKey<>("tooltip_fade_in_time", 0.2f);
 
-    /** Duration of the fade-out animation in seconds. */
+    /**
+     * Duration of the fade-out animation in seconds.
+     */
     public static final StyleKey<Float> FADE_OUT_TIME = new StyleKey<>("tooltip_fade_out_time", 0.2f);
 
-    /** Horizontal offset from the mouse cursor in pixels. */
+    /**
+     *  Horizontal offset from the mouse cursor in pixels.
+     */
     public static final StyleKey<Float> OFFSET_X = new StyleKey<>("tooltip_offset_x", 12.0f);
 
-    /** Vertical offset from the mouse cursor in pixels. */
+    /**
+     * Vertical offset from the mouse cursor in pixels.
+     */
     public static final StyleKey<Float> OFFSET_Y = new StyleKey<>("tooltip_offset_y", -12.0f);
 
-    /** Padding around the text content inside the tooltip frame. */
+    /**
+     *  Padding around the text content inside the tooltip frame.
+     */
     public static final StyleKey<Float> PADDING = new StyleKey<>("tooltip_padding", 5.0f);
 
     private UIWidget target;
@@ -79,7 +92,7 @@ public class UITooltip extends UIPanel {
                 .set(ThemeProperties.BACKGROUND_COLOR, 0xF0101010) // Dark semi-transparent
                 .set(ThemeProperties.BORDER_COLOR, 0x505000FF)     // Purple-ish border
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f)
-                .set(ThemeProperties.BORDER_RADIUS, 4.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(4.0f))
                 // Default specific properties
                 .set(SHOW_DELAY, 0.5f)
                 .set(FADE_IN_TIME, 0.2f)

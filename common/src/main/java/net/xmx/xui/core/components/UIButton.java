@@ -5,6 +5,7 @@
 package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
@@ -15,7 +16,7 @@ import net.xmx.xui.core.UIWidget;
  * Features:
  * - Animated background and border colors
  * - Animated scale (pop effect)
- * - Rounded corners
+ * - Rounded corners (per corner control)
  * - Text centering with Component support
  * - Configurable borders
  *
@@ -44,7 +45,7 @@ public class UIButton extends UIWidget {
                 // --- DEFAULT STATE (Glass Look) ---
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xAA202020) // Transparent Dark Grey
                 .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)       // Off-White
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 8.0f)          // Nice rounding
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(8.0f)) // Nice rounding
                 .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 0f)         // No border by default
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0x00000000)
@@ -53,9 +54,9 @@ public class UIButton extends UIWidget {
                 .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xDD404040)   // Lighter, less transparent
                 .set(InteractionState.HOVER, ThemeProperties.TEXT_COLOR, 0xFFFFFFFF)         // Pure White
                 .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.05f)                   // Grow slightly
-                .set(InteractionState.HOVER, ThemeProperties.BORDER_RADIUS, 10.0f)           // Rounder
-                .set(InteractionState.HOVER, ThemeProperties.BORDER_THICKNESS, 0f)           // Keep border thickness same
-                .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, 0x00000000)       // Keep border transparent
+                .set(InteractionState.HOVER, ThemeProperties.BORDER_RADIUS, CornerRadii.all(10.0f)) // Rounder
+                .set(InteractionState.HOVER, ThemeProperties.BORDER_THICKNESS, 0f)
+                .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, 0x00000000)
 
                 // --- ACTIVE/CLICK STATE (Feedback) ---
                 .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, 0xFF000000)  // Black
@@ -69,7 +70,7 @@ public class UIButton extends UIWidget {
         int txtColor = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);
         int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
 
-        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+        CornerRadii radii = getCornerRadii(ThemeProperties.BORDER_RADIUS, state, deltaTime);
         float scale = getFloat(ThemeProperties.SCALE, state, deltaTime);
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
 
@@ -80,15 +81,20 @@ public class UIButton extends UIWidget {
         float adjY = y - (scaledH - height) / 2.0f;
 
         // 4. Draw Main Button Body
-        renderer.getGeometry().renderRect(adjX, adjY, scaledW, scaledH, bgColor, radius);
+        renderer.getGeometry().renderRect(
+                adjX, adjY, scaledW, scaledH, bgColor,
+                radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+        );
 
         // 5. Draw Border (if enabled)
         if (borderThick > 0 && (borderColor >>> 24) > 0) {
-            renderer.getGeometry().renderOutline(adjX, adjY, scaledW, scaledH, borderColor, radius, borderThick);
+            renderer.getGeometry().renderOutline(
+                    adjX, adjY, scaledW, scaledH, borderColor, borderThick,
+                    radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+            );
         }
 
         // 6. Draw Text (Centered)
-        // Uses TextComponent.getTextWidth() for Component width calculation
         int strWidth = TextComponent.getTextWidth(label);
         int strHeight = TextComponent.getFontHeight();
 

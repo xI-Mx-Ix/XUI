@@ -52,10 +52,11 @@ public final class ThemeProperties {
     // -------------------------------------------------------------------------
 
     /**
-     * Radius of rounded corners in pixels.
+     * Radii of rounded corners in pixels.
+     * Defines the roundness of Top-Left, Top-Right, Bottom-Right, and Bottom-Left corners.
      */
-    public static final StyleKey<Float> BORDER_RADIUS =
-            new StyleKey<>("border_radius", 0f);
+    public static final StyleKey<CornerRadii> BORDER_RADIUS =
+            new StyleKey<>("border_radius", CornerRadii.ZERO);
 
     /**
      * Thickness of the component border in pixels.

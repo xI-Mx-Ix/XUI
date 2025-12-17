@@ -14,6 +14,7 @@ import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIEditBox;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
 
@@ -70,7 +71,7 @@ public class XUIEditBoxExampleScreen extends Screen {
 
         container.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
-                .set(ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(8.0f))
                 .set(ThemeProperties.BORDER_COLOR, 0xFF404040)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 

@@ -8,6 +8,7 @@ import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.effect.UIEffect;
 import net.xmx.xui.core.effect.UIScissorsEffect;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 import org.lwjgl.glfw.GLFW;
@@ -306,11 +307,16 @@ public class UIScrollComponent extends UIWidget {
     @Override
     protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTick, float deltaTime, InteractionState state) {
         int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
-        
+
         // Only render if there is a visible color
         if ((bgColor >>> 24) > 0) {
-            float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
-            renderer.getGeometry().renderRect(this.getX(), this.getY(), this.getWidth(), this.getHeight(), bgColor, radius);
+            CornerRadii radii = getCornerRadii(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+
+            renderer.getGeometry().renderRect(
+                    this.getX(), this.getY(), this.getWidth(), this.getHeight(),
+                    bgColor,
+                    radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+            );
         }
     }
 

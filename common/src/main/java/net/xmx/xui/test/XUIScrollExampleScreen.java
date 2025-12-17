@@ -16,6 +16,7 @@ import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.scroll.ScrollOrientation;
 import net.xmx.xui.core.components.scroll.UIScrollBar;
 import net.xmx.xui.core.components.scroll.UIScrollComponent;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 
@@ -77,7 +78,7 @@ public class XUIScrollExampleScreen extends Screen {
 
         mainPanel.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, COLOR_PANEL)
-                .set(ThemeProperties.BORDER_RADIUS, 16.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(16.0f))
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f)
                 .set(ThemeProperties.BORDER_COLOR, COLOR_BORDER);
 
@@ -114,7 +115,7 @@ public class XUIScrollExampleScreen extends Screen {
 
         scrollComponent.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, 0x40000000) // Darker inner background
-                .set(ThemeProperties.BORDER_RADIUS, 8.0f);
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(8.0f));
 
         // B. The Scrollbar (Visual)
         // This component is placed *next* to the scroll component, not inside it.
@@ -153,7 +154,7 @@ public class XUIScrollExampleScreen extends Screen {
             itemButton.style()
                     .setTransitionSpeed(15.0f)
                     .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, bgColor)
-                    .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 6.0f)
+                    .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(6.0f))
                     .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
                     .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, hoverColor)
                     .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.01f)
@@ -227,7 +228,7 @@ public class XUIScrollExampleScreen extends Screen {
         btn.style()
                 .setTransitionSpeed(20.0f)
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, baseColor)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(8.0f))
                 .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
                 .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.05f)
                 .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.95f);

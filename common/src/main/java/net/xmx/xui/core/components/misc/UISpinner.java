@@ -2,7 +2,7 @@
  * This file is part of XUI.
  * Licensed under LGPL 3.0.
  */
-package net.xmx.xui.core.components.charts;
+package net.xmx.xui.core.components.misc;
 
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.gl.renderer.UIRenderer;

@@ -15,6 +15,7 @@ import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.font.DefaultFonts;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
 
@@ -68,7 +69,7 @@ public class XUITextExampleScreen extends Screen {
 
         paperPanel.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, 0xFF1E1E1E)
-                .set(ThemeProperties.BORDER_RADIUS, 8.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(8.0f))
                 .set(ThemeProperties.BORDER_COLOR, 0xFF333333)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 

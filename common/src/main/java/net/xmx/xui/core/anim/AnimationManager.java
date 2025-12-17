@@ -4,6 +4,7 @@
  */
 package net.xmx.xui.core.anim;
 
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.StyleKey;
 
 import java.util.HashMap;
@@ -83,6 +84,34 @@ public class AnimationManager {
 
         currentValues.put(prop, current);
         return current;
+    }
+
+    /**
+     * Gets or updates the animated CornerRadii value.
+     *
+     * @param prop   The property key.
+     * @param target The target radii from the stylesheet.
+     * @param speed  The interpolation speed.
+     * @param dt     Delta time in seconds.
+     * @return The interpolated CornerRadii for the current frame.
+     */
+    public CornerRadii getAnimatedCornerRadii(StyleKey<CornerRadii> prop, CornerRadii target, float speed, float dt) {
+        float safeDt = Math.min(dt, 0.1f);
+
+        CornerRadii current = (CornerRadii) currentValues.getOrDefault(prop, target);
+
+        // Optimization: if objects are equal or values are extremely close, snap to target
+        if (current.equals(target)) return target;
+
+        // Exponential decay interpolation
+        float lerpFactor = 1.0f - (float) Math.exp(-speed * safeDt);
+        lerpFactor = Math.max(0.0f, Math.min(1.0f, lerpFactor));
+
+        // Use the lerp method in CornerRadii
+        CornerRadii next = current.lerp(target, lerpFactor);
+
+        currentValues.put(prop, next);
+        return next;
     }
 
     /**

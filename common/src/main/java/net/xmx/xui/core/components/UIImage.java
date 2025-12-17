@@ -8,6 +8,7 @@ import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.gl.texture.TextureCache;
 import net.xmx.xui.core.gl.texture.UITexture;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -48,7 +49,7 @@ public class UIImage extends UIWidget {
         this.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, 0x00000000)
                 .set(TINT_COLOR, 0xFFFFFFFF)
-                .set(ThemeProperties.BORDER_RADIUS, 0.0f);
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.ZERO);
     }
 
     /**
@@ -101,7 +102,7 @@ public class UIImage extends UIWidget {
         if (texture == null) return;
 
         // Retrieve styles
-        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+        CornerRadii radii = getCornerRadii(ThemeProperties.BORDER_RADIUS, state, deltaTime);
         int tint = getColor(TINT_COLOR, state, deltaTime);
 
         // Handle transparency of the widget (opacity) combined with tint alpha
@@ -112,12 +113,16 @@ public class UIImage extends UIWidget {
             tint = (tint & 0x00FFFFFF) | (alpha << 24);
         }
 
+        // Current Limitation: ImageRenderer shader supports uniform radius only.
+        // We use the top-left corner as the master radius.
+        float effectiveRadius = radii.topLeft();
+
         // Delegate to renderer with the specific filtering flag
         renderer.getImage().drawImage(
                 texture,
                 x, y, width, height,
                 tint,
-                radius,
+                effectiveRadius,
                 pixelPerfect,
                 renderer.getCurrentUiScale(),
                 renderer.getTransformStack().getDirectModelMatrix()

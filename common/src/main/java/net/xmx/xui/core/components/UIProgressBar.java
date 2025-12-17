@@ -6,6 +6,7 @@ package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -61,7 +62,7 @@ public class UIProgressBar extends UIWidget {
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF303030)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF505050)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 4.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(4.0f))
 
                 // Fill
                 .set(InteractionState.DEFAULT, FILL_COLOR, 0xFF2196F3)
@@ -130,7 +131,7 @@ public class UIProgressBar extends UIWidget {
         int fillColor = style().getValue(state, FILL_COLOR);
         int textColor = getColor(ThemeProperties.TEXT_COLOR, state, deltaTime);
 
-        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+        CornerRadii radii = getCornerRadii(ThemeProperties.BORDER_RADIUS, state, deltaTime);
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
 
         // 2. Animate Progress
@@ -138,7 +139,10 @@ public class UIProgressBar extends UIWidget {
         float currentNorm = animManager.getAnimatedFloat(VISUAL_PROGRESS, targetNorm, style().getTransitionSpeed(), deltaTime);
 
         // 3. Draw Track (Background)
-        renderer.getGeometry().renderRect(x, y, width, height, trackColor, radius);
+        renderer.getGeometry().renderRect(
+                x, y, width, height, trackColor,
+                radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+        );
 
         // 4. Draw Fill with Scissor Clipping
         // Instead of shrinking the rect (which distorts corners), we draw the full-size rect
@@ -150,7 +154,10 @@ public class UIProgressBar extends UIWidget {
             renderer.getScissor().enableScissor(x, y, visibleWidth, height);
 
             // Draw the FULL bar (so the right-side corners exist, but are currently clipped off)
-            renderer.getGeometry().renderRect(x, y, width, height, fillColor, radius);
+            renderer.getGeometry().renderRect(
+                    x, y, width, height, fillColor,
+                    radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+            );
 
             // Disable Scissor
             renderer.getScissor().disableScissor();
@@ -158,7 +165,10 @@ public class UIProgressBar extends UIWidget {
 
         // 5. Draw Border (on top of everything)
         if (borderThick > 0) {
-            renderer.getGeometry().renderOutline(x, y, width, height, borderColor, radius, borderThick);
+            renderer.getGeometry().renderOutline(
+                    x, y, width, height, borderColor, borderThick,
+                    radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+            );
         }
 
         // 6. Draw Text

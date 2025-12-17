@@ -10,6 +10,7 @@ import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.text.TextComponent;
@@ -99,7 +100,7 @@ public class MarkdownTaskListItem extends UIPanel {
                     .set(ThemeProperties.BACKGROUND_COLOR, 0xFF202020)
                     .set(ThemeProperties.BORDER_COLOR, 0xFF606060)
                     .set(ThemeProperties.BORDER_THICKNESS, 1.0f)
-                    .set(ThemeProperties.BORDER_RADIUS, 2.0f)
+                    .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(2.0f))
 
                     // States for animation (Hover effect)
                     .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xFF303030)
@@ -110,11 +111,17 @@ public class MarkdownTaskListItem extends UIPanel {
         protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
             int bg = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
             int border = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
-            float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+            CornerRadii radii = getCornerRadii(ThemeProperties.BORDER_RADIUS, state, deltaTime);
 
             // Draw Box
-            renderer.getGeometry().renderRect(x, y, width, height, bg, radius);
-            renderer.getGeometry().renderOutline(x, y, width, height, border, radius, 1.0f);
+            renderer.getGeometry().renderRect(
+                    x, y, width, height, bg,
+                    radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+            );
+            renderer.getGeometry().renderOutline(
+                    x, y, width, height, border, 1.0f,
+                    radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+            );
 
             // Draw Checkmark if checked
             if (checked) {

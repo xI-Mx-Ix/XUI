@@ -6,6 +6,7 @@ package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -68,7 +69,7 @@ public class UIToggleSwitch extends UIWidget {
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF303030) // Dark Grey Track
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF505050)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 999.0f)        // Max rounding (Pill shape)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(999.0f)) // Max rounding (Pill shape)
                 .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFFFFFFF)
 
                 // --- Specific Switch Styles ---
@@ -143,12 +144,12 @@ public class UIToggleSwitch extends UIWidget {
         // Interpolate Track Background: OFF Color -> ON Color
         int trackOffColor = style().getValue(state, ThemeProperties.BACKGROUND_COLOR);
         int trackOnColor = style().getValue(state, TRACK_ON_COLOR);
-        
+
         // Use AnimationManager to smoothly fade the background color property
         int currentTrackColor = animManager.getAnimatedColor(
-                ThemeProperties.BACKGROUND_COLOR, 
-                isChecked ? trackOnColor : trackOffColor, 
-                style().getTransitionSpeed(), 
+                ThemeProperties.BACKGROUND_COLOR,
+                isChecked ? trackOnColor : trackOffColor,
+                style().getTransitionSpeed(),
                 deltaTime
         );
 
@@ -164,9 +165,9 @@ public class UIToggleSwitch extends UIWidget {
         float pillRadius = height / 2.0f;
 
         // 4. Draw Track
-        renderer.getGeometry().renderRect(x, y, width, height, currentTrackColor, pillRadius);
+        renderer.getGeometry().renderRect(x, y, width, height, currentTrackColor, pillRadius, pillRadius, pillRadius, pillRadius);
         if (borderThick > 0) {
-            renderer.getGeometry().renderOutline(x, y, width, height, borderColor, pillRadius, borderThick);
+            renderer.getGeometry().renderOutline(x, y, width, height, borderColor, borderThick, pillRadius, pillRadius, pillRadius, pillRadius);
         }
 
         // 5. Draw Thumb (Handle)

@@ -9,10 +9,7 @@ import net.xmx.xui.core.anim.AnimationBuilder;
 import net.xmx.xui.core.effect.UIEffect;
 import net.xmx.xui.core.effect.UIScissorsEffect;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
-import net.xmx.xui.core.style.InteractionState;
-import net.xmx.xui.core.style.ThemeProperties;
-import net.xmx.xui.core.style.StyleSheet;
-import net.xmx.xui.core.style.StyleKey;
+import net.xmx.xui.core.style.*;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
@@ -347,6 +344,16 @@ public abstract class UIWidget {
         float target = styleSheet.getValue(currentState, prop);
         return animManager.getAnimatedFloat(prop, target, styleSheet.getTransitionSpeed(), dt);
     }
+
+    /**
+     * Helper to retrieve an animated CornerRadii value based on the current state.
+     * Uses deltaTime to progress the animation.
+     */
+    protected CornerRadii getCornerRadii(StyleKey<CornerRadii> prop, InteractionState currentState, float dt) {
+        CornerRadii target = styleSheet.getValue(currentState, prop);
+        return animManager.getAnimatedCornerRadii(prop, target, styleSheet.getTransitionSpeed(), dt);
+    }
+
 
     /**
      * Checks if this widget is currently visually clipped by any of its ancestors.

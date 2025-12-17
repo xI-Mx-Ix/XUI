@@ -11,6 +11,7 @@ import net.xmx.xui.core.components.scroll.ScrollOrientation;
 import net.xmx.xui.core.components.scroll.UIScrollBar;
 import net.xmx.xui.core.components.scroll.UIScrollComponent;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -80,7 +81,7 @@ public class UIAccordion extends UIPanel {
     /**
      * Border radius of the expanded body area.
      */
-    public static final StyleKey<Float> BODY_BORDER_RADIUS = new StyleKey<>("accordion_body_radius", 4.0f);
+    public static final StyleKey<CornerRadii> BODY_BORDER_RADIUS = new StyleKey<>("accordion_body_radius", CornerRadii.all(4.0f));
 
     // --- Child Components ---
 
@@ -126,7 +127,7 @@ public class UIAccordion extends UIPanel {
                 // We use Default state for the body to ensure stability.
                 int bgColor = UIAccordion.this.getColor(BODY_BACKGROUND_COLOR, InteractionState.DEFAULT, deltaTime);
                 int borderColor = UIAccordion.this.getColor(BODY_BORDER_COLOR, InteractionState.DEFAULT, deltaTime);
-                float radius = UIAccordion.this.getFloat(BODY_BORDER_RADIUS, InteractionState.DEFAULT, deltaTime);
+                CornerRadii radii = UIAccordion.this.getCornerRadii(BODY_BORDER_RADIUS, InteractionState.DEFAULT, deltaTime);
 
                 // Thickness is currently generic, but could be added as a key if needed.
                 // We fetch it from the body's local style or fallback.
@@ -134,7 +135,11 @@ public class UIAccordion extends UIPanel {
 
                 // Draw Border (Outline)
                 if (thickness > 0 && (borderColor >>> 24) > 0) {
-                    renderer.getGeometry().renderOutline(this.getX(), this.getY(), this.getWidth(), this.getHeight(), borderColor, radius, thickness);
+                    renderer.getGeometry().renderOutline(
+                            this.getX(), this.getY(), this.getWidth(), this.getHeight(),
+                            borderColor, thickness,
+                            radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+                    );
                 }
 
                 // Draw Background
@@ -147,7 +152,10 @@ public class UIAccordion extends UIPanel {
                             this.getWidth() - (thickness * 2),
                             this.getHeight() - (thickness * 2),
                             bgColor,
-                            Math.max(0, radius - thickness)
+                            Math.max(0, radii.topLeft() - thickness),
+                            Math.max(0, radii.topRight() - thickness),
+                            Math.max(0, radii.bottomRight() - thickness),
+                            Math.max(0, radii.bottomLeft() - thickness)
                     );
                 }
             }
@@ -203,11 +211,11 @@ public class UIAccordion extends UIPanel {
                 // Body Styles
                 .set(InteractionState.DEFAULT, BODY_BACKGROUND_COLOR, 0xFF181818)
                 .set(InteractionState.DEFAULT, BODY_BORDER_COLOR, 0xFF404040)
-                .set(InteractionState.DEFAULT, BODY_BORDER_RADIUS, 4.0f);
+                .set(InteractionState.DEFAULT, BODY_BORDER_RADIUS, CornerRadii.all(4.0f));
 
         // --- Header Panel Styling ---
         header.style()
-                .set(ThemeProperties.BORDER_RADIUS, 4.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(4.0f))
                 .set(ThemeProperties.BORDER_COLOR, 0xFF404040)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 

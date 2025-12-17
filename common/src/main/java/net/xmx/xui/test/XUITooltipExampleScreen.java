@@ -14,6 +14,7 @@ import net.xmx.xui.core.components.UIButton;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.UITooltip;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
 
@@ -57,7 +58,7 @@ public class XUITooltipExampleScreen extends Screen {
                 .setHeight(Layout.pixel(300));
         contentPanel.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
-                .set(ThemeProperties.BORDER_RADIUS, 10.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(10.0f))
                 .set(ThemeProperties.BORDER_COLOR, 0xFF444444)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 

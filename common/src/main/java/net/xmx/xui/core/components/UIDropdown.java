@@ -6,6 +6,7 @@ package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -77,7 +78,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     /**
      * Border radius of the expanded overlay list.
      */
-    public static final StyleKey<Float> OVERLAY_BORDER_RADIUS = new StyleKey<>("dropdown_overlay_radius", 6.0f);
+    public static final StyleKey<CornerRadii> OVERLAY_BORDER_RADIUS = new StyleKey<>("dropdown_overlay_radius", CornerRadii.all(6.0f));
 
     /**
      * The vertical spacing (gap) between the header and the expanded overlay in pixels.
@@ -125,7 +126,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 // --- Header (Widget) Styles ---
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF404040)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 6.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(6.0f))
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
                 .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)
                 .set(InteractionState.DEFAULT, ARROW_COLOR, 0xFF909090)
@@ -134,7 +135,7 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                 // --- Overlay (List) Styles ---
                 .set(InteractionState.DEFAULT, OVERLAY_BACKGROUND_COLOR, 0xFF181818)
                 .set(InteractionState.DEFAULT, OVERLAY_BORDER_COLOR, 0xFF404040)
-                .set(InteractionState.DEFAULT, OVERLAY_BORDER_RADIUS, 6.0f)
+                .set(InteractionState.DEFAULT, OVERLAY_BORDER_RADIUS, CornerRadii.all(6.0f))
 
                 // --- Item Styles ---
                 // Hover overlay for items (lighter white)
@@ -204,13 +205,16 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         int headerBorder = getColor(ThemeProperties.BORDER_COLOR, headerState, deltaTime);
         int textColor = getColor(ThemeProperties.TEXT_COLOR, headerState, deltaTime);
         int arrowColor = getColor(ARROW_COLOR, headerState, deltaTime);
-        float headerRadius = getFloat(ThemeProperties.BORDER_RADIUS, headerState, deltaTime);
+
+        CornerRadii headerRadii = getCornerRadii(ThemeProperties.BORDER_RADIUS, headerState, deltaTime);
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, headerState, deltaTime);
 
         // 3. Draw Header
-        renderer.getGeometry().renderRect(x, y, width, height, headerBg, headerRadius);
+        renderer.getGeometry().renderRect(x, y, width, height, headerBg,
+                headerRadii.topLeft(), headerRadii.topRight(), headerRadii.bottomRight(), headerRadii.bottomLeft());
         if (borderThick > 0) {
-            renderer.getGeometry().renderOutline(x, y, width, height, headerBorder, headerRadius, borderThick);
+            renderer.getGeometry().renderOutline(x, y, width, height, headerBorder, borderThick,
+                    headerRadii.topLeft(), headerRadii.topRight(), headerRadii.bottomRight(), headerRadii.bottomLeft());
         }
 
         // Draw Selected Text
@@ -231,12 +235,12 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
             // We use the DEFAULT state for the list container itself to ensure stability
             int listBg = getColor(OVERLAY_BACKGROUND_COLOR, InteractionState.DEFAULT, deltaTime);
             int listBorder = getColor(OVERLAY_BORDER_COLOR, InteractionState.DEFAULT, deltaTime);
-            float listRadius = getFloat(OVERLAY_BORDER_RADIUS, InteractionState.DEFAULT, deltaTime);
+            CornerRadii listRadii = getCornerRadii(OVERLAY_BORDER_RADIUS, InteractionState.DEFAULT, deltaTime);
 
             renderer.translate(0, 0, 50);
 
             // Pass the distinct list styles to the render method
-            renderOverlay(renderer, mouseX, mouseY, listBg, listBorder, textColor, listRadius, borderThick);
+            renderOverlay(renderer, mouseX, mouseY, listBg, listBorder, textColor, listRadii, borderThick);
 
             renderer.translate(0, 0, -50);
         }
@@ -323,20 +327,21 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
     }
 
     private void renderOverlay(UIRenderer renderer, int mouseX, int mouseY,
-                               int bgColor, int borderColor, int textColor, float radius, float borderThick) {
+                               int bgColor, int borderColor, int textColor, CornerRadii radii, float borderThick) {
 
         float totalListHeight = options.size() * optionHeight;
 
         // --- Radius Clamping Logic ---
         // Prevent graphical artifacts when the box height is smaller than 2x radius.
-        float effectiveRadius = Math.min(radius, overlayHeight / 2.0f);
+        // For CornerRadii, this is complex, so we skip detailed clamping here assuming radii are sane.
 
         // --- 1. Clipping (Scissors) ---
         // We define a window that matches the current animated box size.
         renderer.getScissor().enableScissor(overlayX, overlayY, overlayWidth, overlayHeight);
 
         // --- 2. Draw Background ---
-        renderer.getGeometry().renderRect(overlayX, overlayY, overlayWidth, overlayHeight, bgColor, effectiveRadius);
+        renderer.getGeometry().renderRect(overlayX, overlayY, overlayWidth, overlayHeight, bgColor,
+                radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft());
 
         // --- 3. Draw Options ---
         int hoverColor = style().getValue(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR);
@@ -353,7 +358,8 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                     mouseY >= overlayY && mouseY <= overlayY + overlayHeight);
 
             if (isHovered) {
-                renderer.getGeometry().renderRect(overlayX + 2, optY, overlayWidth - 4, optionHeight, hoverColor, effectiveRadius / 2);
+                // Hardcoded 2.0f radius for hover highlight, effectively standard rect
+                renderer.getGeometry().renderRect(overlayX + 2, optY, overlayWidth - 4, optionHeight, hoverColor, 2.0f);
             }
 
             float textY = optY + (optionHeight - TextComponent.getFontHeight()) / 2.0f + 1;
@@ -362,7 +368,8 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         // --- 4. Draw Border ---
         if (borderThick > 0) {
-            renderer.getGeometry().renderOutline(overlayX, overlayY, overlayWidth, overlayHeight, borderColor, effectiveRadius, borderThick);
+            renderer.getGeometry().renderOutline(overlayX, overlayY, overlayWidth, overlayHeight, borderColor, borderThick,
+                    radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft());
         }
 
         // Disable clipping

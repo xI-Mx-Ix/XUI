@@ -6,6 +6,7 @@ package net.xmx.xui.core.components;
 
 import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -67,7 +68,7 @@ public class UICheckbox extends UIWidget {
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0x00000000) // Transparent inner
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF808080)     // Grey border
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 2.0f)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 2.0f)          // Slight rounding (set to 0 for sharp)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(2.0f)) // Slight rounding
                 .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFAAAAAA)
                 .set(InteractionState.DEFAULT, CHECK_COLOR, 0xFF64FFDA)
                 .set(InteractionState.DEFAULT, BOX_SIZE, 14.0f)
@@ -152,7 +153,8 @@ public class UICheckbox extends UIWidget {
         // 1. Resolve Styles
         float boxSize = style().getValue(state, BOX_SIZE);
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
-        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+
+        CornerRadii radii = getCornerRadii(ThemeProperties.BORDER_RADIUS, state, deltaTime);
 
         int bgColor = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
         int borderColor = getColor(ThemeProperties.BORDER_COLOR, state, deltaTime);
@@ -170,8 +172,15 @@ public class UICheckbox extends UIWidget {
         float boxX = x;
 
         // 3. Draw Outer Box (Container)
-        renderer.getGeometry().renderRect(boxX, boxY, boxSize, boxSize, bgColor, radius);
-        renderer.getGeometry().renderOutline(boxX, boxY, boxSize, boxSize, borderColor, radius, borderThick);
+        renderer.getGeometry().renderRect(
+                boxX, boxY, boxSize, boxSize, bgColor,
+                radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+        );
+
+        renderer.getGeometry().renderOutline(
+                boxX, boxY, boxSize, boxSize, borderColor, borderThick,
+                radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
+        );
 
         // 4. Draw Inner Check (Animated Filled Square)
         // Interpolate scale: 0.0 -> 1.0
@@ -187,8 +196,14 @@ public class UICheckbox extends UIWidget {
             float innerSize = maxInnerSize * currentScale;
             float offset = (boxSize - innerSize) / 2.0f;
 
-            // Determine inner radius (usually slightly smaller than outer radius)
-            float innerRadius = Math.max(0, radius - 1) * currentScale;
+            // Determine inner radii (slightly smaller than outer radii to nest correctly)
+            // Logic: innerRadius = max(0, outerRadius - padding) * scale
+            // We apply this to all 4 corners.
+            float s = currentScale;
+            float innerTL = Math.max(0, radii.topLeft() - 1) * s;
+            float innerTR = Math.max(0, radii.topRight() - 1) * s;
+            float innerBR = Math.max(0, radii.bottomRight() - 1) * s;
+            float innerBL = Math.max(0, radii.bottomLeft() - 1) * s;
 
             renderer.getGeometry().renderRect(
                     boxX + offset,
@@ -196,7 +211,7 @@ public class UICheckbox extends UIWidget {
                     innerSize,
                     innerSize,
                     checkColor,
-                    innerRadius
+                    innerTL, innerTR, innerBR, innerBL
             );
         }
 

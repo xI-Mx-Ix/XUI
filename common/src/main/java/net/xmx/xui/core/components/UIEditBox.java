@@ -7,6 +7,7 @@ package net.xmx.xui.core.components;
 import net.xmx.xui.core.font.DefaultFonts;
 import net.xmx.xui.core.font.Font;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
@@ -85,7 +86,7 @@ public class UIEditBox extends UIWidget {
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF101010)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF606060)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 3.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(3.0f))
                 .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFFFFFFF)
                 .set(InteractionState.DEFAULT, HINT_COLOR, 0xFF888888) // Default gray for hint
                 .set(InteractionState.DEFAULT, CURSOR_COLOR, 0xFFFFFFFF)
@@ -93,6 +94,7 @@ public class UIEditBox extends UIWidget {
                 .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, 0xFFAAAAAA)
                 .set(InteractionState.ACTIVE, ThemeProperties.BORDER_COLOR, 0xFFFFFFFF);
     }
+
 
     /**
      * Toggles multi-line mode.
@@ -178,13 +180,15 @@ public class UIEditBox extends UIWidget {
         int cursorColor = getColor(CURSOR_COLOR, state, deltaTime);
         int selectionColor = getColor(SELECTION_COLOR, state, deltaTime);
 
-        float radius = getFloat(ThemeProperties.BORDER_RADIUS, state, deltaTime);
+        CornerRadii radii = getCornerRadii(ThemeProperties.BORDER_RADIUS, state, deltaTime);
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
 
         // Render the background and border of the edit box
-        renderer.getGeometry().renderRect(x, y, width, height, bgColor, radius);
+        renderer.getGeometry().renderRect(x, y, width, height, bgColor,
+                radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft());
         if (borderThick > 0) {
-            renderer.getGeometry().renderOutline(x, y, width, height, borderColor, radius, borderThick);
+            renderer.getGeometry().renderOutline(x, y, width, height, borderColor, borderThick,
+                    radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft());
         }
 
         // Use the instance font height instead of static global height

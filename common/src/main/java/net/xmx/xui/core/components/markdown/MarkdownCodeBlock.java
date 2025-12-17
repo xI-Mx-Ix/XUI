@@ -8,6 +8,7 @@ import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.components.UIWrappedText;
 import net.xmx.xui.core.font.Font;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
 
@@ -40,7 +41,7 @@ public class MarkdownCodeBlock extends UIPanel {
 
         // Apply syntax highlighting to the raw code string, returning a styled TextComponent tree
         TextComponent coloredCode = MarkdownUtils.highlightCode(code);
-        
+
         // IMPORTANT: Recursively apply the code font to all highlight segments
         MarkdownUtils.applyFontRecursive(coloredCode, font);
 
@@ -58,7 +59,7 @@ public class MarkdownCodeBlock extends UIPanel {
 
         this.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, 0xFF151515) // Very dark background
-                .set(ThemeProperties.BORDER_RADIUS, 4.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(4.0f))
                 .set(ThemeProperties.BORDER_COLOR, 0xFF303030)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 

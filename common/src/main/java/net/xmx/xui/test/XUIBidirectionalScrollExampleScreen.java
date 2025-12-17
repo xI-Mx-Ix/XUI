@@ -16,6 +16,7 @@ import net.xmx.xui.core.components.UIText;
 import net.xmx.xui.core.components.scroll.ScrollOrientation;
 import net.xmx.xui.core.components.scroll.UIScrollBar;
 import net.xmx.xui.core.components.scroll.UIScrollComponent;
+import net.xmx.xui.core.style.CornerRadii;
 import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.ThemeProperties;
 
@@ -78,7 +79,7 @@ public class XUIBidirectionalScrollExampleScreen extends Screen {
 
         mainFrame.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, COLOR_PANEL_BG)
-                .set(ThemeProperties.BORDER_RADIUS, 12.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(12.0f))
                 .set(ThemeProperties.BORDER_COLOR, COLOR_BORDER)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
 
@@ -100,7 +101,7 @@ public class XUIBidirectionalScrollExampleScreen extends Screen {
 
         viewport.style()
                 .set(ThemeProperties.BACKGROUND_COLOR, COLOR_VIEWPORT_BG)
-                .set(ThemeProperties.BORDER_RADIUS, 4.0f)
+                .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(4.0f))
                 // We add a border to the viewport itself to define the "window"
                 .set(ThemeProperties.BORDER_COLOR, 0x30FFFFFF)
                 .set(ThemeProperties.BORDER_THICKNESS, 1.0f);
@@ -207,7 +208,7 @@ public class XUIBidirectionalScrollExampleScreen extends Screen {
                 int hoverColor = dark ? 0xFF4B515C : 0xFF323944;
 
                 cell.style()
-                        .set(ThemeProperties.BORDER_RADIUS, 4.0f)
+                        .set(ThemeProperties.BORDER_RADIUS, CornerRadii.all(4.0f))
                         // Remove all Border properties
                         .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, baseColor)
                         // Change background on hover instead of showing a border
@@ -241,7 +242,7 @@ public class XUIBidirectionalScrollExampleScreen extends Screen {
         btn.style()
                 .setTransitionSpeed(15.0f)
                 .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF424242)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, 4.0f)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(4.0f))
                 .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xFF616161)
                 .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.05f)
                 .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.95f);
