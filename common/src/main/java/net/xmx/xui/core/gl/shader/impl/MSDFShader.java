@@ -12,8 +12,11 @@ import org.lwjgl.opengl.GL20;
 import java.nio.FloatBuffer;
 
 /**
- * Shader program wrapper for the MSDF text rendering pipeline.
- * Manages uniform uploads for projection matrices, model-view matrices and font rendering parameters.
+ * Shader program wrapper for the generic MSDF rendering pipeline.
+ * Manages uniform uploads for matrices and MSDF parameters (pxRange).
+ * <p>
+ * This shader is used for both Fonts and Icons.
+ * </p>
  *
  * @author xI-Mx-Ix
  */
@@ -21,16 +24,16 @@ public class MSDFShader extends ShaderProgram {
 
     private int locProjMat;
     private int locModelViewMat;
-    private int locFontTexture;
+    private int locMsdfTexture;
     private int locPxRange;
 
     private final FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
 
     /**
-     * Constructs the shader by loading the "msdf_font" sources.
+     * Constructs the shader by loading the generic "msdf" sources.
      */
     public MSDFShader() {
-        super("xui", "core/msdf_font");
+        super("xui", "core/msdf");
     }
 
     @Override
@@ -44,7 +47,7 @@ public class MSDFShader extends ShaderProgram {
     protected void registerUniforms() {
         locProjMat = super.getUniformLocation("projMat");
         locModelViewMat = super.getUniformLocation("modelViewMat");
-        locFontTexture = super.getUniformLocation("fontTexture");
+        locMsdfTexture = super.getUniformLocation("msdfTexture");
         locPxRange = super.getUniformLocation("pxRange");
     }
 
@@ -69,16 +72,16 @@ public class MSDFShader extends ShaderProgram {
     }
 
     /**
-     * Sets the texture unit index for the font atlas.
+     * Sets the texture unit index for the MSDF atlas.
      *
      * @param unit The texture unit (e.g., 0).
      */
     public void uploadTextureUnit(int unit) {
-        GL20.glUniform1i(locFontTexture, unit);
+        GL20.glUniform1i(locMsdfTexture, unit);
     }
 
     /**
-     * Uploads the distance range parameter derived from the font metadata.
+     * Uploads the distance range parameter derived from the atlas metadata.
      * This controls the sharpness/softness of the edge evaluation.
      *
      * @param range The signed distance range in pixels.

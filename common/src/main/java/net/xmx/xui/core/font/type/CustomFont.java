@@ -154,14 +154,14 @@ public class CustomFont extends Font {
 
         try {
             // 2. Pass 1: Render Text Glyphs (MSDF Shader)
-            renderer.getText().begin(UIRenderer.getInstance().getCurrentUiScale(),
+            renderer.getMsdf().begin(UIRenderer.getInstance().getCurrentUiScale(),
                     regular.getData().atlas, UIRenderer.getInstance().getTransformStack().getDirectModelMatrix());
 
             // Execute the recursive drawing logic.
             // This populates the mesh AND fills pendingDecorations.
             renderAction.run();
 
-            renderer.getText().end();
+            renderer.getMsdf().end();
 
             // 3. Pass 2: Render Decorations (Geometry Shader)
             if (!pendingDecorations.isEmpty()) {
@@ -228,8 +228,8 @@ public class CustomFont extends Font {
 
         // --- 2. Prepare Rendering ---
         // Bind the texture for the active font style
-        UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
-        MeshBuffer mesh = UIRenderer.getInstance().getText().getMesh();
+        UIRenderer.getInstance().getMsdf().drawBatch(currentFont.getTextureId());
+        MeshBuffer mesh = UIRenderer.getInstance().getMsdf().getMesh();
 
         float cursorX = x;
 
@@ -269,16 +269,16 @@ public class CustomFont extends Font {
                 MSDFData.Glyph fallback = this.regular.getGlyph(c);
                 if (fallback != null) {
                     // Flush current batch (e.g. Bold)
-                    UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
+                    UIRenderer.getInstance().getMsdf().drawBatch(currentFont.getTextureId());
 
                     // Render single char using Regular texture
                     renderGlyph(mesh, fallback, cursorX, cursorY, this.regular, r, g, b, a);
 
                     // Flush Regular batch immediately
-                    UIRenderer.getInstance().getText().drawBatch(this.regular.getTextureId());
+                    UIRenderer.getInstance().getMsdf().drawBatch(this.regular.getTextureId());
 
                     // Switch back binding to current font (e.g. Bold) for next chars
-                    UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
+                    UIRenderer.getInstance().getMsdf().drawBatch(currentFont.getTextureId());
 
                     // Advance cursor
                     cursorX += fallback.advance * FONT_SIZE;
@@ -318,7 +318,7 @@ public class CustomFont extends Font {
         }
 
         // Ensure the texture binding is correct before returning control
-        UIRenderer.getInstance().getText().drawBatch(currentFont.getTextureId());
+        UIRenderer.getInstance().getMsdf().drawBatch(currentFont.getTextureId());
         return cursorX;
     }
 

@@ -4,8 +4,8 @@
 in vec4 fragColor;
 in vec2 fragUV;
 
-// The MSDF font texture atlas
-uniform sampler2D fontTexture;
+// The MSDF texture atlas
+uniform sampler2D msdfTexture;
 
 // The pixel range used when generating the MSDF texture (e.g., 2.0 or 4.0)
 uniform float pxRange;
@@ -30,10 +30,10 @@ float median(float r, float g, float b) {
  * Computes the screen-space size of the signed distance field's range.
  *
  * This function determines how many physical screen pixels correspond to the
- * 'pxRange' defined in the font atlas.
+ * 'pxRange' defined in the atlas.
  *
  * By clamping the result to a minimum of 1.0, we ensure that the anti-aliasing
- * edge never becomes thinner than a single pixel. This allows the text to behave
+ * edge never becomes thinner than a single pixel. This allows the shape to behave
  * like mip-mapping at very small scales, remaining visible (though blurred)
  * instead of vanishing due to high-frequency noise.
  *
@@ -41,7 +41,7 @@ float median(float r, float g, float b) {
  */
 float screenPxRange() {
     // Retrieve the dimensions of the texture atlas directly from the sampler
-    vec2 texSize = vec2(textureSize(fontTexture, 0));
+    vec2 texSize = vec2(textureSize(msdfTexture, 0));
 
     // Convert the pxRange (in atlas pixels) to UV space (0.0 to 1.0)
     vec2 unitRange = vec2(pxRange) / texSize;
@@ -56,8 +56,8 @@ float screenPxRange() {
 }
 
 void main() {
-    // 1. Retrieve the MSDF data from the texture
-    vec3 msd = texture(fontTexture, fragUV).rgb;
+    // 1. Retrieve the MSDF data from the generic texture
+    vec3 msd = texture(msdfTexture, fragUV).rgb;
 
     // 2. Compute the signed distance to the shape's edge
     float sd = median(msd.r, msd.g, msd.b);
