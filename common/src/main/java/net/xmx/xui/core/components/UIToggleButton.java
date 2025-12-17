@@ -36,7 +36,7 @@ public class UIToggleButton extends UIWidget {
     /**
      * The background color when the button is in the ON state.
      */
-    public static final StyleKey<Integer> TOGGLED_BACKGROUND_COLOR = new StyleKey<>("toggled_bg_color", 0xFF4CAF50);
+    public static final StyleKey<Integer> TOGGLED_BACKGROUND_COLOR = new StyleKey<>("toggled_bg_color", 0xFF388E3C); // Modern Green
 
     /**
      * The border color when the button is in the ON state.
@@ -75,29 +75,29 @@ public class UIToggleButton extends UIWidget {
      */
     private void setupToggleStyles() {
         this.style()
-                .setTransitionSpeed(10.0f)
+                .setTransitionSpeed(12.0f)
 
-                // --- OFF State (Standard Button Look) ---
-                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xFF252525)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0xFF404040)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 1.0f)
+                // --- OFF State (Standard Dark Look) ---
+                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xCC202020) // Dark Grey
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0x00000000)     // No border by default
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 0f)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(6.0f))
-                .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFAAAAAA)
+                .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)       // Light Grey Text
                 .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
 
-                // --- Hover State ---
-                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xFF353535)
-                .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, 0xFF606060)
+                // --- Hover State (Subtle Highlight) ---
+                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xEE353535)   // Slightly lighter
+                .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, 0x00000000)
                 .set(InteractionState.HOVER, ThemeProperties.TEXT_COLOR, 0xFFFFFFFF)
-                .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.02f)
+                .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.0f)                    // Keep size stable
 
                 // --- Active (Click) State ---
-                .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.98f)
+                .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.98f)                  // Tiny tactile shrink
 
                 // --- ON State (Toggled Colors) ---
-                // We define these in DEFAULT state, but they could also have HOVER overrides if desired.
-                .set(InteractionState.DEFAULT, TOGGLED_BACKGROUND_COLOR, 0xFF2E7D32) // Greenish
-                .set(InteractionState.DEFAULT, TOGGLED_BORDER_COLOR, 0xFF4CAF50)     // Lighter Green
+                // These override the background when isToggled is true
+                .set(InteractionState.DEFAULT, TOGGLED_BACKGROUND_COLOR, 0xFF388E3C) // Material Design Green
+                .set(InteractionState.DEFAULT, TOGGLED_BORDER_COLOR, 0x00000000)     // Clean look without border
                 .set(InteractionState.DEFAULT, TOGGLED_TEXT_COLOR, 0xFFFFFFFF);
     }
 
@@ -208,7 +208,6 @@ public class UIToggleButton extends UIWidget {
     @Override
     protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
         // 1. Resolve Target Colors
-        // Depending on the toggle state, we choose which StyleKeys act as the "Target".
         int targetBg;
         int targetBorder;
         int targetText;
@@ -226,7 +225,7 @@ public class UIToggleButton extends UIWidget {
         }
 
         // 2. Delegate Interpolation to AnimationManager
-        // We use the AnimationManager to smoothly transition the displayed color to the Target.
+        // This ensures the color transition happens smoothly over time
         float speed = style().getTransitionSpeed();
 
         int finalBg = animManager.getAnimatedColor(ThemeProperties.BACKGROUND_COLOR, targetBg, speed, deltaTime);
@@ -234,7 +233,6 @@ public class UIToggleButton extends UIWidget {
         int finalText = animManager.getAnimatedColor(ThemeProperties.TEXT_COLOR, targetText, speed, deltaTime);
 
         // 3. Resolve Geometry and Scale
-        // These are handled normally via the standard animation manager logic for hover/active effects
         CornerRadii radii = getCornerRadii(ThemeProperties.BORDER_RADIUS, state, deltaTime);
         float scale = getFloat(ThemeProperties.SCALE, state, deltaTime);
         float borderThick = getFloat(ThemeProperties.BORDER_THICKNESS, state, deltaTime);
@@ -242,6 +240,8 @@ public class UIToggleButton extends UIWidget {
         // 4. Calculate Scale Transformation (Center Zoom)
         float scaledW = width * scale;
         float scaledH = height * scale;
+
+        // Correctly calculate position so scaling shrinks towards center
         float adjX = x - (scaledW - width) / 2.0f;
         float adjY = y - (scaledH - height) / 2.0f;
 
@@ -252,20 +252,21 @@ public class UIToggleButton extends UIWidget {
         );
 
         // 6. Draw Border
-        if (borderThick > 0) {
+        if (borderThick > 0 && (finalBorder >>> 24) > 0) {
             renderer.getGeometry().renderOutline(
                     adjX, adjY, scaledW, scaledH, finalBorder, borderThick,
                     radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft()
             );
         }
 
-        // 7. Draw Text (Centered)
+        // 7. Draw Text (Centered relative to the SCALED box)
         if (label != null) {
             int strWidth = TextComponent.getTextWidth(label);
             int strHeight = TextComponent.getFontHeight();
 
-            float textX = x + (width - strWidth) / 2.0f;
-            float textY = y + (height - strHeight) / 2.0f + 1;
+            // Use adjX/adjY to ensure text stays centered when button shrinks/grows
+            float textX = adjX + (scaledW - strWidth) / 2.0f;
+            float textY = adjY + (scaledH - strHeight) / 2.0f + 1;
 
             renderer.drawText(label, textX, textY, finalText, true);
         }

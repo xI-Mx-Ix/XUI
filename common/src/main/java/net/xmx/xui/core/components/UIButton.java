@@ -14,11 +14,10 @@ import net.xmx.xui.core.UIWidget;
 /**
  * A Modern Button component.
  * Features:
- * - Animated background and border colors
- * - Animated scale (pop effect)
- * - Rounded corners (per corner control)
- * - Text centering with Component support
- * - Configurable borders
+ * - Smooth color transitions (Dark Grey -> Lighter Grey)
+ * - Tactile click feedback (Micro-scale)
+ * - Stable hover state (No shape shifting)
+ * - Text centering with Scaled Component support
  *
  * @author xI-Mx-Ix
  */
@@ -40,27 +39,28 @@ public class UIButton extends UIWidget {
      */
     private void setupModernStyles() {
         this.style()
-                .setTransitionSpeed(12.0f) // Fast, smooth animation (higher = faster)
+                .setTransitionSpeed(12.0f)
 
-                // --- DEFAULT STATE (Glass Look) ---
-                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xAA202020) // Transparent Dark Grey
-                .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)       // Off-White
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(8.0f)) // Nice rounding
+                // --- DEFAULT STATE (Clean Dark) ---
+                .set(InteractionState.DEFAULT, ThemeProperties.BACKGROUND_COLOR, 0xCC202020) // Dark Grey, slightly transparent
+                .set(InteractionState.DEFAULT, ThemeProperties.TEXT_COLOR, 0xFFE0E0E0)       // Light Grey Text (not harsh white)
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_RADIUS, CornerRadii.all(6.0f)) // Fixed, subtle rounding
                 .set(InteractionState.DEFAULT, ThemeProperties.SCALE, 1.0f)
-                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 0f)         // No border by default
+                .set(InteractionState.DEFAULT, ThemeProperties.BORDER_THICKNESS, 0f)
                 .set(InteractionState.DEFAULT, ThemeProperties.BORDER_COLOR, 0x00000000)
 
-                // --- HOVER STATE (Highlight) ---
-                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xDD404040)   // Lighter, less transparent
-                .set(InteractionState.HOVER, ThemeProperties.TEXT_COLOR, 0xFFFFFFFF)         // Pure White
-                .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.05f)                   // Grow slightly
-                .set(InteractionState.HOVER, ThemeProperties.BORDER_RADIUS, CornerRadii.all(10.0f)) // Rounder
+                // --- HOVER STATE (Subtle Highlight) ---
+                .set(InteractionState.HOVER, ThemeProperties.BACKGROUND_COLOR, 0xEE353535)   // Slightly lighter, more opaque
+                .set(InteractionState.HOVER, ThemeProperties.TEXT_COLOR, 0xFFFFFFFF)         // Pure White Text
+                .set(InteractionState.HOVER, ThemeProperties.SCALE, 1.0f)                    // Stay scale 1.0
+                .set(InteractionState.HOVER, ThemeProperties.BORDER_RADIUS, CornerRadii.all(6.0f)) // KEEP RADIUS SAME
                 .set(InteractionState.HOVER, ThemeProperties.BORDER_THICKNESS, 0f)
                 .set(InteractionState.HOVER, ThemeProperties.BORDER_COLOR, 0x00000000)
 
-                // --- ACTIVE/CLICK STATE (Feedback) ---
-                .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, 0xFF000000)  // Black
-                .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.95f);                 // Shrink slightly
+                // --- ACTIVE/CLICK STATE (Tactile Feedback) ---
+                .set(InteractionState.ACTIVE, ThemeProperties.BACKGROUND_COLOR, 0xFF151515)  // Almost Black
+                .set(InteractionState.ACTIVE, ThemeProperties.SCALE, 0.98f)                  // 2% shrink is enough for feedback
+                .set(InteractionState.ACTIVE, ThemeProperties.BORDER_RADIUS, CornerRadii.all(6.0f));
     }
 
     @Override
@@ -77,6 +77,8 @@ public class UIButton extends UIWidget {
         // 2. Math for Scaling from Center (Zoom effect)
         float scaledW = width * scale;
         float scaledH = height * scale;
+
+        // Calculate the adjusted top-left coordinate for the centered scaled box
         float adjX = x - (scaledW - width) / 2.0f;
         float adjY = y - (scaledH - height) / 2.0f;
 
@@ -94,12 +96,13 @@ public class UIButton extends UIWidget {
             );
         }
 
-        // 6. Draw Text (Centered)
+        // 6. Draw Text (Centered relative to the SCALED box)
         int strWidth = TextComponent.getTextWidth(label);
         int strHeight = TextComponent.getFontHeight();
 
-        float textX = x + (width - strWidth) / 2.0f;
-        float textY = y + (height - strHeight) / 2.0f + 1;
+        // Important: Calculate text position based on adjX/adjY so text moves with the scaling
+        float textX = adjX + (scaledW - strWidth) / 2.0f;
+        float textY = adjY + (scaledH - strHeight) / 2.0f + 1; // +1 often helps with visual font centering
 
         renderer.drawText(label, textX, textY, txtColor, true);
     }
