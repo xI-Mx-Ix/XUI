@@ -337,7 +337,7 @@ public class UIEditBox extends UIWidget {
 
         switch (keyCode) {
             case GLFW.GLFW_KEY_BACKSPACE:
-                if (text.length() > 0) {
+                if (!text.isEmpty()) {
                     if (cursorPosition != selectionEnd) {
                         deleteSelection();
                     } else if (cursorPosition > 0) {
@@ -365,6 +365,14 @@ public class UIEditBox extends UIWidget {
 
             case GLFW.GLFW_KEY_RIGHT:
                 moveCursor(1, shift);
+                return true;
+
+            case GLFW.GLFW_KEY_UP:
+                moveVertical(-1, shift);
+                return true;
+
+            case GLFW.GLFW_KEY_DOWN:
+                moveVertical(1, shift);
                 return true;
 
             case GLFW.GLFW_KEY_HOME:
@@ -462,6 +470,72 @@ public class UIEditBox extends UIWidget {
     private void setCursorPos(int pos, boolean keepSelection) {
         this.cursorPosition = Math.max(0, Math.min(text.length(), pos));
         if (!keepSelection) this.selectionEnd = this.cursorPosition;
+    }
+
+    /**
+     * Moves the cursor vertically to the adjacent line while attempting to maintain
+     * the visual horizontal position (X-coordinate).
+     *
+     * @param lineOffset    The direction and distance to move (e.g., -1 for up, 1 for down).
+     * @param keepSelection Whether to expand the selection (Shift held) or reset it.
+     */
+    private void moveVertical(int lineOffset, boolean keepSelection) {
+        if (!isMultiline) {
+            // In single-line mode, behave like Home (Up) or End (Down)
+            if (lineOffset < 0) {
+                setCursorPos(0, keepSelection);
+            } else {
+                setCursorPos(text.length(), keepSelection);
+            }
+            return;
+        }
+
+        String[] lines = text.split("\n", -1);
+
+        // Find the index of the line containing the cursor
+        int currentLineIndex = 0;
+        int currentLineGlobalStart = 0;
+        int accumulatedLength = 0;
+
+        for (int i = 0; i < lines.length; i++) {
+            int lineLen = lines[i].length();
+            if (cursorPosition <= accumulatedLength + lineLen) {
+                currentLineIndex = i;
+                currentLineGlobalStart = accumulatedLength;
+                break;
+            }
+            accumulatedLength += lineLen + 1; // +1 for the newline character
+        }
+
+        // Calculate target line index
+        int targetLineIndex = currentLineIndex + lineOffset;
+
+        // Ensure target is within bounds
+        if (targetLineIndex < 0 || targetLineIndex >= lines.length) {
+            return;
+        }
+
+        // Calculate the visual X offset in the current line
+        int localIndexInCurrentLine = cursorPosition - currentLineGlobalStart;
+        String currentLineText = lines[currentLineIndex];
+
+        // Clamp index to valid range for the current line
+        localIndexInCurrentLine = Math.max(0, Math.min(localIndexInCurrentLine, currentLineText.length()));
+
+        String subStr = currentLineText.substring(0, localIndexInCurrentLine);
+        float currentVisX = font.getWidth(TextComponent.literal(subStr).setFont(font));
+
+        // Find the index in the target line closest to the calculated X offset
+        String targetLineText = lines[targetLineIndex];
+        int localIndexInTargetLine = getIndexInLine(targetLineText, currentVisX);
+
+        // Calculate global position for the start of the target line
+        int targetLineGlobalStart = 0;
+        for (int i = 0; i < targetLineIndex; i++) {
+            targetLineGlobalStart += lines[i].length() + 1;
+        }
+
+        setCursorPos(targetLineGlobalStart + localIndexInTargetLine, keepSelection);
     }
 
     private void copyToClipboard() {
