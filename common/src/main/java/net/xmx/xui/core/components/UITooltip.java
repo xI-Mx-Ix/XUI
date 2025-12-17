@@ -270,8 +270,22 @@ public class UITooltip extends UIPanel {
     }
 
     private void updateState(float dt, int mouseX, int mouseY) {
-        // Check if target is currently hovered using logical coordinates
-        boolean targetHovered = target.isVisible() && target.isMouseOver(mouseX, mouseY);
+        // 1. Check strict visibility hierarchy
+        // If the target or ANY of its parents are hidden, the tooltip must not show.
+        boolean effectivelyVisible = target.isVisible();
+        if (effectivelyVisible) {
+            UIWidget parent = target.getParent();
+            while (parent != null) {
+                if (!parent.isVisible()) {
+                    effectivelyVisible = false;
+                    break;
+                }
+                parent = parent.getParent();
+            }
+        }
+
+        // 2. Check hover (only if visible)
+        boolean targetHovered = effectivelyVisible && target.isMouseOver(mouseX, mouseY);
 
         // Retrieve timing from style
         float delay = style().getValue(InteractionState.DEFAULT, SHOW_DELAY);
