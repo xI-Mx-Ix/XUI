@@ -106,6 +106,63 @@ public class UIScrollBar extends UIWidget {
     }
 
     // =================================================================================
+    // Helper: Geometry & Hit Detection
+    // =================================================================================
+
+    /**
+     * Calculates whether the specified mouse coordinates are strictly within the bounds
+     * of the draggable thumb.
+     * <p>
+     * This replicates the geometry logic used in rendering to ensure the click detection
+     * matches the visual representation.
+     * </p>
+     *
+     * @param mouseX The absolute X coordinate of the mouse.
+     * @param mouseY The absolute Y coordinate of the mouse.
+     * @return true if the mouse is over the thumb, false otherwise.
+     */
+    private boolean isMouseOverThumb(double mouseX, double mouseY) {
+        if (!isVisible || !canScroll()) return false;
+
+        // Use the raw style value for logic calculations to avoid animation inconsistencies
+        float padding = style().getValue(InteractionState.DEFAULT, PADDING);
+
+        float thumbX = this.x + padding;
+        float thumbY = this.y + padding;
+        float thumbW, thumbH;
+
+        if (orientation == ScrollOrientation.VERTICAL) {
+            float trackInnerHeight = this.height - (padding * 2);
+            float viewRatio = target.getHeight() / target.getContentHeight();
+            thumbH = Math.max(MIN_THUMB_SIZE, trackInnerHeight * viewRatio);
+            thumbW = this.width - (padding * 2);
+
+            float maxTravel = trackInnerHeight - thumbH;
+            float scrollProgress = target.getScrollY() / target.getMaxScrollY();
+
+            if (Float.isNaN(scrollProgress) || Float.isInfinite(scrollProgress)) scrollProgress = 0;
+
+            thumbY += maxTravel * scrollProgress;
+        } else {
+            float trackInnerWidth = this.width - (padding * 2);
+            float viewRatio = target.getWidth() / target.getContentWidth();
+            thumbW = Math.max(MIN_THUMB_SIZE, trackInnerWidth * viewRatio);
+            thumbH = this.height - (padding * 2);
+
+            float maxTravel = trackInnerWidth - thumbW;
+            float scrollProgress = target.getScrollX() / target.getMaxScrollX();
+
+            if (Float.isNaN(scrollProgress) || Float.isInfinite(scrollProgress)) scrollProgress = 0;
+
+            thumbX += maxTravel * scrollProgress;
+        }
+
+        // Check AABB collision
+        return mouseX >= thumbX && mouseX <= thumbX + thumbW &&
+                mouseY >= thumbY && mouseY <= thumbY + thumbH;
+    }
+
+    // =================================================================================
     // Rendering
     // =================================================================================
 
@@ -123,10 +180,11 @@ public class UIScrollBar extends UIWidget {
         }
 
         // 2. Determine Target Thumb Color
-        // Instead of swapping instantly, we define the TARGET color based on logic.
-        // We look up the raw value from the style sheet for the specific state we want.
+        // The hover state is active if the user is dragging OR if the mouse is specifically over the thumb.
+        boolean isHoveringThumb = isDragging || isMouseOverThumb(mouseX, mouseY);
+
         int targetThumbColor;
-        if (isDragging || isHovered) {
+        if (isHoveringThumb) {
             targetThumbColor = style().getValue(InteractionState.HOVER, THUMB_HOVER_COLOR);
         } else {
             targetThumbColor = style().getValue(InteractionState.DEFAULT, THUMB_COLOR);
@@ -144,7 +202,8 @@ public class UIScrollBar extends UIWidget {
 
         float padding = getFloat(PADDING, state, deltaTime);
 
-        // 4. Calculate Thumb Geometry (Standard logic)
+        // 4. Calculate Thumb Geometry (Visual)
+        // This math corresponds to isMouseOverThumb but uses the animated padding
         float thumbX = this.x + padding;
         float thumbY = this.y + padding;
         float thumbW, thumbH;
@@ -152,7 +211,7 @@ public class UIScrollBar extends UIWidget {
         if (orientation == ScrollOrientation.VERTICAL) {
             float trackInnerHeight = this.height - (padding * 2);
             float viewRatio = target.getHeight() / target.getContentHeight();
-            thumbH = Math.max(20.0f, trackInnerHeight * viewRatio);
+            thumbH = Math.max(MIN_THUMB_SIZE, trackInnerHeight * viewRatio);
             thumbW = this.width - (padding * 2);
 
             float maxTravel = trackInnerHeight - thumbH;
@@ -163,7 +222,7 @@ public class UIScrollBar extends UIWidget {
         } else {
             float trackInnerWidth = this.width - (padding * 2);
             float viewRatio = target.getWidth() / target.getContentWidth();
-            thumbW = Math.max(20.0f, trackInnerWidth * viewRatio);
+            thumbW = Math.max(MIN_THUMB_SIZE, trackInnerWidth * viewRatio);
             thumbH = this.height - (padding * 2);
 
             float maxTravel = trackInnerWidth - thumbW;
@@ -183,14 +242,20 @@ public class UIScrollBar extends UIWidget {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // Standard checks: Visible, Scrollable, Inside Bounds, Left Click
-        if (!isVisible || !canScroll() || !isMouseOver(mouseX, mouseY) || button != 0) {
+        // Standard checks: Visible, Scrollable, Left Click
+        if (!isVisible || !canScroll() || button != 0) {
+            return false;
+        }
+
+        // Verify that the mouse click is strictly on the thumb (the handle)
+        // and not just on the empty track.
+        if (!isMouseOverThumb(mouseX, mouseY)) {
             return false;
         }
 
         // Initiate Dragging
         isDragging = true;
-        
+
         if (orientation == ScrollOrientation.VERTICAL) {
             dragStartMouse = (float) mouseY;
             dragStartScroll = target.getScrollY();
@@ -199,9 +264,6 @@ public class UIScrollBar extends UIWidget {
             dragStartScroll = target.getScrollX();
         }
 
-        // Note: We could implement "Jump to position" logic here if the click 
-        // lands on the track but not on the thumb.
-        
         return true;
     }
 
@@ -224,7 +286,7 @@ public class UIScrollBar extends UIWidget {
         if (orientation == ScrollOrientation.VERTICAL) {
             // --- Vertical Drag Calculation ---
             float trackHeight = this.height - (padding * 2);
-            
+
             // Recalculate thumb height to determine available travel pixels
             float viewRatio = target.getHeight() / target.getContentHeight();
             float thumbHeight = Math.max(MIN_THUMB_SIZE, trackHeight * viewRatio);
@@ -233,10 +295,10 @@ public class UIScrollBar extends UIWidget {
             if (maxTravel > 0) {
                 // How far has the mouse moved since click?
                 float deltaMouse = (float) mouseY - dragStartMouse;
-                
+
                 // Convert mouse movement percentage to scroll percentage
                 float ratio = deltaMouse / maxTravel;
-                
+
                 // Apply to start scroll position
                 float newScroll = dragStartScroll + (ratio * target.getMaxScrollY());
                 target.setScrollY(newScroll);
