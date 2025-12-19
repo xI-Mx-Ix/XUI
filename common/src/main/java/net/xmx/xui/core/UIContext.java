@@ -101,30 +101,27 @@ public class UIContext {
      * @param windowHeight The physical height of the window in pixels.
      */
     public void updateLayout(int windowWidth, int windowHeight) {
-        // Calculate the raw scale ratio.
-        double rawScale = (double) windowHeight / REFERENCE_HEIGHT;
+        // Handle minimized window or invalid state
+        if (windowWidth <= 0 || windowHeight <= 0) return;
 
-        // Force Integer Scaling:
-        // Round down to the nearest integer. This prevents fractional scaling artifacts.
-        // e.g., 2.7 -> 2.0.
+        double rawScale = (double) windowHeight / REFERENCE_HEIGHT;
+        // Floor to integer to keep pixels sharp (Pixel Perfect)
         this.scaleFactor = Math.floor(rawScale);
 
-        // Ensure the scale is at least 1.0 to prevent division by zero or invisible UI.
         if (this.scaleFactor < 1.0) {
             this.scaleFactor = 1.0;
         }
 
-        // Calculate the new logical dimensions by dividing physical pixels by the integer scale factor.
+        // Calculate logical size
         float logicalWidth = (float) (windowWidth / scaleFactor);
         float logicalHeight = (float) (windowHeight / scaleFactor);
 
-        // Apply these new dimensions to the root container.
-        // This ensures the root panel always fills the "virtual" screen.
+        // Apply to root. This does NOT destroy children.
         root.setWidth(Layout.pixel(logicalWidth));
         root.setHeight(Layout.pixel(logicalHeight));
 
-        // Trigger a full layout recalculation for the entire widget tree
-        // so that children can adjust their positions relative to the new root size.
+        // Trigger a constraint recalculation for the entire tree.
+        // This fixes relative positions (like center()) after resize.
         root.layout();
     }
 

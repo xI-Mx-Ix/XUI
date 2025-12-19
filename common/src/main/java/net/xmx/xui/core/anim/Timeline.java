@@ -58,6 +58,22 @@ public class Timeline<T> {
     }
 
     /**
+     * Checks if a keyframe exists exactly at the specified time (within epsilon).
+     * Used by the builder to determine if a start frame needs to be generated.
+     *
+     * @param time The time to check.
+     * @return true if a keyframe exists at this time.
+     */
+    public boolean hasKeyframeAt(float time) {
+        for (Keyframe<T> kf : keyframes) {
+            if (Math.abs(kf.time() - time) < 0.0001f) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Gets the property associated with this timeline.
      *
      * @return The StyleKey key.
