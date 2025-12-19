@@ -10,6 +10,7 @@ import net.xmx.xui.core.style.StyleKey;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents an active, running animation sequence on a specific widget.
@@ -59,7 +60,7 @@ public class AnimationInstance {
                 maxDuration = tEnd;
             }
         }
-        
+
         // Ensure non-zero duration to prevent instant finish logic issues if empty
         if (maxDuration <= 0.001f) maxDuration = 0.001f;
     }
@@ -79,10 +80,10 @@ public class AnimationInstance {
         for (Map.Entry<StyleKey<?>, Timeline<?>> entry : timelines.entrySet()) {
             StyleKey property = entry.getKey();
             Timeline timeline = entry.getValue();
-            
+
             // Get the interpolated value for the current time
             Object value = timeline.getValueAt(elapsedTime);
-            
+
             // Apply value to the widget's DEFAULT state style.
             // Using raw set with casting because we know the type matches from builder construction.
             ((StyleKey<Object>)property).getName(); // No-op, just ensuring type safety check logic if needed
@@ -113,7 +114,7 @@ public class AnimationInstance {
                     Object finalValue = timeline.getValueAt(maxDuration);
                     widget.style().set(InteractionState.DEFAULT, (StyleKey<Object>) entry.getKey(), finalValue);
                 }
-                
+
                 if (onComplete != null) {
                     onComplete.run();
                 }
@@ -122,5 +123,30 @@ public class AnimationInstance {
         }
 
         return false; // Continue running
+    }
+
+    /**
+     * Checks if this animation instance conflicts with a set of properties from a new animation.
+     * A conflict exists if both animations try to modify the same StyleKey (e.g. TranslateX).
+     *
+     * @param otherProperties The set of properties controlled by the new animation.
+     * @return true if there is an overlap/conflict.
+     */
+    public boolean conflictsWith(Set<StyleKey<?>> otherProperties) {
+        for (StyleKey<?> key : timelines.keySet()) {
+            if (otherProperties.contains(key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Gets the set of properties controlled by this animation.
+     *
+     * @return A set of StyleKeys.
+     */
+    public Set<StyleKey<?>> getAnimatedProperties() {
+        return timelines.keySet();
     }
 }

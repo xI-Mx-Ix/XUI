@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -28,10 +29,23 @@ public class AnimationManager {
 
     /**
      * Registers a new animation instance to be updated by this manager.
+     * <p>
+     * <b>Conflict Resolution:</b>
+     * If the new animation controls properties (e.g. TRANSLATE_X) that are already being
+     * animated by an existing instance, the existing instance is strictly removed/cancelled.
+     * This prevents "jittering" (two animations fighting for the same value) and ensures
+     * that the newest user interaction takes precedence.
+     * </p>
      *
-     * @param animation The animation to start.
+     * @param animation The new animation to start.
      */
     public void startAnimation(AnimationInstance animation) {
+        Set<StyleKey<?>> newKeys = animation.getAnimatedProperties();
+
+        // Remove any existing animation that conflicts with the new one.
+        // We use removeIf (safe on CopyOnWriteArrayList) to cancel old movements instantly.
+        activeAnimations.removeIf(existing -> existing.conflictsWith(newKeys));
+
         activeAnimations.add(animation);
     }
 

@@ -129,8 +129,8 @@ public class UIContext {
      * Renders the UI tree managed by this context.
      * <p>
      * This method triggers the rendering lifecycle via the provider.
-     * Note that no graphics object is passed here; the implementation is expected
-     * to manage its own graphics context.
+     * It automatically checks if the layout tree is "dirty" (needs update) and performs
+     * a layout pass before rendering if necessary.
      * </p>
      *
      * @param mouseX       The raw mouse X coordinate from the window/screen.
@@ -138,27 +138,31 @@ public class UIContext {
      * @param partialTick  The partial tick time for interpolation.
      */
     public void render(int mouseX, int mouseY, float partialTick) {
-        // 0. Calculate Delta Time for Animations
+        // 0. Auto-Layout Pass
+        // If any widget was marked dirty (e.g. via setVisible or setX), propagate the layout update.
+        if (root.isLayoutDirty()) {
+            root.layout();
+        }
+
+        // 1. Calculate Delta Time for Animations
         long now = System.currentTimeMillis();
         float deltaTime = (lastFrameTime == 0) ? 0.016f : (now - lastFrameTime) / 1000.0f;
         lastFrameTime = now;
 
-        // 1. Transform input coordinates (using internal scale factor)
+        // 2. Transform input coordinates (using internal scale factor)
         // Note: transformMouseX/Y logic usually needs MC window scale.
-        // If transformMouseX uses Minecraft.getInstance(), you might need to extract that too via an InputProvider interface later if you want 100% purity.
-        // For now, assuming transformMouseX logic is solved or acceptable:
         double logicalMouseX = transformMouseX(mouseX);
         double logicalMouseY = transformMouseY(mouseY);
 
-        // 2. Begin Frame via Provider
+        // 3. Begin Frame via Provider
         // Implementation creates the GuiGraphics internally
         UIRenderer.getInstance().beginFrame(this.scaleFactor, this.clearDepth);
 
-        // 3. Render Widget Tree
+        // 4. Render Widget Tree
         // Pass the abstract provider to widgets
         root.render(UIRenderer.getInstance(), (int) logicalMouseX, (int) logicalMouseY, partialTick, deltaTime);
 
-        // 4. End Frame via Provider
+        // 5. End Frame via Provider
         UIRenderer.getInstance().endFrame();
     }
 

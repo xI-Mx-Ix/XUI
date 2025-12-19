@@ -25,11 +25,9 @@ import net.xmx.xui.core.text.TextComponent;
 /**
  * Robust Login Screen Implementation.
  * <p>
- * <b>Fix Applied:</b>
- * Added explicit {@code layout()} calls when switching pages.
- * Since invisible widgets skip layout calculations to save performance,
- * a widget must be re-laid out immediately after becoming visible to ensure
- * it has the correct dimensions before rendering.
+ * <b>Update:</b>
+ * Removed explicit {@code layout()} calls. The system now uses a dirty-flag approach,
+ * automatically recalculating layouts in the render loop whenever visibility or properties change.
  * </p>
  *
  * @author xI-Mx-Ix
@@ -64,6 +62,7 @@ public class XUILoginExampleScreen extends Screen {
         if (!uiContext.isInitialized()) {
             buildUI();
         } else {
+            // Trigger root layout to refresh any relative constraints after screen resize
             uiContext.getRoot().layout();
         }
     }
@@ -93,6 +92,8 @@ public class XUILoginExampleScreen extends Screen {
 
         showPageOneInstant();
 
+        // Initial layout is still good practice to ensure init state is clean,
+        // though strictly handled by render loop now.
         root.layout();
     }
 
@@ -242,14 +243,11 @@ public class XUILoginExampleScreen extends Screen {
 
     private void animateToPageTwo() {
         // 1. Make visible
+        // Since setVisible() internally calls markLayoutDirty(),
+        // the layout will be automatically recalculated in the next UIContext.render() pass.
         pageTwoPanel.setVisible(true);
 
-        // 2. CRITICAL: Force layout calculation immediately.
-        // Because it was hidden, its width/height are 0. calling layout() now
-        // updates it to the correct size (100% of parent) before it appears.
-        uiContext.getRoot().layout();
-
-        // 3. Animate
+        // 2. Animate
         pageOnePanel.animate()
                 .keyframe(ANIM_SPEED, ThemeProperties.TRANSLATE_X, -WIN_WIDTH, Easing.EASE_IN_OUT_CUBIC)
                 .onComplete(() -> pageOnePanel.setVisible(false))
@@ -263,12 +261,10 @@ public class XUILoginExampleScreen extends Screen {
 
     private void animateToPageOne() {
         // 1. Make visible
+        // Auto-layout is triggered via the dirty flag.
         pageOnePanel.setVisible(true);
 
-        // 2. CRITICAL: Force layout calculation immediately.
-        uiContext.getRoot().layout();
-
-        // 3. Animate
+        // 2. Animate
         pageTwoPanel.animate()
                 .keyframe(ANIM_SPEED, ThemeProperties.TRANSLATE_X, WIN_WIDTH, Easing.EASE_IN_OUT_CUBIC)
                 .onComplete(() -> pageTwoPanel.setVisible(false))

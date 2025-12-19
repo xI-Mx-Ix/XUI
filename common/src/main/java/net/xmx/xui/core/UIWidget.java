@@ -86,6 +86,12 @@ public abstract class UIWidget {
     protected boolean isFocused;
     protected boolean isVisible = true;
 
+    /**
+     * Flag indicating if this widget's layout needs to be recalculated.
+     * If true, the {@link #layout()} method will execute its logic.
+     */
+    protected boolean isLayoutDirty = true;
+
     // Styling, Animation & Effects
     protected final StyleSheet styleSheet = new StyleSheet();
     protected final AnimationManager animManager = new AnimationManager();
@@ -139,11 +145,31 @@ public abstract class UIWidget {
     }
 
     /**
+     * Marks this widget and all its ancestors as needing a layout update.
+     * This ensures that the next render pass triggers {@link #layout()} on the root,
+     * propagating changes down to this widget.
+     */
+    public void markLayoutDirty() {
+        // Optimization: Stop propagation if already dirty to prevent redundant tree traversal
+        if (this.isLayoutDirty) return;
+
+        this.isLayoutDirty = true;
+        if (parent != null) {
+            parent.markLayoutDirty();
+        }
+    }
+
+    /**
      * Calculates the layout of this widget and recursively its children.
-     * Should be called before the render loop if dimensions change.
+     * <p>
+     * <b>Optimization:</b> This method exits immediately if {@link #isLayoutDirty} is false.
+     * It also calculates dimensions even if the widget is invisible, ensuring consistent state
+     * when it becomes visible again.
+     * </p>
      */
     public void layout() {
-        if (!isVisible) return;
+        // Performance optimization: Skip if nothing changed in this branch
+        if (!isLayoutDirty) return;
 
         float pX = (parent != null) ? parent.x : 0;
         float pY = (parent != null) ? parent.y : 0;
@@ -157,9 +183,16 @@ public abstract class UIWidget {
         this.x = xConstraint.calculate(pX, pW, width);
         this.y = yConstraint.calculate(pY, pH, height);
 
+        // Propagate layout update to children.
+        // We must force children to update if the parent updated, because relative
+        // constraints (like center or sibling) depend on the parent's new dimensions.
         for (UIWidget child : children) {
+            child.markLayoutDirty(); // Ensure the child processes the new parent values
             child.layout();
         }
+
+        // Reset the flag after successful calculation
+        this.isLayoutDirty = false;
     }
 
     /**
@@ -449,6 +482,15 @@ public abstract class UIWidget {
         }
     }
 
+    /**
+     * Returns true if the layout of this widget or its descendants is marked as dirty.
+     *
+     * @return The current state of the layout dirty flag.
+     */
+    public boolean isLayoutDirty() {
+        return isLayoutDirty;
+    }
+
     // =================================================================================
     // Interaction & Input Handling
     // =================================================================================
@@ -689,6 +731,7 @@ public abstract class UIWidget {
     public void add(UIWidget child) {
         child.parent = this;
         children.add(child);
+        markLayoutDirty(); // Adding a child changes layout structure
     }
 
     // --- Accessors ---
@@ -699,21 +742,25 @@ public abstract class UIWidget {
 
     public UIWidget setX(AxisFunc c) {
         this.xConstraint = c;
+        markLayoutDirty(); // Layout needs update
         return this;
     }
 
     public UIWidget setY(AxisFunc c) {
         this.yConstraint = c;
+        markLayoutDirty(); // Layout needs update
         return this;
     }
 
     public UIWidget setWidth(AxisFunc c) {
         this.widthConstraint = c;
+        markLayoutDirty(); // Layout needs update
         return this;
     }
 
     public UIWidget setHeight(AxisFunc c) {
         this.heightConstraint = c;
+        markLayoutDirty(); // Layout needs update
         return this;
     }
 
@@ -794,7 +841,10 @@ public abstract class UIWidget {
     }
 
     public UIWidget setVisible(boolean visible) {
-        this.isVisible = visible;
+        if (this.isVisible != visible) {
+            this.isVisible = visible;
+            markLayoutDirty(); // Visibility changes affect layout flows
+        }
         return this;
     }
 
