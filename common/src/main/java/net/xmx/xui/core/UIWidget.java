@@ -126,6 +126,26 @@ public abstract class UIWidget {
     }
 
     /**
+     * Returns the visual effect at the specified index.
+     *
+     * @param index The index of the effect to retrieve.
+     * @return The {@link UIEffect} at the given index.
+     * @throws IndexOutOfBoundsException if the index is out of range.
+     */
+    public UIEffect getEffect(int index) {
+        return this.effects.get(index);
+    }
+
+    /**
+     * Returns an unmodifiable list of all visual effects applied to this widget.
+     *
+     * @return A {@link List} of {@link UIEffect} instances applied to this widget.
+     */
+    public List<UIEffect> getEffects() {
+        return this.effects;
+    }
+
+    /**
      * Creates a new animation builder for this widget.
      * Allows fluent configuration of keyframe animations.
      *
