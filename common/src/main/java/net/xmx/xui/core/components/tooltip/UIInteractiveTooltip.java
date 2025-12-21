@@ -62,8 +62,7 @@ public class UIInteractiveTooltip extends UIAbstractTooltip {
      */
     @Override
     protected void updateLogic(float dt, int mouseX, int mouseY) {
-        boolean isHoveringTarget = target.isMouseOver(mouseX, mouseY);
-        // We can check isMouseOver on self because calculatePosition updates our layout rect every frame
+        boolean isHoveringTarget = target.isHovered();
         boolean isHoveringSelf = this.isMouseOver(mouseX, mouseY);
         boolean isSafe = isHoveringTarget || isHoveringSelf;
 

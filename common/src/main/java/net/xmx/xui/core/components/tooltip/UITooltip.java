@@ -36,7 +36,7 @@ public class UITooltip extends UIAbstractTooltip {
      */
     @Override
     protected void updateLogic(float dt, int mouseX, int mouseY) {
-        boolean targetHovered = target.isMouseOver(mouseX, mouseY);
+        boolean targetHovered = target.isHovered();
 
         float delay = style().getValue(InteractionState.DEFAULT, SHOW_DELAY);
         float fadeIn = style().getValue(InteractionState.DEFAULT, FADE_IN_TIME);

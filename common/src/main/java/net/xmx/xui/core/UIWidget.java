@@ -416,16 +416,58 @@ public abstract class UIWidget {
     }
 
     /**
+     * Checks if this widget is a descendant (child, grandchild, etc.) of the specified widget.
+     * <p>
+     * This is used to allow interactions with children of an obstructing widget
+     * (e.g., clicking a button inside an interactive tooltip).
+     * </p>
+     *
+     * @param potentialAncestor The widget to check against.
+     * @return true if this widget is inside the ancestor's hierarchy.
+     */
+    protected boolean isDescendantOf(UIWidget potentialAncestor) {
+        UIWidget cursor = this.parent;
+        while (cursor != null) {
+            if (cursor == potentialAncestor) {
+                return true;
+            }
+            cursor = cursor.parent;
+        }
+        return false;
+    }
+
+    /**
      * Checks if the given coordinates are obstructed by any active global overlay.
+     * <p>
+     * Logic updated: A widget is NOT obstructed if the obstructor is:
+     * <ul>
+     *     <li>The widget itself.</li>
+     *     <li>An ancestor of the widget (e.g., the Tooltip containing this Button).</li>
+     * </ul>
+     * </p>
      *
      * @param mouseX The current mouse X.
      * @param mouseY The current mouse Y.
-     * @return true if an active obstructor (like an open dropdown) is covering this point.
+     * @return true if an active obstructor (like an open dropdown) is covering this point
+     *         and is unrelated to the current widget.
      */
     protected boolean isGlobalObstructed(double mouseX, double mouseY) {
         for (WidgetObstructor obstructor : globalObstructors) {
-            // A widget does not obstruct itself
-            if (obstructor != this && obstructor.isObstructing(mouseX, mouseY)) {
+            // 1. A widget does not obstruct itself
+            if (obstructor == this) {
+                continue;
+            }
+
+            // 2. A widget should not be obstructed by its own parent/ancestor.
+            // This ensures that content inside a Tooltip or Window is not blocked by the container itself.
+            if (obstructor instanceof UIWidget) {
+                if (isDescendantOf((UIWidget) obstructor)) {
+                    continue;
+                }
+            }
+
+            // 3. Check if the obstructor actually covers the mouse position
+            if (obstructor.isObstructing(mouseX, mouseY)) {
                 return true;
             }
         }
