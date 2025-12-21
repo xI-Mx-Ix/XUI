@@ -2,8 +2,9 @@
  * This file is part of XUI.
  * Licensed under LGPL 3.0.
  */
-package net.xmx.xui.core.msdf.texture;
+package net.xmx.xui.core.sdf.texture;
 
+import net.xmx.xui.core.sdf.SDFType;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -17,49 +18,59 @@ import java.nio.IntBuffer;
  * Centralized utility for loading Signed Distance Field (SDF) textures.
  * <p>
  * Handles the OpenGL texture parameters required for SDF rendering, such as
- * linear filtering and edge clamping. Currently supports standard MSDF textures (RGB).
+ * linear filtering and edge clamping. Supports both MSDF (RGB) and MTSDF (RGBA).
  * </p>
  *
  * @author xI-Mx-Ix
  */
-public class MSDFTextureLoader {
+public class SDFTextureLoader {
 
     /**
-     * Loads a standard MSDF texture (RGB).
+     * Loads an SDF texture based on the specific SDF Type provided in the metadata.
      * <p>
-     * Forces the image to be decoded as 3 channels (RGB). Standard MSDF is mainly used for fonts,
-     * providing sharp edge reconstruction without alpha-channel correction.
+     * Automatically resolves the required channel count:
+     * <ul>
+     *     <li>{@link SDFType#MSDF} -> 3 Channels (RGB)</li>
+     *     <li>{@link SDFType#MTSDF} -> 4 Channels (RGBA)</li>
+     * </ul>
      * </p>
      *
      * @param path The absolute classpath to the resource.
+     * @param type The SDF type definition (MSDF or MTSDF).
      * @return The OpenGL texture ID handle.
-     * @throws RuntimeException If loading fails.
      */
-    public static int loadMSDFTexture(String path) {
-        // Load as 3 channels (RGB) and upload as GL_RGB
-        return loadTextureInternal(path, 3, GL11.GL_RGB);
+    public static int loadSDFTexture(String path, SDFType type) {
+        // MTSDF benötigt 4 Kanäle (RGBA), MSDF nur 3 (RGB)
+        int channels = (type == SDFType.MTSDF) ? 4 : 3;
+        return loadSDFTexture(path, channels);
     }
 
     /**
-     * Internal generic loading logic used by MSDF loader.
-     * <p>
-     * Reads the input stream, decodes the image using STB, and uploads it to OpenGL with
-     * the correct texture parameters for SDF rendering.
-     * </p>
+     * Loads an SDF texture with the specified channel configuration.
+     *
+     * @param path     The absolute classpath to the resource.
+     * @param channels The number of channels to load (3 for MSDF, 4 for MTSDF).
+     * @return The OpenGL texture ID handle.
+     */
+    public static int loadSDFTexture(String path, int channels) {
+        int format = (channels == 4) ? GL11.GL_RGBA : GL11.GL_RGB;
+        return loadTextureInternal(path, channels, format);
+    }
+
+    /**
+     * Internal generic loading logic.
      *
      * @param path            The resource path.
-     * @param desiredChannels The number of channels to force decode (3 for RGB).
-     * @param glFormat        The OpenGL format constant (GL_RGB).
+     * @param desiredChannels The number of channels to force decode.
+     * @param glFormat        The OpenGL format constant.
      * @return The generated OpenGL texture ID.
-     * @throws RuntimeException If loading or decoding fails.
      */
     private static int loadTextureInternal(String path, int desiredChannels, int glFormat) {
-        try (InputStream imgStream = MSDFTextureLoader.class.getResourceAsStream(path)) {
+        try (InputStream imgStream = SDFTextureLoader.class.getResourceAsStream(path)) {
             if (imgStream == null) {
                 throw new RuntimeException("SDF texture resource not found: " + path);
             }
 
-            // Read input stream into a direct ByteBuffer
             byte[] bytes = imgStream.readAllBytes();
             ByteBuffer buffer = BufferUtils.createByteBuffer(bytes.length);
             buffer.put(bytes);
@@ -69,13 +80,12 @@ public class MSDFTextureLoader {
             IntBuffer h = BufferUtils.createIntBuffer(1);
             IntBuffer c = BufferUtils.createIntBuffer(1);
 
-            // Decode the image with STB, enforcing the desired channel count
+            // Decode the image with STB
             ByteBuffer image = STBImage.stbi_load_from_memory(buffer, w, h, c, desiredChannels);
             if (image == null) {
                 throw new RuntimeException("STB failed to load image (" + path + "): " + STBImage.stbi_failure_reason());
             }
 
-            // Generate OpenGL texture
             int textureId = GL11.glGenTextures();
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
 
@@ -88,7 +98,6 @@ public class MSDFTextureLoader {
             // Upload image data to GPU
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, glFormat, w.get(0), h.get(0), 0, glFormat, GL11.GL_UNSIGNED_BYTE, image);
 
-            // Free native memory
             STBImage.stbi_image_free(image);
 
             return textureId;

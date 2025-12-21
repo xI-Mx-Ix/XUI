@@ -39,7 +39,7 @@ public class UIRenderer {
     private ScissorManager scissorManager;
     private TransformStack transformStack;
     private GeometryRenderer geometryRenderer;
-    private MSDFRenderer msdfRenderer;
+    private SDFRenderer sdfRenderer;
     private ImageRenderer imageRenderer;
 
     // --- External Dependencies ---
@@ -87,7 +87,7 @@ public class UIRenderer {
     public void init() {
         if (geometryRenderer == null) {
             this.geometryRenderer = new GeometryRenderer();
-            this.msdfRenderer = new MSDFRenderer();
+            this.sdfRenderer = new SDFRenderer();
             this.transformStack = new TransformStack();
             this.imageRenderer = new ImageRenderer();
             this.stateManager = new GlState();
@@ -172,7 +172,7 @@ public class UIRenderer {
      * <b>Logic:</b> Checks the font type of the component.
      * <ul>
      *     <li>If {@link Font.Type#VANILLA}: Delegates to {@link PlatformRenderInterface} with current matrix.</li>
-     *     <li>If {@link Font.Type#CUSTOM}: Delegates to internal MSDF {@link MSDFRenderer}.</li>
+     *     <li>If {@link Font.Type#CUSTOM}: Delegates to internal MSDF {@link SDFRenderer}.</li>
      * </ul>
      * </p>
      *
@@ -190,7 +190,7 @@ public class UIRenderer {
             getPlatform().renderNativeText(text, x, y, color, shadow, transformStack.getDirectModelMatrix());
         } else {
             // Logic: Custom fonts use our internal renderer logic
-            if (msdfRenderer != null) {
+            if (sdfRenderer != null) {
                 text.getFont().draw(this, text, x, y, color, shadow);
             }
         }
@@ -212,7 +212,7 @@ public class UIRenderer {
         if (text.getFont().getType() == Font.Type.VANILLA) {
             getPlatform().renderNativeWrappedText(text, x, y, width, color, shadow, transformStack.getDirectModelMatrix());
         } else {
-            if (msdfRenderer != null) {
+            if (sdfRenderer != null) {
                 text.getFont().drawWrapped(this, text, x, y, width, color, shadow);
             }
         }
@@ -282,18 +282,16 @@ public class UIRenderer {
     }
 
     /**
-     * Retrieves the MSDF renderer responsible for rendering
-     * multi-channel signed distance field (MSDF) content,
-     * such as high-quality text and vector-based icons.
+     * Retrieves the Unified SDF renderer responsible for rendering
+     * Fonts (MSDF) and Icons (MTSDF).
      *
-     * @return The MSDFRenderer instance.
-     * @throws IllegalStateException If {@link #init()} has not been called.
+     * @return The SDFRenderer instance.
      */
-    public MSDFRenderer getMsdf() {
-        if (msdfRenderer == null) {
+    public SDFRenderer getSdf() {
+        if (sdfRenderer == null) {
             throw new IllegalStateException("UIRenderer has not been initialized. Call UIRenderer.getInstance().init() first.");
         }
-        return msdfRenderer;
+        return sdfRenderer;
     }
 
     /**

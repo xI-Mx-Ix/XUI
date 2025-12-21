@@ -5,7 +5,7 @@
 package net.xmx.xui.core.font.data;
 
 import com.google.gson.annotations.SerializedName;
-import net.xmx.xui.core.msdf.MSDFMetadata;
+import net.xmx.xui.core.sdf.SDFMetadata;
 
 import java.util.Map;
 
@@ -15,7 +15,7 @@ import java.util.Map;
  *
  * @author xI-Mx-Ix
  */
-public class FontMetadata extends MSDFMetadata {
+public class FontMetadata extends SDFMetadata {
 
     /**
      * Global font metrics used for line layout calculations.
@@ -76,11 +76,11 @@ public class FontMetadata extends MSDFMetadata {
         /**
          * The geometric bounds relative to the baseline.
          */
-        public MSDFMetadata.Bounds planeBounds;
+        public SDFMetadata.Bounds planeBounds;
         
         /**
          * The pixel coordinates in the atlas.
          */
-        public MSDFMetadata.Bounds atlasBounds;
+        public SDFMetadata.Bounds atlasBounds;
     }
 }

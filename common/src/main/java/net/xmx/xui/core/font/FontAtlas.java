@@ -9,9 +9,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.xmx.xui.core.font.data.FontMetadata;
-import net.xmx.xui.core.msdf.MSDFAtlas;
-import net.xmx.xui.core.msdf.MSDFMetadata;
-import net.xmx.xui.core.msdf.texture.MSDFTextureLoader;
+import net.xmx.xui.core.sdf.SDFAtlas;
+import net.xmx.xui.core.sdf.SDFMetadata;
+import net.xmx.xui.core.sdf.SDFType;
+import net.xmx.xui.core.sdf.texture.SDFTextureLoader;
+import net.xmx.xui.init.XuiMainClass;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,13 +23,13 @@ import java.util.HashMap;
 /**
  * Manages the loading and storage of a single font variant (e.g., "Regular" or "Bold").
  * <p>
- * This class implements {@link MSDFAtlas}, making it compatible with the shared rendering pipeline.
+ * This class implements {@link SDFAtlas}, making it compatible with the shared rendering pipeline.
  * It parses specific font metrics alongside the standard MSDF metadata.
  * </p>
  *
  * @author xI-Mx-Ix
  */
-public class FontAtlas implements MSDFAtlas {
+public class FontAtlas implements SDFAtlas {
 
     /**
      * The parsed metadata containing metrics and glyph bounds.
@@ -59,7 +61,7 @@ public class FontAtlas implements MSDFAtlas {
 
             this.fontData = new FontMetadata();
             // Parse generic atlas info
-            this.fontData.atlas = gson.fromJson(root.get("atlas"), MSDFMetadata.AtlasInfo.class);
+            this.fontData.atlas = gson.fromJson(root.get("atlas"), SDFMetadata.AtlasInfo.class);
             // Parse font specific metrics
             this.fontData.metrics = gson.fromJson(root.get("metrics"), FontMetadata.Metrics.class);
 
@@ -76,8 +78,12 @@ public class FontAtlas implements MSDFAtlas {
             throw new RuntimeException("Failed to parse font JSON metadata for: " + path, e);
         }
 
-        // 2. Load PNG Texture Atlas
-        this.textureId = MSDFTextureLoader.loadMSDFTexture(basePath + ".png");
+        if (this.fontData.atlas.type != null) {
+            this.textureId = SDFTextureLoader.loadSDFTexture(basePath + ".png", this.fontData.atlas.type);
+        } else {
+            XuiMainClass.LOGGER.error("FontAtlas: Font " + path + " has no atlas type specified in metadata.");
+            this.textureId = SDFTextureLoader.loadSDFTexture(basePath + ".png", SDFType.MSDF);
+        }
     }
 
     /**
@@ -96,7 +102,7 @@ public class FontAtlas implements MSDFAtlas {
      * @return The MSDF data containing metrics and atlas info.
      */
     @Override
-    public MSDFMetadata getMetadata() {
+    public SDFMetadata getMetadata() {
         return fontData;
     }
 
