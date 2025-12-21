@@ -8,6 +8,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.xmx.xui.core.font.DefaultFonts;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
+import net.xmx.xui.core.heroicons.atlas.HeroIconProvider;
 import net.xmx.xui.core.platform.PlatformRenderProvider;
 import net.xmx.xui.impl.RenderImpl;
 import net.xmx.xui.init.registry.ModRegistries;
@@ -47,5 +48,6 @@ public class XuiMainClass {
         PlatformRenderProvider.register(RenderImpl.getInstance());
         UIRenderer.getInstance().init();
         DefaultFonts.init();
+        HeroIconProvider.init();
     }
 }
