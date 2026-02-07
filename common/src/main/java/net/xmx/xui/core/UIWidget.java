@@ -182,13 +182,14 @@ public abstract class UIWidget {
     /**
      * Calculates the layout of this widget and recursively its children.
      * <p>
-     * <b>Optimization:</b> This method exits immediately if {@link #isLayoutDirty} is false.
-     * It also calculates dimensions even if the widget is invisible, ensuring consistent state
-     * when it becomes visible again.
+     * This implementation applies a strict floor-based pixel snapping strategy.
+     * Absolute positions are rounded down to the nearest integer, and dimensions
+     * are calculated based on the floored boundaries to ensure elements align
+     * perfectly with the physical pixel grid, eliminating blurriness and gaps.
      * </p>
      */
     public void layout() {
-        // Performance optimization: Skip if nothing changed in this branch
+        // Skip if nothing changed in this branch
         if (!isLayoutDirty) return;
 
         float pX = (parent != null) ? parent.x : 0;
@@ -196,16 +197,22 @@ public abstract class UIWidget {
         float pW = (parent != null) ? parent.width : 0;
         float pH = (parent != null) ? parent.height : 0;
 
-        // Calculate size first, as position calculation might depend on self size
-        this.width = widthConstraint.calculate(0, pW, 0);
-        this.height = heightConstraint.calculate(0, pH, 0);
+        // Calculate theoretical fractional layout values
+        float rawWidth = widthConstraint.calculate(0, pW, 0);
+        float rawHeight = heightConstraint.calculate(0, pH, 0);
+        float rawX = xConstraint.calculate(pX, pW, rawWidth);
+        float rawY = yConstraint.calculate(pY, pH, rawHeight);
 
-        this.x = xConstraint.calculate(pX, pW, width);
-        this.y = yConstraint.calculate(pY, pH, height);
+        // Snap the origin to the floor of the calculated position
+        this.x = (float) Math.floor(rawX);
+        this.y = (float) Math.floor(rawY);
+
+        // Size is the difference between the floored outer boundary and floored origin.
+        // This prevents 1-pixel gaps between adjacent widgets caused by floating point residues.
+        this.width = (float) (Math.floor(rawX + rawWidth) - this.x);
+        this.height = (float) (Math.floor(rawY + rawHeight) - this.y);
 
         // Propagate layout update to children.
-        // We must force children to update if the parent updated, because relative
-        // constraints (like center or sibling) depend on the parent's new dimensions.
         for (UIWidget child : children) {
             child.markLayoutDirty(); // Ensure the child processes the new parent values
             child.layout();
