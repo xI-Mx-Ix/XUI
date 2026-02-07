@@ -10,10 +10,16 @@ import net.xmx.xui.core.style.InteractionState;
 
 /**
  * A Heatmap chart showing values as color intensity in a 2D grid.
+ * <p>
+ * This component is thread-safe and supports high-frequency data updates
+ * by separating data ingestion from the render loop.
+ * </p>
  *
  * @author xI-Mx-Ix
  */
 public class UIHeatmap extends UIWidget {
+
+    private final Object dataLock = new Object();
 
     private float[][] values; // 0.0 to 1.0
 
@@ -27,18 +33,53 @@ public class UIHeatmap extends UIWidget {
     private int cols = 5;
     private int baseColor = 0xFFFF0000; // Red
 
+    /**
+     * Initializes the grid dimensions.
+     * This resets the data arrays.
+     *
+     * @param rows Number of rows.
+     * @param cols Number of columns.
+     * @return This instance.
+     */
     public UIHeatmap setGrid(int rows, int cols) {
-        this.rows = rows;
-        this.cols = cols;
-        this.values = new float[rows][cols];
-        // Initialize animation state array with the same dimensions
-        this.hoverAlphas = new float[rows][cols];
+        synchronized (dataLock) {
+            this.rows = rows;
+            this.cols = cols;
+            this.values = new float[rows][cols];
+            // Initialize animation state array with the same dimensions
+            this.hoverAlphas = new float[rows][cols];
+        }
         return this;
     }
 
+    /**
+     * Updates a single value in the heatmap.
+     * Thread-safe and allocation-free.
+     *
+     * @param row The row index.
+     * @param col The column index.
+     * @param val The normalized value (0.0 to 1.0).
+     */
     public void setValue(int row, int col, float val) {
-        if (row >= 0 && row < rows && col >= 0 && col < cols) {
-            values[row][col] = Math.max(0f, Math.min(1f, val));
+        synchronized (dataLock) {
+            if (values != null && row >= 0 && row < rows && col >= 0 && col < cols) {
+                values[row][col] = Math.max(0f, Math.min(1f, val));
+            }
+        }
+    }
+
+    /**
+     * Bulk update for the entire grid.
+     *
+     * @param newValues A 2D array matching the current grid dimensions.
+     */
+    public void setValues(float[][] newValues) {
+        synchronized (dataLock) {
+            if (newValues.length == rows && newValues[0].length == cols) {
+                for (int r = 0; r < rows; r++) {
+                    System.arraycopy(newValues[r], 0, this.values[r], 0, cols);
+                }
+            }
         }
     }
 
@@ -49,15 +90,8 @@ public class UIHeatmap extends UIWidget {
 
     @Override
     protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
-        if (values == null) return;
-
-        // Ensure state array exists and matches dimensions (safety check against dynamic resizing)
-        if (hoverAlphas == null || hoverAlphas.length != rows || (rows > 0 && hoverAlphas[0].length != cols)) {
-            hoverAlphas = new float[rows][cols];
-        }
-
-        float cellW = width / cols;
-        float cellH = height / rows;
+        float cellW;
+        float cellH;
         float gap = 1.0f;
 
         // Get animation speed from style
@@ -65,48 +99,62 @@ public class UIHeatmap extends UIWidget {
         // Calculate common interpolation factor for this frame based on delta time
         float lerpFactor = 1.0f - (float) Math.exp(-transitionSpeed * deltaTime);
 
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                float val = values[r][c];
+        // Pre-calculate style colors
+        int baseRGB = baseColor & 0x00FFFFFF;
 
-                // Calculate Alpha based on value for the cell body
-                int alpha = (int) (255 * val);
-                int color = (baseColor & 0x00FFFFFF) | (alpha << 24);
+        synchronized (dataLock) {
+            if (values == null) return;
 
-                // Or darker/lighter variant
-                // int color = interpolateColor(0xFF000000, baseColor, val);
+            // Ensure state array exists and matches dimensions (safety check against dynamic resizing)
+            if (hoverAlphas == null || hoverAlphas.length != rows || (rows > 0 && hoverAlphas[0].length != cols)) {
+                hoverAlphas = new float[rows][cols];
+            }
 
-                float cx = x + (c * cellW);
-                float cy = y + (r * cellH);
+            cellW = width / cols;
+            cellH = height / rows;
 
-                // Draw the main cell rectangle
-                renderer.getGeometry().renderRect(cx, cy, cellW - gap, cellH - gap, color, 2.0f);
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    float val = values[r][c];
 
-                // --- ANIMATION LOGIC for Hover Outline ---
+                    // Calculate Alpha based on value for the cell body
+                    int alpha = (int) (255 * val);
+                    int color = baseRGB | (alpha << 24);
 
-                // 1. Check if specific cell is hovered
-                boolean isHovered = mouseX >= cx && mouseX < cx + cellW &&
-                        mouseY >= cy && mouseY < cy + cellH;
+                    float cx = x + (c * cellW);
+                    float cy = y + (r * cellH);
 
-                // 2. Determine target alpha (1.0 if hovered, 0.0 if not)
-                float targetAlpha = isHovered ? 1.0f : 0.0f;
+                    // Draw the main cell rectangle
+                    renderer.getGeometry().renderRect(cx, cy, cellW - gap, cellH - gap, color, 2.0f);
 
-                // 3. Interpolate current alpha towards target using exponential decay
-                hoverAlphas[r][c] += (targetAlpha - hoverAlphas[r][c]) * lerpFactor;
+                    // --- ANIMATION LOGIC for Hover Outline ---
 
-                // 4. Render Outline if partially visible (alpha > ~1%)
-                if (hoverAlphas[r][c] > 0.01f) {
-                    // Convert float alpha (0-1) to byte (0-255)
-                    int outlineAlpha = (int)(hoverAlphas[r][c] * 255);
-                    // Create white color with calculated alpha
-                    int outlineColor = (0xFFFFFF) | (outlineAlpha << 24);
+                    // 1. Check if specific cell is hovered
+                    boolean isHovered = mouseX >= cx && mouseX < cx + cellW &&
+                            mouseY >= cy && mouseY < cy + cellH;
 
-                    renderer.getGeometry().renderOutline(
-                            cx, cy,
-                            cellW - gap, cellH - gap,
-                            outlineColor,
-                            2.0f, 1.0f
-                    );
+                    // 2. Determine target alpha (1.0 if hovered, 0.0 if not)
+                    float targetAlpha = isHovered ? 1.0f : 0.0f;
+
+                    // 3. Interpolate current alpha towards target using exponential decay
+                    // We modify the array directly; strict separation of view/model is blurred here for performance
+                    hoverAlphas[r][c] += (targetAlpha - hoverAlphas[r][c]) * lerpFactor;
+
+                    // 4. Render Outline if partially visible (alpha > ~1%)
+                    float currentAlpha = hoverAlphas[r][c];
+                    if (currentAlpha > 0.01f) {
+                        // Convert float alpha (0-1) to byte (0-255)
+                        int outlineAlpha = (int) (currentAlpha * 255);
+                        // Create white color with calculated alpha
+                        int outlineColor = (0xFFFFFF) | (outlineAlpha << 24);
+
+                        renderer.getGeometry().renderOutline(
+                                cx, cy,
+                                cellW - gap, cellH - gap,
+                                outlineColor,
+                                2.0f, 1.0f
+                        );
+                    }
                 }
             }
         }

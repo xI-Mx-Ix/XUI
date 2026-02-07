@@ -10,6 +10,8 @@ import net.xmx.xui.core.style.InteractionState;
 import net.xmx.xui.core.style.StyleKey;
 import net.xmx.xui.core.style.ThemeProperties;
 import net.xmx.xui.core.text.TextComponent;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +28,17 @@ import java.util.List;
  * <ul>
  *     <li><b>Donut Mode:</b> Configurable inner hole radius via {@link #HOLE_RADIUS}.</li>
  *     <li><b>Interactive:</b> Slices expand/explode outwards when hovered.</li>
+ *     <li><b>Dynamic Hitbox:</b> The interaction hitbox follows the animated position of the slice
+ *     and accounts for parent widget transformations (e.g. animating panels).</li>
  *     <li><b>Animations:</b> Smooth transitions for hover effects using exponential decay.</li>
  *     <li><b>Center Info:</b> Displays the value and label of the hovered slice in the center (Donut mode only).</li>
  * </ul>
+ * </p>
+ * <p>
+ * <b>Performance Optimization (v3):</b>
+ * Uses a "Snapshot" rendering model. A shallow copy of the list is created at the start of the frame.
+ * This allows the Update-Thread to modify the structure without crashing the Render-Thread.
+ * Hit-testing is performed in local transformed space to align with UI animations.
  * </p>
  *
  * @author xI-Mx-Ix
@@ -68,17 +78,31 @@ public class UIPieChart extends UIWidget {
     // =================================================================================
 
     /**
+     * Lock object for thread-safe access to the slices list.
+     */
+    private final Object dataLock = new Object();
+
+    /**
      * Represents a single data entry within the chart.
+     * <p>
+     * <b>Note:</b> Fields are not final to allow real-time updates without object reallocation.
+     * </p>
      */
     public static class Slice {
-        /** Display label for the slice (e.g., "Java"). */
-        final String label;
+        /**
+         * Display label for the slice (e.g., "Java").
+         */
+        String label;
 
-        /** Numerical value of the slice (e.g., 45.0). */
-        final float value;
+        /**
+         * Numerical value of the slice (e.g., 45.0).
+         */
+        float value;
 
-        /** ARGB rendering color. */
-        final int color;
+        /**
+         * ARGB rendering color.
+         */
+        int color;
 
         /**
          * Internal animation state for the explosion effect.
@@ -101,11 +125,10 @@ public class UIPieChart extends UIWidget {
         }
     }
 
-    /** The list of data slices to render. */
+    /**
+     * The master list of data slices (Model).
+     */
     private final List<Slice> slices = new ArrayList<>();
-
-    /** The sum of all slice values, used to calculate percentages. */
-    private float totalValue = 0;
 
     /**
      * Constructs a default PieChart.
@@ -126,6 +149,10 @@ public class UIPieChart extends UIWidget {
 
     /**
      * Adds a data slice to the chart.
+     * <p>
+     * For high-frequency updates, prefer using {@link #updateValue(int, float)}
+     * instead of clearing and re-adding slices.
+     * </p>
      *
      * @param label The name of the entry.
      * @param value The numerical value.
@@ -133,17 +160,37 @@ public class UIPieChart extends UIWidget {
      * @return This instance for chaining.
      */
     public UIPieChart addSlice(String label, float value, int color) {
-        slices.add(new Slice(label, value, color));
-        totalValue += value;
+        synchronized (dataLock) {
+            slices.add(new Slice(label, value, color));
+        }
         return this;
+    }
+
+    /**
+     * Updates the value of an existing slice efficiently.
+     * <p>
+     * This method is thread-safe and does not allocate new memory, making it ideal
+     * for calling hundreds of times per second.
+     * </p>
+     *
+     * @param index    The index of the slice to update.
+     * @param newValue The new numerical value.
+     */
+    public void updateValue(int index, float newValue) {
+        synchronized (dataLock) {
+            if (index >= 0 && index < slices.size()) {
+                slices.get(index).value = newValue;
+            }
+        }
     }
 
     /**
      * Clears all data from the chart.
      */
     public void clear() {
-        slices.clear();
-        totalValue = 0;
+        synchronized (dataLock) {
+            slices.clear();
+        }
     }
 
     // =================================================================================
@@ -152,152 +199,138 @@ public class UIPieChart extends UIWidget {
 
     @Override
     protected void drawSelf(UIRenderer renderer, int mouseX, int mouseY, float partialTicks, float deltaTime, InteractionState state) {
-        // Early exit if there is no data to render
-        if (slices.isEmpty() || totalValue <= 0) return;
 
-        // ---------------------------------------------------------
-        // 1. Resolve Geometry & Styles
-        // ---------------------------------------------------------
+        // --- 1. Create Snapshot (Critical Section) ---
+        List<Slice> renderSlices;
+        synchronized (dataLock) {
+            if (slices.isEmpty()) return;
+            // Shallow copy to preserve animProgress while allowing structural changes in other threads.
+            renderSlices = new ArrayList<>(slices);
+        }
 
-        // The chart fits within the smallest dimension (width or height) to remain circular
+        // --- 2. Calculate Total ---
+        float renderTotal = 0;
+        for (Slice s : renderSlices) renderTotal += s.value;
+        if (renderTotal <= 0) return;
+
+        // --- 3. Resolve Geometry & Styles ---
         float size = Math.min(width, height);
         float cx = x + width / 2.0f;
         float cy = y + height / 2.0f;
         float radiusOuter = size / 2.0f;
 
-        // Fetch animated style properties via the manager logic
         float holePercent = style().getValue(state, HOLE_RADIUS);
         float explodeOffset = style().getValue(state, HOVER_EXPLODE);
-        float currentAngle = style().getValue(state, START_ANGLE);
-
-        // We use the configured speed for the hover animation
+        float startAngle = style().getValue(state, START_ANGLE);
         float transitionSpeed = style().getTransitionSpeed();
-
         float radiusInner = radiusOuter * holePercent;
         int textColor = style().getValue(state, ThemeProperties.TEXT_COLOR);
 
         // ---------------------------------------------------------
-        // 2. Calculate Hover Logic (Polar Coordinates)
+        // 4. Transform Mouse to Local Transformed Space
         // ---------------------------------------------------------
+        // We calculate the mouse position relative to the widget's current coordinate system.
+        // This accounts for parent animations (like cards moving up).
 
-        // Vector from center to mouse
-        float dx = mouseX - cx;
-        float dy = mouseY - cy;
+        Matrix4f model = new Matrix4f();
+        UIWidget current = this;
+        // Walk up the hierarchy to build the full model matrix
+        while (current != null) {
+            float cX = current.getX() + current.getWidth() / 2.0f;
+            float cY = current.getY() + current.getHeight() / 2.0f;
 
-        // Distance from center (Hypotenuse)
-        float dist = (float) Math.sqrt(dx * dx + dy * dy);
+            // Apply current widget's style transforms (same logic as UIWidget.render)
+            float tX = current.style().getValue(InteractionState.DEFAULT, ThemeProperties.TRANSLATE_X);
+            float tY = current.style().getValue(InteractionState.DEFAULT, ThemeProperties.TRANSLATE_Y);
+            float rZ = current.style().getValue(InteractionState.DEFAULT, ThemeProperties.ROTATION_Z);
+            float sX = current.style().getValue(InteractionState.DEFAULT, ThemeProperties.SCALE_X);
+            float sY = current.style().getValue(InteractionState.DEFAULT, ThemeProperties.SCALE_Y);
 
-        // Angle in radians (-PI to +PI)
-        double angleRad = Math.atan2(dy, dx);
-        // Convert to degrees
-        float mouseAngle = (float) Math.toDegrees(angleRad);
+            // Pre-multiply parent transforms
+            Matrix4f step = new Matrix4f()
+                    .translate(cX + tX, cY + tY, 0)
+                    .rotate((float) Math.toRadians(rZ), 0, 0, 1)
+                    .scale(sX, sY, 1)
+                    .translate(-cX, -cY, 0);
 
-        // Check if mouse is strictly within the ring (between inner and outer radius)
-        boolean isMouseInRing = dist >= radiusInner && dist <= radiusOuter;
+            model.mulLocal(step);
+            current = current.getParent();
+        }
+
+        Vector4f localMouse = new Vector4f((float) mouseX, (float) mouseY, 0, 1).mul(model.invert());
+        float lmX = localMouse.x;
+        float lmY = localMouse.y;
+
+        // Polar coordinates based on transformed local mouse
+        float vdx = lmX - cx;
+        float vdy = lmY - cy;
+        float dist = (float) Math.sqrt(vdx * vdx + vdy * vdy);
+        float mouseAngle = (float) Math.toDegrees(Math.atan2(vdy, vdx));
 
         Slice hoveredSlice = null;
 
-        // ---------------------------------------------------------
-        // 3. Render Loop (Iterate Slices)
-        // ---------------------------------------------------------
-
-        for (Slice slice : slices) {
-            // Calculate the angular size of this slice
-            float percent = slice.value / totalValue;
+        // --- 5. Render Loop & Hit Testing ---
+        float currentAngle = startAngle;
+        for (Slice slice : renderSlices) {
+            float percent = slice.value / renderTotal;
             float sweepAngle = percent * 360f;
             float endAngle = currentAngle + sweepAngle;
 
-            // --- Hit Testing ---
+            // --- Hit Testing (Hysteresis Logic) ---
             boolean isHovered = false;
-            if (isMouseInRing) {
-                // Normalize mouse angle relative to the start of this slice
-                // We normalize everything to 0..360 range to handle wrap-around cases
-                float normMouse = (mouseAngle - currentAngle);
-                while (normMouse < 0) normMouse += 360;
-                while (normMouse >= 360) normMouse -= 360;
 
-                // If the normalized mouse angle falls within the sweep of this slice, it's a hit
-                if (normMouse >= 0 && normMouse <= sweepAngle) {
+            float normMouse = mouseAngle - currentAngle;
+            while (normMouse < 0) normMouse += 360;
+            while (normMouse >= 360) normMouse -= 360;
+
+            if (normMouse >= 0 && normMouse <= sweepAngle) {
+                // Outer radius grows with animation progress to follow the slice visually.
+                // Inner radius stays stable at radiusInner to prevent flickering.
+                float currentMaxRadius = radiusOuter + (slice.animProgress * explodeOffset);
+                if (dist >= radiusInner && dist <= currentMaxRadius) {
                     isHovered = true;
                     hoveredSlice = slice;
                 }
             }
 
-            // --- Animation Logic (Smooth Explosion) ---
-
-            // Determine target state: 1.0 if hovered, 0.0 otherwise
+            // --- Animation Logic ---
             float targetState = isHovered ? 1.0f : 0.0f;
-
-            // Exponential decay interpolation formula: current + (target - current) * factor
-            // Factor is derived from time step and speed: 1 - e^(-speed * dt)
             float lerp = 1.0f - (float) Math.exp(-transitionSpeed * deltaTime);
-
-            // Update the slice's individual progress
             slice.animProgress += (targetState - slice.animProgress) * lerp;
 
             // --- Draw Geometry ---
-
-            // Base center position
             float drawCx = cx;
             float drawCy = cy;
 
-            // Apply explosion offset if animation is active
             if (slice.animProgress > 0.001f) {
-                // Calculate the middle angle of the slice to determine direction
                 float midAngleRad = (float) Math.toRadians(currentAngle + sweepAngle / 2.0f);
-
-                // Calculate pixel offset based on animation progress
-                float offset = explodeOffset * slice.animProgress;
-
-                // Move draw center outwards along the angle vector
-                drawCx += Math.cos(midAngleRad) * offset;
-                drawCy += Math.sin(midAngleRad) * offset;
+                float drawOffset = explodeOffset * slice.animProgress;
+                drawCx += (float) Math.cos(midAngleRad) * drawOffset;
+                drawCy += (float) Math.sin(midAngleRad) * drawOffset;
             }
 
-            // Dispatch render command to the Geometry Renderer
             if (radiusInner > 0.01f) {
                 renderer.getGeometry().renderDonutSlice(drawCx, drawCy, radiusOuter, radiusInner, currentAngle, endAngle, slice.color);
             } else {
                 renderer.getGeometry().renderPieSlice(drawCx, drawCy, radiusOuter, currentAngle, endAngle, slice.color);
             }
 
-            // Advance the angle cursor for the next slice
             currentAngle += sweepAngle;
         }
 
-        // ---------------------------------------------------------
-        // 4. Render Center Info (Donut Mode Only)
-        // ---------------------------------------------------------
-
-        // Only draw text if there is enough space in the middle
+        // --- 6. Render Center Info ---
         if (radiusInner > 10) {
-            String centerText;
-            String subText = null;
+            String centerText = (hoveredSlice != null) ? String.valueOf((int) hoveredSlice.value) : String.valueOf((int) renderTotal);
+            String subText = (hoveredSlice != null) ? hoveredSlice.label : "Total";
 
-            if (hoveredSlice != null) {
-                // Show specific slice data if hovered
-                centerText = String.valueOf((int) hoveredSlice.value);
-                subText = hoveredSlice.label;
-            } else {
-                // Show total summary if idle
-                centerText = String.valueOf((int) totalValue);
-                subText = "Total";
-            }
-
-            // Main Value Text (Centered)
             TextComponent mainT = TextComponent.literal(centerText);
             float mainW = TextComponent.getTextWidth(mainT);
             float fontH = TextComponent.getFontHeight();
-
             renderer.drawText(mainT, cx - mainW / 2.0f, cy - fontH, textColor, true);
 
-            // Sub Label Text (Below main text)
-            if (subText != null) {
-                TextComponent subT = TextComponent.literal(subText);
-                float subW = TextComponent.getTextWidth(subT);
-                // Draw slightly below center
-                renderer.drawText(subT, cx - subW / 2.0f, cy + 2, 0xFFAAAAAA, true);
-            }
+            TextComponent subT = TextComponent.literal(subText);
+            float subW = TextComponent.getTextWidth(subT);
+            renderer.drawText(subT, cx - subW / 2.0f, cy + 2, 0xFFAAAAAA, true);
         }
     }
 }

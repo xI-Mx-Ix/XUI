@@ -11,7 +11,7 @@ import net.xmx.xui.core.style.ThemeProperties;
 
 /**
  * An Area Chart component.
- * Fills the area under the curve.
+ * Fills the area under the curve using the optimized ring buffer.
  *
  * @author xI-Mx-Ix
  */
@@ -24,44 +24,58 @@ public class UIAreaChart extends UILineChart {
         // Draw Background
         int bg = getColor(ThemeProperties.BACKGROUND_COLOR, state, deltaTime);
         renderer.getGeometry().renderRect(x, y, width, height, bg, 0);
-        
+
         drawAxes(renderer, style().getValue(state, AXIS_COLOR), style().getValue(state, GRID_COLOR));
 
-        if (dataPoints.size() < 2) return;
+        synchronized (dataLock) {
+            if (bufferSize < 2) return;
 
-        int areaColor = style().getValue(state, AREA_COLOR);
-        float stepX = width / (dataPoints.size() - 1);
+            // Ensure scale is up to date
+            performAutoScaling();
 
-        // Render Area using vertical strips (Quads)
-        // This is an approximation. Ideally we would use a Polygon, but UIRenderer uses Rects.
-        // We draw thin columns to approximate the slope.
-        int resolution = 2; // Pixel width per strip
-        
-        for (int i = 0; i < dataPoints.size() - 1; i++) {
-            float v1 = normalize(dataPoints.get(i));
-            float v2 = normalize(dataPoints.get(i + 1));
-            
-            float xStart = x + (i * stepX);
-            float dist = stepX;
-            
-            // Interpolate between v1 and v2 across 'dist'
-            for (float d = 0; d < dist; d += resolution) {
-                float fraction = d / dist;
-                float currentVal = v1 + (v2 - v1) * fraction;
-                float currentH = height * currentVal;
-                
+            int areaColor = style().getValue(state, AREA_COLOR);
+
+            // Adaptive Rendering:
+            // If high density, we draw 1px wide columns for every pixel on X axis.
+            // If low density, we interpolate to draw smoother blocks.
+
+            float stepX = width / (Math.max(1, bufferSize - 1));
+
+            // If the step is smaller than 1 pixel, we clamp to 1 pixel stepping (Downsampling)
+            // to avoid overdraw.
+            boolean performDownsample = stepX < 1.0f;
+            float renderStep = performDownsample ? 1.0f : stepX;
+            int iterations = performDownsample ? (int)width : bufferSize - 1;
+
+            for (int i = 0; i < iterations; i++) {
+                float value;
+
+                if (performDownsample) {
+                    // Calculate mapping from pixel index 'i' to buffer index
+                    float bufferIndexFloat = ((float)i / width) * bufferSize;
+                    value = getValueAt((int)bufferIndexFloat);
+                } else {
+                    value = getValueAt(i);
+                }
+
+                float normH = normalize(value);
+                float barH = height * normH;
+                float xPos = x + (i * renderStep);
+
+                // Draw vertical strip from axis up to value
                 renderer.getGeometry().renderRect(
-                    xStart + d, 
-                    y + height - currentH, 
-                    resolution, 
-                    currentH, 
-                    areaColor, 
-                    0
+                        xPos,
+                        y + height - barH,
+                        renderStep, // width of strip
+                        barH,
+                        areaColor,
+                        0
                 );
             }
         }
 
-        // Draw the line on top
+        // Draw the line on top (delegates to UILineChart logic which handles locking itself)
+        // Note: UILineChart.drawSelf does the locking again. Re-entrant locks in Java are fine.
         super.drawSelf(renderer, mouseX, mouseY, partialTicks, deltaTime, state);
     }
 }
