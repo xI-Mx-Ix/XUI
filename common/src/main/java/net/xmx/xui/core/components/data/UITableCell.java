@@ -28,7 +28,7 @@ public class UITableCell extends UIPanel {
         // Center text vertically
         textWidget.setY(Layout.center());
         textWidget.setX(Layout.pixel(4)); // Left padding
-        
+
         this.content = textWidget;
         this.add(content);
     }
@@ -43,7 +43,7 @@ public class UITableCell extends UIPanel {
         content.setY(Layout.pixel(2));
         content.setWidth(Layout.relative(1.0f).minus(4));
         content.setHeight(Layout.relative(1.0f).minus(4));
-        
+
         this.add(content);
     }
 }

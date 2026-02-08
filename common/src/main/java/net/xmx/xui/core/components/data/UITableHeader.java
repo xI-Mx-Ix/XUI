@@ -6,8 +6,8 @@ package net.xmx.xui.core.components.data;
 
 import net.xmx.xui.core.Layout;
 import net.xmx.xui.core.components.UIPanel;
-import net.xmx.xui.core.text.TextComponent;
 import net.xmx.xui.core.style.ThemeProperties;
+import net.xmx.xui.core.text.TextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +37,8 @@ public class UITableHeader extends UIPanel {
     public UITableHeader addColumn(String title, float weight) {
         UITableCell cell = new UITableCell(TextComponent.literal(title));
         // Bold text for header
-        cell.style().set(ThemeProperties.TEXT_COLOR, 0xFFEEEEEE);
-        
+        cell.style().set(ThemeProperties.TEXT_COLOR, 0xFF00ADB5);
+
         this.columnWeights.add(weight);
         this.headerCells.add(cell);
         this.add(cell);
@@ -56,19 +56,19 @@ public class UITableHeader extends UIPanel {
         float totalWeight = 0;
         for (float w : columnWeights) totalWeight += w;
 
-        float availableWidth = this.getWidth();
+        float availableWidth = this.width;
         float currentX = 0;
 
         for (int i = 0; i < headerCells.size(); i++) {
             UITableCell cell = headerCells.get(i);
             float weight = columnWeights.get(i);
-            
-            float cellWidth = (weight / totalWeight) * availableWidth;
-            
+
+            float cellWidth = (totalWeight > 0) ? (weight / totalWeight) * availableWidth : 0;
+
             cell.setX(Layout.pixel(currentX));
             cell.setWidth(Layout.pixel(cellWidth));
             cell.setHeight(Layout.relative(1.0f));
-            
+
             cell.layout();
             currentX += cellWidth;
         }

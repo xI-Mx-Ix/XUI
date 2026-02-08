@@ -932,4 +932,31 @@ public abstract class UIWidget {
     public AxisFunc getHeightConstraint() {
         return this.heightConstraint;
     }
+
+    /**
+     * Retrieves the callback executed when the mouse enters the widget.
+     *
+     * @return The registered consumer or null.
+     */
+    public Consumer<UIWidget> getOnMouseEnter() {
+        return this.onMouseEnter;
+    }
+
+    /**
+     * Retrieves the callback executed when the mouse exits the widget.
+     *
+     * @return The registered consumer or null.
+     */
+    public Consumer<UIWidget> getOnMouseExit() {
+        return this.onMouseExit;
+    }
+
+    /**
+     * Retrieves the callback executed when the widget is clicked.
+     *
+     * @return The registered consumer or null.
+     */
+    public Consumer<UIWidget> getOnClick() {
+        return this.onClick;
+    }
 }

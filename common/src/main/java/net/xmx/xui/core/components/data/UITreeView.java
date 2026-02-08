@@ -5,6 +5,7 @@
 package net.xmx.xui.core.components.data;
 
 import net.xmx.xui.core.Layout;
+import net.xmx.xui.core.UIWidget;
 import net.xmx.xui.core.components.UIPanel;
 import net.xmx.xui.core.gl.renderer.UIRenderer;
 import net.xmx.xui.core.style.InteractionState;
@@ -31,12 +32,13 @@ public class UITreeView extends UIPanel {
         private final List<UITreeNode> treeChildren = new ArrayList<>();
         private boolean expanded = false;
         private int depth = 0;
-        private final float indentPerLevel = 16.0f;
+        private final float indentPerLevel = 12.0f;
 
         public UITreeNode(TextComponent label) {
             this.label = label;
             this.style().set(ThemeProperties.BACKGROUND_COLOR, 0x00000000);
-            this.setHeight(Layout.pixel(20)); // Fixed node height
+            this.setHeight(Layout.pixel(18)); // Fixed node height
+            this.setWidth(Layout.relative(1.0f));
         }
 
         /**
@@ -52,6 +54,8 @@ public class UITreeView extends UIPanel {
             UITreeNode node = new UITreeNode(TextComponent.literal(text));
             node.depth = this.depth + 1;
             this.treeChildren.add(node);
+            UITreeView.this.structureDirty = true;
+            UITreeView.this.markLayoutDirty();
             return node;
         }
 
@@ -62,18 +66,19 @@ public class UITreeView extends UIPanel {
          * @param expanded True to show children, false to hide.
          */
         public void setExpanded(boolean expanded) {
-            this.expanded = expanded;
-            UITreeView.this.layout();
+            if (this.expanded != expanded) {
+                this.expanded = expanded;
+                UITreeView.this.structureDirty = true;
+                UITreeView.this.markLayoutDirty();
+            }
         }
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (isVisible && isMouseOver(mouseX, mouseY) && button == 0) {
-                // Toggle expansion if there are logical sub-nodes
-                if (!treeChildren.isEmpty()) {
-                    setExpanded(!expanded);
-                    return true;
-                }
+            if (!isVisible || isClippedByParent(mouseX, mouseY)) return false;
+            if (isMouseOver(mouseX, mouseY) && button == 0 && !treeChildren.isEmpty()) {
+                setExpanded(!expanded);
+                return true;
             }
             return super.mouseClicked(mouseX, mouseY, button);
         }
@@ -90,7 +95,7 @@ public class UITreeView extends UIPanel {
             if (!treeChildren.isEmpty()) {
                 // Calculate absolute X position relative to the widget
                 drawChevron(renderer, this.x + currentX, centerY, textColor, expanded);
-                currentX += 12; // Space for arrow
+                currentX += 10; // Space for arrow
             } else {
                 currentX += 4;
             }
@@ -124,6 +129,7 @@ public class UITreeView extends UIPanel {
     }
 
     private final List<UITreeNode> rootNodes = new ArrayList<>();
+    private boolean structureDirty = false;
 
     public UITreeView() {
         this.style().set(ThemeProperties.BACKGROUND_COLOR, 0x00000000);
@@ -132,41 +138,50 @@ public class UITreeView extends UIPanel {
     public UITreeNode addRoot(String text) {
         UITreeNode node = new UITreeNode(TextComponent.literal(text));
         this.rootNodes.add(node);
+        this.structureDirty = true;
+        this.markLayoutDirty();
         return node;
     }
 
     @Override
     public void layout() {
-        // Flatten the visible tree for layout
-        this.children.clear();
-        float currentY = 0;
+        super.layout();
 
-        for (UITreeNode root : rootNodes) {
-            currentY = layoutNodeRecursive(root, currentY);
+        if (structureDirty) {
+            this.children.clear();
+            for (UITreeNode root : rootNodes) {
+                buildFlatTreeRecursive(root);
+            }
+            structureDirty = false;
         }
 
-        this.height = currentY;
-        super.layout();
+        float currentY = 0;
+        float viewWidth = this.width;
+
+        for (UIWidget child : children) {
+            child.setX(Layout.pixel(0));
+            child.setY(Layout.pixel(currentY));
+            child.setWidth(Layout.pixel(viewWidth));
+            child.layout();
+            currentY += child.getHeight();
+        }
+
+        // Adjust total height of the tree
+        if (Math.abs(this.height - currentY) > 0.01f) {
+            this.height = currentY;
+            this.heightConstraint = Layout.pixel(currentY);
+        }
     }
 
     /**
      * Recursively adds visible nodes to the layout list.
      */
-    private float layoutNodeRecursive(UITreeNode node, float currentY) {
-        // Add current node
+    private void buildFlatTreeRecursive(UITreeNode node) {
         this.add(node);
-        node.setY(Layout.pixel(currentY));
-        node.setWidth(Layout.relative(1.0f));
-        // Node layout handled by its own class, but width constraint needs update from parent first
-        node.layout();
-
-        float nextY = currentY + node.getHeight();
-
         if (node.isExpanded()) {
             for (UITreeNode child : node.getTreeChildren()) {
-                nextY = layoutNodeRecursive(child, nextY);
+                buildFlatTreeRecursive(child);
             }
         }
-        return nextY;
     }
 }

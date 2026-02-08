@@ -29,6 +29,7 @@ public class UITable extends UIPanel {
         this.style().set(ThemeProperties.BACKGROUND_COLOR, 0xFF1E1E1E);
         this.style().set(ThemeProperties.BORDER_COLOR, 0xFF404040);
         this.style().set(ThemeProperties.BORDER_THICKNESS, 1.0f);
+        this.setWidth(Layout.relative(1.0f));
     }
 
     /**
@@ -77,11 +78,12 @@ public class UITable extends UIPanel {
         // Calculate own dimensions first to determine available width
         super.layout();
 
-        float tableWidth = this.getWidth();
+        float tableWidth = this.width;
         float currentY = 0;
 
         // 1. Position and Size Header
         if (header != null) {
+            header.setX(Layout.pixel(0));
             header.setY(Layout.pixel(0));
             // Explicitly set width to match table so percentages calculate correctly
             header.setWidth(Layout.pixel(tableWidth));
@@ -92,6 +94,7 @@ public class UITable extends UIPanel {
 
         // 2. Position and Size Rows
         for (UITableRow row : rows) {
+            row.setX(Layout.pixel(0));
             row.setY(Layout.pixel(currentY));
             // Explicitly set width to match table so percentages calculate correctly
             row.setWidth(Layout.pixel(tableWidth));
@@ -107,6 +110,9 @@ public class UITable extends UIPanel {
         }
 
         // Adjust total height of the table to fit all rows
-        this.height = currentY;
+        if (Math.abs(this.height - currentY) > 0.01f) {
+            this.height = currentY;
+            this.heightConstraint = Layout.pixel(currentY);
+        }
     }
 }

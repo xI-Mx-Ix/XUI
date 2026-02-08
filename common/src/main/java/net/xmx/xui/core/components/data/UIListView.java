@@ -25,10 +25,14 @@ import java.util.function.Consumer;
  */
 public class UIListView extends UIPanel {
 
-    /** Color for the selected item background. */
+    /**
+     * Color for the selected item background.
+     */
     public static final StyleKey<Integer> SELECTION_COLOR = new StyleKey<>("list_selection_color", 0xFF404040);
-    
-    /** Color for alternating rows (even index). Set to 0 for no striping. */
+
+    /**
+     * Color for alternating rows (even index). Set to 0 for no striping.
+     */
     public static final StyleKey<Integer> ALT_ROW_COLOR = new StyleKey<>("list_alt_row_color", 0x10FFFFFF);
 
     private UIWidget selectedItem;
@@ -38,6 +42,7 @@ public class UIListView extends UIPanel {
     public UIListView() {
         // Transparent default background
         this.style().set(ThemeProperties.BACKGROUND_COLOR, 0x00000000);
+        this.setWidth(Layout.relative(1.0f));
     }
 
     /**
@@ -87,15 +92,23 @@ public class UIListView extends UIPanel {
         super.layout();
 
         float currentY = 0;
+        float listWidth = this.width;
+
         for (UIWidget child : children) {
             // Manually position children in a vertical stack
+            child.setX(Layout.pixel(0));
             child.setY(Layout.pixel(currentY));
+            child.setWidth(Layout.pixel(listWidth));
+
             child.layout(); // Recalculate child with new constraints
             currentY += child.getHeight() + itemGap;
         }
 
         // Adjust the height of the list to fit content (if needed by parent scroll panel)
-        this.height = currentY;
+        if (Math.abs(this.height - currentY) > 0.01f) {
+            this.height = currentY;
+            this.heightConstraint = Layout.pixel(currentY);
+        }
     }
 
     @Override
@@ -108,7 +121,7 @@ public class UIListView extends UIPanel {
         // Render Selection and Striping backgrounds behind items
         for (int i = 0; i < children.size(); i++) {
             UIWidget child = children.get(i);
-            
+
             if (child == selectedItem) {
                 renderer.getGeometry().renderRect(child.getX(), child.getY(), child.getWidth(), child.getHeight(), selectionColor, 2.0f);
             } else if (i % 2 == 0 && (altColor >>> 24) > 0) {
