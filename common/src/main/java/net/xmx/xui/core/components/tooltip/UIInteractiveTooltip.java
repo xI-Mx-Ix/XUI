@@ -54,11 +54,15 @@ public class UIInteractiveTooltip extends UIAbstractTooltip {
     }
 
     /**
-     * Logic:
-     * 1. If mouse is over Target OR over Tooltip (self) -> Show / Keep Open.
-     * 2. If mouse leaves both -> Start Grace Timer.
-     * 3. If mouse returns within Grace Period -> Reset Timer, Keep Open.
-     * 4. If Grace Timer expires -> Fade Out.
+     * Updates the internal state machine (Timers, Fading).
+     * <p>
+     * Manages transitions between hidden, waiting, visible, and fading states based on
+     * mouse hover interactions with the target or the tooltip itself.
+     * </p>
+     *
+     * @param dt     Delta time in seconds.
+     * @param mouseX Global mouse X.
+     * @param mouseY Global mouse Y.
      */
     @Override
     protected void updateLogic(float dt, int mouseX, int mouseY) {
@@ -84,6 +88,9 @@ public class UIInteractiveTooltip extends UIAbstractTooltip {
                 } else {
                     stateTimer += dt;
                     if (stateTimer >= delay) {
+                        this.layout();
+                        this.calculatePosition(mouseX, mouseY);
+
                         state = VisibilityState.FADING_IN;
                         stateTimer = 0.0f;
                         if (onShow != null) onShow.accept(this);

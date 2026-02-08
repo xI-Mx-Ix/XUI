@@ -106,7 +106,7 @@ public class XUITooltipExampleScreen extends Screen {
 
         // Add standard text content
         UIWrappedText textSimple = new UIWrappedText();
-        textSimple.setText("I am a simple visual tooltip.I follow the mouse cursor.");
+        textSimple.setText("I am a simple visual tooltip. I follow the mouse cursor.");
         textSimple.setWidth(Layout.pixel(150)); // Hint width for wrapping
         tipSimple.add(textSimple);
 
@@ -128,7 +128,8 @@ public class XUITooltipExampleScreen extends Screen {
         tipStatic.setAnchor(TooltipAnchor.TOP); // Fixed position
 
         UIWrappedText textStatic = new UIWrappedText();
-        textStatic.setText("I stay centered above the button.\nEven if you move the mouse.");
+        textStatic.addText(TextComponent.literal("I stay centered above the button."));
+        textStatic.addText(TextComponent.literal("Even if you move the mouse."));
         tipStatic.add(textStatic);
 
         tooltipList.add(tipStatic);
@@ -224,7 +225,7 @@ public class XUITooltipExampleScreen extends Screen {
         tipEdge.setAnchor(TooltipAnchor.RIGHT); // Should force flip to LEFT because no space on right
 
         UIWrappedText edgeText = new UIWrappedText();
-        edgeText.setText("I was anchored RIGHT,\nbut I should appear LEFT\nto stay on screen.");
+        edgeText.addText(TextComponent.literal("I was anchored RIGHT, but I should appear LEFT to stay on screen."));
         tipEdge.add(edgeText);
 
         tooltipList.add(tipEdge);

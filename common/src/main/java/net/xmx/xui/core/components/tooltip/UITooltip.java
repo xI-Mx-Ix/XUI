@@ -31,8 +31,15 @@ public class UITooltip extends UIAbstractTooltip {
     }
 
     /**
+     * Updates the internal state machine.
+     * <p>
      * Logic: The tooltip is visible ONLY if the mouse is strictly over the target.
      * Once the mouse leaves the target, the tooltip begins to fade out immediately.
+     * </p>
+     *
+     * @param dt     Delta time in seconds.
+     * @param mouseX Global mouse X.
+     * @param mouseY Global mouse Y.
      */
     @Override
     protected void updateLogic(float dt, int mouseX, int mouseY) {
@@ -55,6 +62,9 @@ public class UITooltip extends UIAbstractTooltip {
                 } else {
                     stateTimer += dt;
                     if (stateTimer >= delay) {
+                        this.layout();
+                        this.calculatePosition(mouseX, mouseY);
+
                         state = VisibilityState.FADING_IN;
                         stateTimer = 0.0f;
                         if (onShow != null) onShow.accept(this);

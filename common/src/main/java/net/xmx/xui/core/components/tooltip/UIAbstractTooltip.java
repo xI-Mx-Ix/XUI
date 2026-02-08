@@ -307,6 +307,10 @@ public abstract class UIAbstractTooltip extends UIPanel implements UIWidget.Widg
     /**
      * Calculates the absolute screen position of the tooltip.
      * Handles boundary clamping to keep the tooltip on screen.
+     * <p>
+     * Uses the parent's dimensions (logical scale) instead of physical window size
+     * to ensure correct clamping when UI scaling is active.
+     * </p>
      *
      * @param mouseX Current mouse X.
      * @param mouseY Current mouse Y.
@@ -324,9 +328,10 @@ public abstract class UIAbstractTooltip extends UIPanel implements UIWidget.Widg
             y = calculateFixedY();
         }
 
-        // Clamp to screen bounds
-        int sw = getScreenWidth();
-        int sh = getScreenHeight();
+        // Determine screen bounds based on the parent (Root Panel)
+        // This ensures we use logical pixels matching the UI scale, not physical display pixels.
+        float sw = (parent != null) ? parent.getWidth() : (float) getScreenWidth();
+        float sh = (parent != null) ? parent.getHeight() : (float) getScreenHeight();
 
         // Check Right Edge
         if (x + width > sw) {
