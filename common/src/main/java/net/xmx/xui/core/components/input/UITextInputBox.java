@@ -49,6 +49,12 @@ public class UITextInputBox extends UIWidget {
     public static final StyleKey<Integer> HINT_COLOR = new StyleKey<>("hint_color", 0xFF888888);
 
     /**
+     * The timestamp of the last interaction (typing, moving, clicking)
+     * used to reset the cursor blink cycle.
+     */
+    private long lastInteractionTime = 0;
+
+    /**
      * The font instance used to render text within this EditBox.
      * Defaults to the standard Vanilla font.
      */
@@ -244,10 +250,33 @@ public class UITextInputBox extends UIWidget {
         }
     }
 
+    /**
+     * Renders the blinking cursor if the widget has focus.
+     * The cursor stays solid for 300ms after any interaction to maintain focus,
+     * then immediately begins a smooth fading animation using a cosine wave
+     * to ensure a seamless transition from the solid state.
+     *
+     * @param renderer   The UI renderer.
+     * @param baseX      The base X coordinate for text.
+     * @param baseY      The base Y coordinate for text.
+     * @param fontHeight The height of the font line.
+     * @param color      The base color of the cursor.
+     */
     private void renderCursor(UIRenderer renderer, float baseX, float baseY, int fontHeight, int color) {
-        // Smooth blink logic
-        double time = System.currentTimeMillis() / 250.0;
-        float alphaFactor = (float) (0.5 + 0.5 * Math.sin(time));
+        long currentTime = System.currentTimeMillis();
+        long timeSinceInteraction = currentTime - lastInteractionTime;
+        float alphaFactor;
+
+        // Reduced solid delay to 300ms for a more responsive feel
+        if (timeSinceInteraction < 300) {
+            alphaFactor = 1.0f;
+        } else {
+            // Animation speed adjusted to 200.0 for a slightly faster, smoother blink
+            // Cosine starts at 1.0 when time is 0, matching the solid alpha perfectly
+            double time = (currentTime - lastInteractionTime - 300) / 200.0;
+            alphaFactor = (float) (0.5 + 0.5 * Math.cos(time));
+        }
+
         int baseAlpha = (color >> 24) & 0xFF;
         int finalAlpha = (int) (baseAlpha * alphaFactor);
         int blinkingColor = (color & 0x00FFFFFF) | (finalAlpha << 24);
@@ -275,7 +304,6 @@ public class UITextInputBox extends UIWidget {
             }
 
             String subLine = lines[lineIndex].substring(0, colIndex);
-            // Calculate width using the instance font
             cx = font.getWidth(TextComponent.literal(subLine).setFont(font));
             cy = lineIndex * fontHeight;
         } else {
@@ -287,7 +315,7 @@ public class UITextInputBox extends UIWidget {
         float cursorX = baseX + cx;
         float cursorY = baseY + cy;
 
-        // Draw the cursor line
+        // Draw the cursor as a 1-pixel wide vertical bar
         renderer.getGeometry().renderRect(cursorX, cursorY - 1, 1, fontHeight + 2, blinkingColor, 0);
     }
 
@@ -334,6 +362,9 @@ public class UITextInputBox extends UIWidget {
 
         boolean ctrl = (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
         boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+
+        // Mark that an interaction occurred to keep the cursor solid
+        this.lastInteractionTime = System.currentTimeMillis();
 
         switch (keyCode) {
             case GLFW.GLFW_KEY_BACKSPACE:
@@ -467,9 +498,19 @@ public class UITextInputBox extends UIWidget {
         setCursorPos(cursorPosition + delta, keepSelection);
     }
 
+    /**
+     * Sets the current cursor position and updates the selection endpoint.
+     * Resets the interaction timer to keep the cursor visible.
+     *
+     * @param pos           The new character index.
+     * @param keepSelection Whether to maintain the selection anchor.
+     */
     private void setCursorPos(int pos, boolean keepSelection) {
         this.cursorPosition = Math.max(0, Math.min(text.length(), pos));
         if (!keepSelection) this.selectionEnd = this.cursorPosition;
+
+        // Reset the timer so the cursor remains solid during movement
+        this.lastInteractionTime = System.currentTimeMillis();
     }
 
     /**
