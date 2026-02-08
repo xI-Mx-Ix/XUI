@@ -326,17 +326,16 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
         }
     }
 
+    /**
+     * Renders the floating list overlay, including the background, item hover states, and text.
+     * The hover effect is dynamically clipped to match the container's rounded corners.
+     */
     private void renderOverlay(UIRenderer renderer, int mouseX, int mouseY,
                                int bgColor, int borderColor, int textColor, CornerRadii radii, float borderThick) {
 
         float totalListHeight = options.size() * optionHeight;
 
-        // --- Radius Clamping Logic ---
-        // Prevent graphical artifacts when the box height is smaller than 2x radius.
-        // For CornerRadii, this is complex, so we skip detailed clamping here assuming radii are sane.
-
         // --- 1. Clipping (Scissors) ---
-        // We define a window that matches the current animated box size.
         renderer.getScissor().enableScissor(overlayX, overlayY, overlayWidth, overlayHeight);
 
         // --- 2. Draw Background ---
@@ -345,8 +344,6 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
 
         // --- 3. Draw Options ---
         int hoverColor = style().getValue(InteractionState.DEFAULT, ThemeProperties.HOVER_COLOR);
-
-        // If opening upward, we align content to the bottom of the overlay rect
         float startY = openUpward ? (overlayY + overlayHeight - totalListHeight) : overlayY;
 
         for (int i = 0; i < options.size(); i++) {
@@ -358,8 +355,22 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                     mouseY >= overlayY && mouseY <= overlayY + overlayHeight);
 
             if (isHovered) {
-                // Hardcoded 2.0f radius for hover highlight, effectively standard rect
-                renderer.getGeometry().renderRect(overlayX + 2, optY, overlayWidth - 4, optionHeight, hoverColor, 2.0f);
+                // Determine radii for the hover effect based on item position
+                // Top item inherits top radii, bottom item inherits bottom radii
+                float tl = (i == 0) ? radii.topLeft() : 0.0f;
+                float tr = (i == 0) ? radii.topRight() : 0.0f;
+                float br = (i == options.size() - 1) ? radii.bottomRight() : 0.0f;
+                float bl = (i == options.size() - 1) ? radii.bottomLeft() : 0.0f;
+
+                // Render hover background precisely within the borders
+                renderer.getGeometry().renderRect(
+                        overlayX + borderThick,
+                        optY,
+                        overlayWidth - (borderThick * 2),
+                        optionHeight,
+                        hoverColor,
+                        tl, tr, br, bl
+                );
             }
 
             float textY = optY + (optionHeight - TextComponent.getFontHeight()) / 2.0f + 1;
@@ -372,7 +383,6 @@ public class UIDropdown extends UIWidget implements UIWidget.WidgetObstructor {
                     radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft());
         }
 
-        // Disable clipping
         renderer.getScissor().disableScissor();
     }
 

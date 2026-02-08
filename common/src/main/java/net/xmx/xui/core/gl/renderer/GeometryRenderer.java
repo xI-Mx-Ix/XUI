@@ -210,11 +210,9 @@ public class GeometryRenderer {
     // --- Vertex Generation (Internal/Batched) ---
 
     /**
-     * Queues vertices for a filled rectangle with optional rounded corners into the active mesh buffer.
-     * <p>
-     * <b>Note:</b> This method does NOT invoke draw calls or bind shaders. It must be called
-     * strictly between {@link #begin} and {@link #end}.
-     * </p>
+     * Queues vertices for a filled rectangle with independent corner radii.
+     * The geometry is constructed to be gap-free by combining a central body,
+     * side bars, and corner arcs or square fillers for sharp corners.
      *
      * @param x      Logical X position.
      * @param y      Logical Y position.
@@ -239,30 +237,38 @@ public class GeometryRenderer {
         rBR = Math.min(rBR, maxR);
         rBL = Math.min(rBL, maxR);
 
-        // 1. Draw Center Body (Cross shape logic)
-        addQuad(x + rTL, y, width - rTL - rTR, height, r, g, b, a);
+        float maxLeft = Math.max(rTL, rBL);
+        float maxRight = Math.max(rTR, rBR);
 
-        // 2. Draw Left and Right sides (between corners)
-        addQuad(x, y + rTL, rTL, height - rTL - rBL, r, g, b, a);
-        addQuad(x + width - rTR, y + rTR, rTR, height - rTR - rBR, r, g, b, a);
+        // Main horizontal body
+        addQuad(x + maxLeft, y, width - maxLeft - maxRight, height, r, g, b, a);
 
-        // 3. Draw Corners (Arcs) or fill sharp corners
+        // Left and Right vertical filler bars
+        addQuad(x, y + rTL, maxLeft, height - rTL - rBL, r, g, b, a);
+        addQuad(x + width - maxRight, y + rTR, maxRight, height - rTR - rBR, r, g, b, a);
+
+        // Top-Left Corner
         if (rTL > 0) addCorner(x + rTL, y + rTL, rTL, Math.PI, 1.5 * Math.PI, r, g, b, a);
-        else addQuad(x, y, rTL, rTL, r, g, b, a); // Fill gap if radius is 0
+        else if (maxLeft > 0) addQuad(x, y, maxLeft, rTL, r, g, b, a);
 
+        // Top-Right Corner
         if (rTR > 0) addCorner(x + width - rTR, y + rTR, rTR, 1.5 * Math.PI, 2.0 * Math.PI, r, g, b, a);
+        else if (maxRight > 0) addQuad(x + width - maxRight, y, maxRight, rTR, r, g, b, a);
 
+        // Bottom-Right Corner
         if (rBR > 0) addCorner(x + width - rBR, y + height - rBR, rBR, 0.0, 0.5 * Math.PI, r, g, b, a);
+        else if (maxRight > 0) addQuad(x + width - maxRight, y + height - rBR, maxRight, rBR, r, g, b, a);
 
+        // Bottom-Left Corner
         if (rBL > 0) addCorner(x + rBL, y + height - rBL, rBL, 0.5 * Math.PI, Math.PI, r, g, b, a);
+        else if (maxLeft > 0) addQuad(x, y + height - rBL, maxLeft, rBL, r, g, b, a);
     }
 
     /**
-     * Queues vertices for a hollow outline into the active mesh buffer.
-     * <p>
-     * <b>Note:</b> This method does NOT invoke draw calls or bind shaders. It must be called
-     * strictly between {@link #begin} and {@link #end}.
-     * </p>
+     * Queues vertices for a hollow outline.
+     * Edges are drawn as linear quads that meet exactly at the corners.
+     * Arcs are only rendered if the respective corner radius is greater than zero,
+     * preventing square artifacts on sharp corners.
      *
      * @param x         Logical X position.
      * @param y         Logical Y position.
@@ -281,17 +287,17 @@ public class GeometryRenderer {
         float[] rgba = unpackColor(color);
         float r = rgba[0], g = rgba[1], b = rgba[2], a = rgba[3];
 
-        // Draw 4 Linear Edges using quads
+        // Linear Edges
         addQuad(x + rTL, y, width - rTL - rTR, thickness, r, g, b, a); // Top
         addQuad(x + rBL, y + height - thickness, width - rBL - rBR, thickness, r, g, b, a); // Bottom
         addQuad(x, y + rTL, thickness, height - rTL - rBL, r, g, b, a); // Left
         addQuad(x + width - thickness, y + rTR, thickness, height - rTR - rBR, r, g, b, a); // Right
 
-        // Draw 4 Corner Rings (arcs with inner and outer radii) or standard quads if sharp
-        drawCornerRingOrQuad(x + rTL, y + rTL, rTL, thickness, Math.PI, 1.5 * Math.PI, r, g, b, a, x, y);
-        drawCornerRingOrQuad(x + width - rTR, y + rTR, rTR, thickness, 1.5 * Math.PI, 2.0 * Math.PI, r, g, b, a, x + width - thickness, y);
-        drawCornerRingOrQuad(x + width - rBR, y + height - rBR, rBR, thickness, 0.0, 0.5 * Math.PI, r, g, b, a, x + width - thickness, y + height - thickness);
-        drawCornerRingOrQuad(x + rBL, y + height - rBL, rBL, thickness, 0.5 * Math.PI, Math.PI, r, g, b, a, x, y + height - thickness);
+        // Rounded Corners
+        if (rTL > 0) addCornerRing(x + rTL, y + rTL, rTL, Math.max(0, rTL - thickness), Math.PI, 1.5 * Math.PI, r, g, b, a);
+        if (rTR > 0) addCornerRing(x + width - rTR, y + rTR, rTR, Math.max(0, rTR - thickness), 1.5 * Math.PI, 2.0 * Math.PI, r, g, b, a);
+        if (rBR > 0) addCornerRing(x + width - rBR, y + height - rBR, rBR, Math.max(0, rBR - thickness), 0.0, 0.5 * Math.PI, r, g, b, a);
+        if (rBL > 0) addCornerRing(x + rBL, y + height - rBL, rBL, Math.max(0, rBL - thickness), 0.5 * Math.PI, Math.PI, r, g, b, a);
     }
 
     // --- Private Helpers ---
